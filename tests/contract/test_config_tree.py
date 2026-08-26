@@ -13,12 +13,14 @@ def test_repository_configuration_is_valid() -> None:
     result = validate_config_tree(CONFIG_DIR)
 
     assert result.profile_ids == (
+        "markets",
         "news-alternative",
         "news-german",
         "news-top",
     )
 
     assert result.source_set_ids == (
+        "markets",
         "news-alternative",
         "news-german",
         "news-top",

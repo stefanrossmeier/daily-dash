@@ -4,10 +4,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from daily_dash.config.errors import ConfigurationError
-from daily_dash.config.loader import (
-    load_news_profile,
-    load_news_source_set,
-)
+from daily_dash.config.loader import load_profile, load_source_set
+from daily_dash.config.models import Profile, SourceSet
 
 
 @dataclass(frozen=True)
@@ -34,11 +32,11 @@ def validate_config_tree(config_dir: Path) -> ConfigValidationResult:
     if not sources_dir.is_dir():
         raise ConfigurationError(f"sources directory not found: {sources_dir}")
 
-    profiles = {}
-    source_sets = {}
+    profiles: dict[str, Profile] = {}
+    source_sets: dict[str, SourceSet] = {}
 
     for path in sorted(profiles_dir.glob("*.yaml")):
-        profile = load_news_profile(path)
+        profile = load_profile(path)
 
         if path.stem != profile.profile_id:
             raise ConfigurationError(
@@ -51,7 +49,7 @@ def validate_config_tree(config_dir: Path) -> ConfigValidationResult:
         profiles[profile.profile_id] = profile
 
     for path in sorted(sources_dir.glob("*.yaml")):
-        source_set = load_news_source_set(path)
+        source_set = load_source_set(path)
 
         if path.stem != source_set.source_set_id:
             raise ConfigurationError(
@@ -65,10 +63,18 @@ def validate_config_tree(config_dir: Path) -> ConfigValidationResult:
         source_sets[source_set.source_set_id] = source_set
 
     for profile in profiles.values():
-        if profile.source_set not in source_sets:
+        resolved_source_set = source_sets.get(profile.source_set)
+        if resolved_source_set is None:
             raise ConfigurationError(
-                f"profile '{profile.profile_id}' references missing "
-                f"source set '{profile.source_set}'"
+                f"profile '{profile.profile_id}' references missing source set "
+                f"'{profile.source_set}'"
+            )
+
+        if resolved_source_set.pipeline != profile.pipeline:
+            raise ConfigurationError(
+                f"profile '{profile.profile_id}' uses pipeline '{profile.pipeline}' but source set "
+                f"'{resolved_source_set.source_set_id}' uses pipeline "
+                f"'{resolved_source_set.pipeline}'"
             )
 
     return ConfigValidationResult(

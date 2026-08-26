@@ -1,4 +1,5 @@
 schema_version: 1
+pipeline: news
 source_set_id: news-german
 
 sources:

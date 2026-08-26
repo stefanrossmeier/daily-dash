@@ -1,0 +1,133 @@
+schema_version: 1
+pipeline: markets
+source_set_id: markets
+provider: yfinance
+
+assets:
+  - id: dax
+    name: DAX
+    symbol: 3XJN.DE
+    group: indices
+    ath:
+      symbol: ^GDAXI
+      period: 10y
+      label: DAX
+
+  - id: eurostoxx50
+    name: EuroStx50
+    symbol: ^STOXX50E
+    group: indices
+
+  - id: stoxx600
+    name: Stoxx600
+    symbol: ^STOXX
+    group: indices
+    ath:
+      symbol: ^STOXX
+      period: 10y
+      label: Stoxx600
+
+  - id: msci-world
+    name: MSCI World
+    symbol: EUNL.DE
+    group: indices
+    ath:
+      symbol: URTH
+      period: 10y
+      label: MSCI World
+
+  - id: msci-em
+    name: MSCI EM
+    symbol: IS3N.DE
+    group: indices
+    ath:
+      symbol: EEM
+      period: 10y
+      label: MSCI EM
+
+  - id: nikkei
+    name: Nikkei
+    symbol: NIY=F
+    group: indices
+
+  - id: hangseng
+    name: HangSeng
+    symbol: ^HSI
+    group: indices
+
+  - id: sp500
+    name: S&P500
+    symbol: ES=F
+    group: indices
+    ath:
+      symbol: ^GSPC
+      period: 10y
+      label: S&P500
+
+  - id: nasdaq100
+    name: Nasdaq100
+    symbol: NQ=F
+    group: indices
+
+  - id: dow
+    name: Dow
+    symbol: YM=F
+    group: indices
+
+  - id: eurusd
+    name: EURUSD
+    symbol: EURUSD=X
+    group: fx
+    price_decimals: 4
+
+  - id: dxy
+    name: DXY
+    symbol: DX-Y.NYB
+    group: fx
+
+  - id: vix
+    name: VIX
+    symbol: ^VIX
+    group: volatility
+
+  - id: wti
+    name: WTI
+    symbol: CL=F
+    group: commodities
+
+  - id: brent
+    name: Brent
+    symbol: BZ=F
+    group: commodities
+    ath:
+      symbol: BZ=F
+      period: 10y
+      label: Brent
+
+  - id: gold
+    name: Gold
+    symbol: GC=F
+    group: commodities
+    ath:
+      symbol: GC=F
+      period: 10y
+      label: Gold
+
+  - id: silver
+    name: Silver
+    symbol: SI=F
+    group: commodities
+
+  - id: btc
+    name: BTC
+    symbol: BTC-USD
+    group: crypto
+    ath:
+      symbol: BTC-USD
+      period: max
+      label: Bitcoin
+
+  - id: eth
+    name: ETH
+    symbol: ETH-USD
+    group: crypto

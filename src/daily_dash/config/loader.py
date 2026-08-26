@@ -7,7 +7,14 @@ import yaml
 from pydantic import ValidationError
 
 from daily_dash.config.errors import ConfigurationError
-from daily_dash.config.models import NewsProfile, NewsSourceSet
+from daily_dash.config.models import (
+    MarketSourceSet,
+    MarketsProfile,
+    NewsProfile,
+    NewsSourceSet,
+    Profile,
+    SourceSet,
+)
 
 
 def _read_yaml(path: Path) -> dict[str, object]:
@@ -28,19 +35,65 @@ def _read_yaml(path: Path) -> dict[str, object]:
     return cast(dict[str, object], raw)
 
 
-def load_news_profile(path: Path) -> NewsProfile:
+def load_profile(path: Path) -> Profile:
     raw = _read_yaml(path)
+    pipeline = raw.get("pipeline")
+
+    model: type[NewsProfile] | type[MarketsProfile]
+    if pipeline == "news":
+        model = NewsProfile
+    elif pipeline == "markets":
+        model = MarketsProfile
+    else:
+        raise ConfigurationError(f"unknown profile pipeline in {path}: {pipeline!r}")
 
     try:
-        return NewsProfile.model_validate(raw)
+        return model.model_validate(raw)
     except ValidationError as exc:
-        raise ConfigurationError(f"invalid news profile {path}: {exc}") from exc
+        raise ConfigurationError(f"invalid profile {path}: {exc}") from exc
+
+
+def load_source_set(path: Path) -> SourceSet:
+    raw = _read_yaml(path)
+    pipeline = raw.get("pipeline")
+
+    model: type[NewsSourceSet] | type[MarketSourceSet]
+    if pipeline == "news":
+        model = NewsSourceSet
+    elif pipeline == "markets":
+        model = MarketSourceSet
+    else:
+        raise ConfigurationError(f"unknown source-set pipeline in {path}: {pipeline!r}")
+
+    try:
+        return model.model_validate(raw)
+    except ValidationError as exc:
+        raise ConfigurationError(f"invalid source set {path}: {exc}") from exc
+
+
+def load_news_profile(path: Path) -> NewsProfile:
+    profile = load_profile(path)
+    if not isinstance(profile, NewsProfile):
+        raise ConfigurationError(f"expected news profile: {path}")
+    return profile
+
+
+def load_markets_profile(path: Path) -> MarketsProfile:
+    profile = load_profile(path)
+    if not isinstance(profile, MarketsProfile):
+        raise ConfigurationError(f"expected markets profile: {path}")
+    return profile
 
 
 def load_news_source_set(path: Path) -> NewsSourceSet:
-    raw = _read_yaml(path)
+    source_set = load_source_set(path)
+    if not isinstance(source_set, NewsSourceSet):
+        raise ConfigurationError(f"expected news source set: {path}")
+    return source_set
 
-    try:
-        return NewsSourceSet.model_validate(raw)
-    except ValidationError as exc:
-        raise ConfigurationError(f"invalid news source set {path}: {exc}") from exc
+
+def load_market_source_set(path: Path) -> MarketSourceSet:
+    source_set = load_source_set(path)
+    if not isinstance(source_set, MarketSourceSet):
+        raise ConfigurationError(f"expected market source set: {path}")
+    return source_set
