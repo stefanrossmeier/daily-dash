@@ -69,8 +69,7 @@ RETRIEVAL               RETRIEVAL
 Every executable step should look conceptually like this:
 
 ```python
-def main(input: StepInput) -> StepOutput:
-    ...
+def main(input: StepInput) -> StepOutput: ...
 ```
 
 Inputs and outputs are Pydantic models serializable to JSON. Large data is never passed through orchestration JSON; it is passed by object-store reference.

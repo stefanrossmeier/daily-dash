@@ -82,9 +82,7 @@ class NewsProfile(BaseModel):
     @model_validator(mode="after")
     def validate_pipeline_limits(self) -> Self:
         if self.presentation.max_items > self.ranking.top_k:
-            raise ValueError(
-                "presentation.max_items must not exceed ranking.top_k"
-            )
+            raise ValueError("presentation.max_items must not exceed ranking.top_k")
         return self
 
 

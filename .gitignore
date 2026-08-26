@@ -47,3 +47,10 @@ temp/
 .vscode/
 *.swp
 *.swo
+
+# Build artifacts
+dist/
+build/
+
+# Local repository archives
+/*.zip

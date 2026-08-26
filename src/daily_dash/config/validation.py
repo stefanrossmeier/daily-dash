@@ -29,14 +29,10 @@ def validate_config_tree(config_dir: Path) -> ConfigValidationResult:
     sources_dir = config_dir / "sources"
 
     if not profiles_dir.is_dir():
-        raise ConfigurationError(
-            f"profiles directory not found: {profiles_dir}"
-        )
+        raise ConfigurationError(f"profiles directory not found: {profiles_dir}")
 
     if not sources_dir.is_dir():
-        raise ConfigurationError(
-            f"sources directory not found: {sources_dir}"
-        )
+        raise ConfigurationError(f"sources directory not found: {sources_dir}")
 
     profiles = {}
     source_sets = {}
@@ -46,14 +42,11 @@ def validate_config_tree(config_dir: Path) -> ConfigValidationResult:
 
         if path.stem != profile.profile_id:
             raise ConfigurationError(
-                f"profile filename '{path.stem}' does not match "
-                f"profile_id '{profile.profile_id}'"
+                f"profile filename '{path.stem}' does not match profile_id '{profile.profile_id}'"
             )
 
         if profile.profile_id in profiles:
-            raise ConfigurationError(
-                f"duplicate profile id: {profile.profile_id}"
-            )
+            raise ConfigurationError(f"duplicate profile id: {profile.profile_id}")
 
         profiles[profile.profile_id] = profile
 
@@ -67,9 +60,7 @@ def validate_config_tree(config_dir: Path) -> ConfigValidationResult:
             )
 
         if source_set.source_set_id in source_sets:
-            raise ConfigurationError(
-                f"duplicate source set id: {source_set.source_set_id}"
-            )
+            raise ConfigurationError(f"duplicate source set id: {source_set.source_set_id}")
 
         source_sets[source_set.source_set_id] = source_set
 

@@ -48,3 +48,14 @@ select = [
 python_version = "3.12"
 strict = true
 packages = ["daily_dash"]
+
+[tool.uv]
+required-version = ">=0.11.17,<0.12"
+
+[tool.coverage.run]
+branch = true
+source = ["daily_dash"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
