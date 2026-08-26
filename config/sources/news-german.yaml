@@ -1,0 +1,12 @@
+schema_version: 1
+source_set_id: news-german
+
+sources:
+  - id: placeholder-german
+    name: Placeholder German News Feed
+    kind: rss
+    url: https://example.com/german-news.xml
+    enabled: false
+    weight: 1.0
+    tags:
+      - placeholder

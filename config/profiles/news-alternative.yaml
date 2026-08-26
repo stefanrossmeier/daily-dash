@@ -1,0 +1,25 @@
+schema_version: 1
+profile_id: news-alternative
+pipeline: news
+
+source_set: news-alternative
+
+retrieval:
+  lookback_hours: 24
+  max_items_per_source: 50
+
+keywords:
+  include: []
+  exclude: []
+
+ranking:
+  prefilter_limit: 40
+  top_k: 10
+  llm_enabled: true
+  model_alias: rank-cheap
+  min_score: 0.50
+
+presentation:
+  title: Alternative News
+  language: en
+  max_items: 10

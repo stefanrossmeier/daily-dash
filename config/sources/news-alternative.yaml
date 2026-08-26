@@ -1,0 +1,12 @@
+schema_version: 1
+source_set_id: news-alternative
+
+sources:
+  - id: placeholder-alternative
+    name: Placeholder Alternative News Feed
+    kind: rss
+    url: https://example.com/alternative-news.xml
+    enabled: false
+    weight: 1.0
+    tags:
+      - placeholder

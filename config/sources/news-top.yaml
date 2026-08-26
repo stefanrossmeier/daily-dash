@@ -1,0 +1,12 @@
+schema_version: 1
+source_set_id: news-top
+
+sources:
+  - id: placeholder-top
+    name: Placeholder Top News Feed
+    kind: rss
+    url: https://example.com/top-news.xml
+    enabled: false
+    weight: 1.0
+    tags:
+      - placeholder
