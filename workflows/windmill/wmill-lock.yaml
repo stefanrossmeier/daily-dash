@@ -1,3 +1,4 @@
 version: v2
 locks:
+  f/daily_dash/persist_data_repo: e4dc9510ecaf8b1c5763d8fc377840ea97fcf0074b56ce387c4940c2716610fc
   f/daily_dash/run_markets: 8c31788ad48644d94dd9b663bc259d019d434b4a1cf160fd1421dd192cef2b1a

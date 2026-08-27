@@ -67,3 +67,13 @@ workflows/windmill/CLAUDE.md
 
 # Temporary local Windmill secret specifications
 .windmill-tmp/
+
+# Windmill-generated AI assistant context
+workflows/windmill/.agents/
+workflows/windmill/.claude/
+workflows/windmill/AGENTS.md
+workflows/windmill/AGENTS.cli.md
+workflows/windmill/AGENTS.wmill.md
+
+# Temporary local Windmill secret specifications
+.windmill-tmp/

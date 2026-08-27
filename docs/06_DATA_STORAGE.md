@@ -142,3 +142,15 @@ A later migration may replace it with:
 
 Retrieval, processing and presentation should not require changes when the
 storage implementation changes.
+
+## Automated Git persistence
+
+Generated runtime data is automatically committed and pushed after a
+successful pipeline run.
+
+Git persistence is implemented as a reusable Windmill orchestration step and
+is intentionally separate from pipeline business logic.
+
+See:
+
+    docs/07_GIT_DATA_PERSISTENCE.md

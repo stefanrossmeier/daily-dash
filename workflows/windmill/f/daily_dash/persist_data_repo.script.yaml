@@ -1,0 +1,41 @@
+summary: ''
+description: ''
+lock: ''
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    branch:
+      type: string
+      description: ''
+      default: main
+      originalType: string
+    commit_message:
+      type: string
+      description: ''
+      default: 'data: persist generated data'
+      originalType: string
+    data_path:
+      type: string
+      description: ''
+      default: null
+      originalType: string
+    deploy_key:
+      type: string
+      description: ''
+      default: null
+      originalType: string
+    remote_url:
+      type: string
+      description: ''
+      default: git@github.com:stefanrossmeier/daily-dash-data.git
+      originalType: string
+    repo_path:
+      type: string
+      description: ''
+      default: /data/daily-dash-data
+      originalType: string
+  required:
+    - deploy_key
+    - data_path
