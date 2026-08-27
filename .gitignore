@@ -54,3 +54,16 @@ build/
 
 # Local repository archives
 /*.zip
+
+# Node tooling
+node_modules/
+
+# Windmill-generated AI assistant context
+workflows/windmill/.agents/
+workflows/windmill/.claude/
+workflows/windmill/AGENTS.cli.md
+workflows/windmill/AGENTS.md
+workflows/windmill/CLAUDE.md
+
+# Temporary local Windmill secret specifications
+.windmill-tmp/

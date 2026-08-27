@@ -1,0 +1,32 @@
+# Windmill definitions versioned with DailyDash.
+#
+# Secrets, variables, resources, users and workspace settings are intentionally
+# excluded from Git synchronization.
+
+defaultTs: bun
+
+includes:
+  - "f/**"
+
+excludes: []
+
+skipVariables: true
+skipResources: true
+skipResourceTypes: true
+skipSecrets: true
+
+includeSchedules: false
+includeTriggers: false
+includeUsers: false
+includeGroups: false
+includeSettings: false
+includeKey: false
+
+nonDottedPaths: true
+syncBehavior: v1
+
+workspaces:
+  daily-dash-local:
+    baseUrl: http://localhost
+    workspaceId: daily-dash-workspace
+    gitBranch: main

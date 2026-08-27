@@ -8,6 +8,7 @@ from pydantic import ValidationError
 from daily_dash.config import (
     ConfigurationError,
     TelegramSettings,
+    default_config_dir,
     load_market_source_set,
     load_markets_profile,
     validate_config_tree,
@@ -16,6 +17,7 @@ from daily_dash.contracts import DeliveryStatus
 from daily_dash.delivery.telegram import TelegramDelivery
 from daily_dash.pipelines.markets import run_markets
 from daily_dash.retrieval.markets import YahooFinanceRetriever
+from daily_dash.storage import JsonFileMarketSnapshotStore
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -33,7 +35,7 @@ def build_parser() -> argparse.ArgumentParser:
     validate_parser.add_argument(
         "--config-dir",
         type=Path,
-        default=Path("config"),
+        default=default_config_dir(),
         help="configuration directory",
     )
 
@@ -44,13 +46,19 @@ def build_parser() -> argparse.ArgumentParser:
     markets_parser.add_argument(
         "--config-dir",
         type=Path,
-        default=Path("config"),
+        default=default_config_dir(),
         help="configuration directory",
     )
     markets_parser.add_argument(
         "--profile",
         default="markets",
         help="markets profile id",
+    )
+    markets_parser.add_argument(
+        "--data-repo",
+        type=Path,
+        default=None,
+        help="optional DailyDash data repository path",
     )
     markets_parser.add_argument(
         "--delivery",
@@ -84,7 +92,16 @@ def _run_markets(args: argparse.Namespace, parser: argparse.ArgumentParser) -> N
     except ConfigurationError as exc:
         parser.exit(status=1, message=f"Configuration invalid: {exc}\n")
 
-    artifact = run_markets(profile, source_set, YahooFinanceRetriever())
+    snapshot_store = (
+        JsonFileMarketSnapshotStore(args.data_repo) if args.data_repo is not None else None
+    )
+
+    artifact = run_markets(
+        profile,
+        source_set,
+        YahooFinanceRetriever(),
+        snapshot_store=snapshot_store,
+    )
 
     if args.delivery == "stdout":
         print(artifact.content)

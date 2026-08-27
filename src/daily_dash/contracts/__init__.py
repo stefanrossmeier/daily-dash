@@ -8,6 +8,7 @@ from daily_dash.contracts.common import (
 from daily_dash.contracts.market import (
     MarketGroup,
     MarketReportData,
+    MarketSnapshotDocument,
     ProcessedMarketAsset,
     RawMarketAsset,
     RawMarketSnapshot,
@@ -27,6 +28,7 @@ __all__ = [
     "JsonValue",
     "MarketGroup",
     "MarketReportData",
+    "MarketSnapshotDocument",
     "ModelCall",
     "ProcessedMarketAsset",
     "RankedBatch",

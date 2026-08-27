@@ -1,0 +1,32 @@
+summary: Run DailyDash Markets
+description: Execute the DailyDash markets pipeline with snapshot persistence
+  and optional Telegram delivery.
+lock: ''
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    data_repo:
+      type: string
+      description: ''
+      default: /data/daily-dash-data
+      originalType: string
+    delivery:
+      type: string
+      description: ''
+      default: telegram
+      originalType: string
+    telegram_chat_id:
+      type: string
+      description: ''
+      default: null
+      originalType: string
+    telegram_token:
+      type: string
+      description: ''
+      default: null
+      originalType: string
+  required:
+    - telegram_token
+    - telegram_chat_id

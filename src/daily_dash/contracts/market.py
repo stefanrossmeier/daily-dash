@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -77,3 +78,15 @@ class MarketReportData(BaseModel):
     generated_at: datetime
     assets: list[ProcessedMarketAsset]
     issues: list[str] = Field(default_factory=list)
+
+
+class MarketSnapshotDocument(BaseModel):
+    """Versioned document persisted for one markets pipeline run."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    schema_version: Literal[1] = 1
+    pipeline: Literal["markets"] = "markets"
+
+    raw: RawMarketSnapshot
+    report: MarketReportData

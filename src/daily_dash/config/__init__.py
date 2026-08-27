@@ -23,6 +23,7 @@ from daily_dash.config.models import (
     RssSourceConfig,
     SourceSet,
 )
+from daily_dash.config.paths import default_config_dir
 from daily_dash.config.settings import TelegramSettings
 from daily_dash.config.validation import ConfigValidationResult, validate_config_tree
 
@@ -50,5 +51,6 @@ __all__ = [
     "load_news_source_set",
     "load_profile",
     "load_source_set",
+    "default_config_dir",
     "validate_config_tree",
 ]

@@ -1,0 +1,10 @@
+{
+  "name": "daily-dash-tools",
+  "private": true,
+  "engines": {
+    "node": ">20"
+  },
+  "devDependencies": {
+    "windmill-cli": "1.775.1"
+  }
+}
