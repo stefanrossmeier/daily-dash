@@ -73,7 +73,7 @@ def deduplicate_news_items(items: list[SourceItem]) -> list[SourceItem]:
     return result
 
 
-def source_neutral_prefilter(
+def source_neutral_candidate_cap(
     items: list[SourceItem],
     *,
     limit: int,
@@ -81,7 +81,7 @@ def source_neutral_prefilter(
     """Cap candidates without using publisher identity or source weights."""
 
     if limit < 1:
-        raise ValueError("prefilter limit must be positive")
+        raise ValueError("candidate limit must be positive")
 
     ordered = sorted(
         items,
@@ -186,6 +186,7 @@ def select_distinct_events(
     *,
     limit: int,
     eligible_only: bool = False,
+    selected_only: bool = False,
 ) -> tuple[
     list[str],
     list[NewsDuplicateSuppression],
@@ -259,7 +260,12 @@ def select_distinct_events(
 
     # ranking.ranking is already ordered by the active ranking policy.
     for item_id in ranking.ranking:
-        if eligible_only and not evaluations[item_id].selection_eligible:
+        evaluation = evaluations[item_id]
+
+        if eligible_only and not evaluation.selection_eligible:
+            continue
+
+        if selected_only and not evaluation.selected:
             continue
 
         group = find(item_id)

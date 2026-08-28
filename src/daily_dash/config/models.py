@@ -124,26 +124,12 @@ class PromptRefConfig(BaseModel):
     )
 
 
-class ScreeningConfig(BaseModel):
-    """Lightweight semantic screen used before the rich Top-News ranking."""
-
-    model_config = ConfigDict(extra="forbid", frozen=True)
-
-    enabled: bool = True
-    batch_size: int = Field(default=25, ge=5, le=50)
-    finalist_limit: int = Field(default=30, ge=1, le=100)
-    model_alias: str = Field(default="rank-cheap", min_length=1)
-    prompt: PromptRefConfig = Field(
-        default_factory=lambda: PromptRefConfig(id="news-screening", version="v1")
-    )
-
-
 class RankingConfig(BaseModel):
-    """Candidate reduction and semantic ranking configuration."""
+    """Deterministic candidate cap and semantic ranking configuration."""
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    prefilter_limit: int = Field(default=40, ge=1, le=500)
+    candidate_limit: int = Field(default=150, ge=1, le=500)
     top_k: int = Field(default=10, ge=1, le=100)
 
     llm_enabled: bool = True
@@ -154,14 +140,11 @@ class RankingConfig(BaseModel):
     )
 
     min_score: float = Field(default=0.5, ge=0.0, le=1.0)
-    screening: ScreeningConfig | None = None
 
     @model_validator(mode="after")
     def validate_limits(self) -> Self:
-        if self.top_k > self.prefilter_limit:
-            raise ValueError("top_k must not exceed prefilter_limit")
-        if self.screening is not None and self.screening.finalist_limit > self.prefilter_limit:
-            raise ValueError("screening finalist_limit must not exceed prefilter_limit")
+        if self.top_k > self.candidate_limit:
+            raise ValueError("top_k must not exceed candidate_limit")
         return self
 
 

@@ -27,7 +27,7 @@ class _Response:
         }
 
 
-def test_model_gateway_client_default_timeout_covers_single_retry(
+def test_model_gateway_client_default_timeout_covers_two_retries(
     monkeypatch: Any,
 ) -> None:
     observed_timeout: float | None = None
@@ -52,4 +52,4 @@ def test_model_gateway_client_default_timeout_covers_single_retry(
         response_schema={"type": "object"},
     )
 
-    assert observed_timeout == 390.0
+    assert observed_timeout == 600.0

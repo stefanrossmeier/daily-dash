@@ -25,7 +25,6 @@ from daily_dash.config.models import (
     RssSourceConfig,
     ScheduleRegistry,
     ScheduleWindowConfig,
-    ScreeningConfig,
     SourceSet,
 )
 from daily_dash.config.paths import default_config_dir
@@ -51,7 +50,6 @@ __all__ = [
     "RssSourceConfig",
     "ScheduleRegistry",
     "ScheduleWindowConfig",
-    "ScreeningConfig",
     "SourceSet",
     "TelegramSettings",
     "load_market_source_set",

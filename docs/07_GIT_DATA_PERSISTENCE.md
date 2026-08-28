@@ -127,30 +127,23 @@ News will use the same persistence mechanism.
 
 Conceptually:
 
-    Retrieve
+    Retrieve / rank / select
         |
         v
-    Normalize
-        |
-        v
-    Deterministic prefilter
-        |
-        v
-    Rank
-        |
-        v
-    LLM processing
-        |
-        v
-    Write artifacts
-        |
-        v
-    Deliver report
+    Write immutable run artifact
         |
         v
     persist_data_repo
+        |
+        v
+    Deliver Telegram report
 
-The News flow will provide a different `data_path` and commit message, but no
+The persisted run artifact contains the complete normalized retrieval result,
+the ranked candidate set and the final selected IDs. The data repository is a
+write-only output sink: News scheduling, retrieval, ranking and selection do not
+read prior artifacts as workflow state.
+
+The News flow provides a profile-specific `data_path` and commit message, but no
 new Git persistence implementation is required.
 
 This keeps storage mechanics independent from ranking and model behavior.

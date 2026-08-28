@@ -6,8 +6,10 @@ import httpx
 
 from daily_dash.contracts import DeliveryResult, DeliveryStatus, ReportArtifact
 
+TELEGRAM_SAFE_MESSAGE_LIMIT = 3800
 
-def split_markdown_message(text: str, limit: int = 4000) -> list[str]:
+
+def split_markdown_message(text: str, limit: int = TELEGRAM_SAFE_MESSAGE_LIMIT) -> list[str]:
     """Split markdown on paragraph boundaries while keeping messages below Telegram's limit."""
 
     sections = text.split("\n\n")

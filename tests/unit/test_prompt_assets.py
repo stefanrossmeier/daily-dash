@@ -182,6 +182,38 @@ def test_load_news_ranking_v8_prompt_is_headline_only_and_policy_aware() -> None
     assert len(prompt.combined_sha256) == 64
 
 
+def test_load_news_ranking_v9_prompt_defines_final_selection_discipline() -> None:
+    top = load_prompt_asset(
+        "news-ranking",
+        "v9",
+        "news-top",
+        assets_dir=_ASSETS_DIR,
+    )
+    alternative = load_prompt_asset(
+        "news-ranking",
+        "v9",
+        "news-alternative",
+        assets_dir=_ASSETS_DIR,
+    )
+    german = load_prompt_asset(
+        "news-ranking",
+        "v9",
+        "news-german",
+        assets_dir=_ASSETS_DIR,
+    )
+
+    normalized_system = " ".join(top.system.split())
+    normalized_alternative = " ".join(alternative.profile_text.split())
+    normalized_german = " ".join(german.profile_text.split())
+
+    assert top.version == "v9"
+    assert "independently deserves publication" in normalized_system
+    assert "Do not target a fixed number" in normalized_system
+    assert "Alternative value is a bonus only after financial materiality" in normalized_alternative
+    assert "German relevance can raise the value" in normalized_german
+    assert len(top.combined_sha256) == 64
+
+
 def test_load_news_screening_v1_prompt() -> None:
     prompt = load_prompt_asset(
         "news-screening",
@@ -195,3 +227,44 @@ def test_load_news_screening_v1_prompt() -> None:
     assert "Publisher, URL" in prompt.system
     assert "Top News Screening" in prompt.profile_text
     assert len(prompt.combined_sha256) == 64
+
+
+def test_load_news_ranking_v10_prompt_biases_selection_toward_recall() -> None:
+    top = load_prompt_asset(
+        "news-ranking",
+        "v10",
+        "news-top",
+        assets_dir=_ASSETS_DIR,
+    )
+    alternative = load_prompt_asset(
+        "news-ranking",
+        "v10",
+        "news-alternative",
+        assets_dir=_ASSETS_DIR,
+    )
+    german = load_prompt_asset(
+        "news-ranking",
+        "v10",
+        "news-german",
+        assets_dir=_ASSETS_DIR,
+    )
+
+    normalized_system = " ".join(top.system.split())
+    normalized_top = " ".join(top.profile_text.split())
+    normalized_alternative = " ".join(alternative.profile_text.split())
+    normalized_german = " ".join(german.profile_text.split())
+
+    assert top.version == "v10"
+    assert "selection decision is deliberately recall-oriented" in normalized_system
+    assert "Missing a materially useful story is worse" in normalized_system
+    assert (
+        "materially decision-relevant Tier 3 stories should generally remain selected"
+        in normalized_system
+    )
+    assert "it is not a macro-only feed" in normalized_top
+    assert "changes ranking emphasis more than eligibility" in normalized_alternative
+    assert (
+        "German relevance is a ranking advantage, not an eligibility requirement"
+        in normalized_german
+    )
+    assert len(top.combined_sha256) == 64

@@ -7,7 +7,7 @@ from daily_dash.processing.news import (
     apply_top_market_policy,
     canonical_url,
     deduplicate_news_items,
-    source_neutral_prefilter,
+    source_neutral_candidate_cap,
     top_market_selection_score,
 )
 
@@ -67,23 +67,23 @@ def test_dedupe_by_canonical_url_or_title() -> None:
     assert [item.id for item in deduplicate_news_items(items)] == ["a"]
 
 
-def test_source_neutral_prefilter_uses_recency_not_source_identity() -> None:
+def test_source_neutral_candidate_cap_uses_recency_not_source_identity() -> None:
     items = [
         _item("a-old", "a", "A old", "https://x.test/a-old", 10),
         _item("b-new", "b", "B new", "https://x.test/b-new", 1),
         _item("a-new", "a", "A new", "https://x.test/a-new", 2),
     ]
 
-    result = source_neutral_prefilter(items, limit=2)
+    result = source_neutral_candidate_cap(items, limit=2)
 
     assert [item.id for item in result] == ["b-new", "a-new"]
 
 
-def test_source_neutral_prefilter_rejects_non_positive_limit() -> None:
+def test_source_neutral_candidate_cap_rejects_non_positive_limit() -> None:
     import pytest
 
-    with pytest.raises(ValueError, match="prefilter limit"):
-        source_neutral_prefilter([], limit=0)
+    with pytest.raises(ValueError, match="candidate limit"):
+        source_neutral_candidate_cap([], limit=0)
 
 
 def _evaluation(

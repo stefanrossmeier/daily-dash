@@ -2,9 +2,9 @@
 
 ## Status
 
-News v1 implements live RSS/Atom retrieval, deterministic hygiene,
-source-balanced candidate reduction, versioned LLM ranking, and immutable JSON
-run artifacts.
+News implements live RSS/Atom retrieval, deterministic hygiene, a shared
+source-neutral candidate cap, one versioned rich LLM ranking call, deterministic
+selection, and immutable JSON run artifacts.
 
 Telegram delivery and Windmill scheduling are wired after live ranking behavior
 has been inspected.
@@ -45,25 +45,22 @@ to determine semantic importance. Tags are descriptive metadata only.
     URL/title deduplication
           |
           v
-    source-balanced prefilter
+    source-neutral candidate cap (max 150)
           |
           v
-    versioned prompt asset
+    one versioned rich ranking call
           |
           v
-    model gateway
-          |
-          v
-    OpenRouter
+    model gateway (same-model retries only)
           |
           v
     structured ranking
           |
           v
-    deterministic final top-k
+    deterministic selection / event suppression
           |
           v
-    immutable JSON artifact
+    immutable JSON output sink
 
 ## Keywords
 
@@ -71,24 +68,25 @@ Production News v1 performs no positive keyword ranking. Keyword arrays remain
 empty so a legacy keyword baseline can later be implemented as an evaluation
 mode against the LLM ranker.
 
-The deterministic prefilter performs no semantic keyword scoring.
+The deterministic candidate cap performs no semantic keyword scoring.
 
-## Source-balanced prefilter
+## Source-neutral candidate cap
 
-A high-volume feed must not consume the entire model context. Candidates are
-sorted by recency within each source and selected round-robin across configured
-sources until `ranking.prefilter_limit` is reached.
+All three News profiles use the same `ranking.candidate_limit` of 150. After
+URL/title deduplication, candidates are ordered deterministically by recency and
+internal ID and capped only if the deduplicated pool exceeds that limit.
 
-This is capacity control, not an importance score. The LLM decides semantic
-importance.
+Publisher identity and source weights do not influence the cap. This is capacity
+control, not an importance score. Under normal feed volume no truncation is
+expected.
 
 ## Versioned prompts
 
-Prompts live under:
+The current prompt lives under:
 
-    assets/prompts/news-ranking/v1/
+    assets/prompts/news-ranking/v9/
 
-Profiles reference the prompt by ID and version. Every run records prompt ID,
+Older versions remain checked in for reproducibility. Profiles reference the prompt by ID and version. Every run records prompt ID,
 version, profile, and SHA-256 hashes for the system, profile, and combined
 prompt text.
 
@@ -98,26 +96,39 @@ News uses only the configured model alias, initially `rank-cheap`. Provider
 model IDs and the OpenRouter credential remain behind the model gateway.
 
 The ranker captures resolved model, provider, generation ID, token usage, exact
-reported cost, and latency.
+reported cost, latency, logical call count, provider attempt count and retries.
+
+A normal News run performs exactly one logical model call. `rank-cheap` allows
+one initial provider attempt plus at most two retries of the same model. There is
+no application-level second full ranking/repair request.
 
 ## Ranking output
 
-Every candidate receives:
+Prompt v9 evaluates every opaque candidate slot exactly once and returns:
 
-- tier;
+- `rank_score`;
+- `event_key` and `duplicate_of_slot`;
+- tier and priority;
 - relevance;
-- market impact;
+- market impact and market breadth;
 - surprise;
 - information quality;
 - novelty;
-- selection recommendation;
-- rationale.
+- `selected`;
+- one concise rationale.
 
-The model must also return every candidate ID exactly once in an ordered
-ranking. DailyDash validates complete coverage and then selects the first
-`presentation.max_items` IDs deterministically.
+The model does not reproduce internal candidate IDs or article URLs. DailyDash
+resolves slots back to the original candidates, constructs a deterministic
+ordering from the returned judgments and suppresses duplicate event coverage.
+For Alternative and German, `selected=false` is ineligible for publication. Top
+keeps its additional transparent broad-market eligibility policy. No profile is
+forced to fill `presentation.max_items`.
 
 ## Storage
+
+Persistence is a write-only output sink for the News run. Retrieval, schedule
+resolution, candidate selection and ranking do not read prior persisted News
+artifacts or use persistence as control state.
 
 Run artifacts are written to the private data repository:
 
@@ -154,7 +165,7 @@ CI is deterministic and internet-independent. It tests:
 - HTML cleanup;
 - URL canonicalization;
 - title/URL deduplication;
-- source-balanced candidate selection;
+- source-neutral candidate capping;
 - gateway ranker behavior with a fake structured client;
 - prompt/model/cost trace capture;
 - storage paths.
@@ -170,38 +181,32 @@ With the model gateway reachable:
 
 Run the equivalent command for `news-alternative` and `news-german`.
 
-## Next milestone
+## Windmill and delivery
 
-After inspecting live rankings, the same pipeline will receive Telegram
-presentation/delivery and three Windmill flows reusing `persist_data_repo`.
+The same application pipeline is used by Top, Alternative and German. Windmill
+orchestrates run -> persistence -> Telegram. Persistence is a sink only; it is
+not consulted to determine retrieval windows, ranking inputs or later run
+behavior.
 
-## Semantic output validation and repair
+## Semantic output validation and retry ownership
 
-Provider structured-output validation guarantees JSON structure but does not
-guarantee cross-item semantic invariants such as candidate-ID uniqueness.
+Provider structured-output validation guarantees JSON structure but DailyDash
+still validates local cross-item invariants such as slot coverage and duplicate
+references.
 
-DailyDash therefore validates ranking responses locally.
+The production rule is deliberately simple:
 
-A valid News ranking must:
+- DailyDash sends one complete rich-ranking request;
+- the model gateway owns transient provider retries;
+- `rank-cheap` permits one initial attempt plus at most two same-model retries;
+- a response that reaches DailyDash but fails local semantic validation fails the
+  run explicitly;
+- DailyDash does not issue a second full ranking request to repair it.
 
-- contain every candidate exactly once in `evaluations`;
-- contain every candidate exactly once in `ranking`;
-- contain no unknown candidate IDs;
-- satisfy the typed score and tier constraints.
-
-If the first model response violates these invariants, DailyDash performs one
-bounded repair attempt.
-
-The repair request includes:
-
-- the validation error;
-- the exact expected candidate IDs;
-- explicit instructions not to omit or duplicate IDs.
-
-A second invalid response fails the run rather than silently repairing,
-dropping, or inventing ranking entries.
-
-The successful run trace records the number of model attempts used.
+The persisted model summary distinguishes `calls`, `attempts` and `retries`, so
+a normal run is `1 / 1 / 0`, while a successful request after two gateway retries
+is `1 / 3 / 2`. If a failed provider attempt prevents authoritative usage from
+being known, `usage_complete` remains false rather than claiming exact cost.
 
 ## Ranking output contract v2
 
@@ -362,6 +367,18 @@ existing Windmill Telegram secrets.
 
 Keeping persistence before delivery ensures that a successful Telegram report
 has a durable audit artifact in `daily-dash-data` first.
+
+Each immutable News run artifact contains both sides of the output contract:
+
+- `retrieved_items`: the complete normalized retrieval result for the resolved
+  time window, before deterministic deduplication or the candidate cap;
+- `candidates`: the deduplicated/capped items actually presented to ranking;
+- `ranking`: the full model evaluation and ranking for those candidates;
+- `selected_ids`: the ordered final selection used for presentation.
+
+This makes `daily-dash-data` a complete write-only audit sink. Production News
+execution never reads earlier persisted runs to determine retrieval windows,
+ranking, selection, or delivery.
 
 ## Canonical event identity — ranking v4
 

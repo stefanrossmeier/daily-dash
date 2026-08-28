@@ -21,9 +21,9 @@ from daily_dash.processing.news import (
     apply_top_market_policy,
     deduplicate_news_items,
     select_distinct_events,
-    source_neutral_prefilter,
+    source_neutral_candidate_cap,
 )
-from daily_dash.ranking.news import GatewayNewsRanker, GatewayNewsScreener
+from daily_dash.ranking.news import GatewayNewsRanker, uses_profile_selection_contract
 from daily_dash.retrieval.rss import retrieve_source_set
 from daily_dash.scheduling import resolve_schedule_window
 from daily_dash.storage.news import JsonNewsRunStore
@@ -43,6 +43,7 @@ def _model_summary(traces: list[NewsRankingTrace]) -> NewsModelSummary:
         latency_ms=sum(trace.latency_ms for trace in traces),
         calls=len(traces),
         attempts=sum(trace.attempts for trace in traces),
+        retries=sum(max(trace.attempts - 1, 0) for trace in traces),
         usage_complete=all(trace.usage_complete for trace in traces),
     )
 
@@ -84,9 +85,9 @@ def run_news_pipeline(
         raise RuntimeError(f"all enabled news sources failed for {profile_id}")
 
     deduplicated = deduplicate_news_items(retrieved)
-    candidates = source_neutral_prefilter(
+    candidates = source_neutral_candidate_cap(
         deduplicated,
-        limit=profile.ranking.prefilter_limit,
+        limit=profile.ranking.candidate_limit,
     )
 
     if not candidates:
@@ -94,23 +95,13 @@ def run_news_pipeline(
 
     run_id = uuid4().hex
     client = ModelGatewayClient(gateway_url)
-    screening = None
-    screening_traces: list[NewsRankingTrace] = []
-    ranking_candidates = candidates
-
-    uses_top_market_policy = (
-        profile.profile_id == "news-top" and profile.ranking.prompt.version == "v8"
-    )
-    if uses_top_market_policy and profile.ranking.screening is not None:
-        screening, screening_traces, ranking_candidates = GatewayNewsScreener(client).screen(
-            candidates,
-            profile,
-        )
+    uses_modern_selection = uses_profile_selection_contract(profile.ranking.prompt.version)
+    uses_top_market_policy = profile.profile_id == "news-top" and uses_modern_selection
 
     batch = CandidateBatch(
         run_id=run_id,
         profile=profile_id,
-        items=ranking_candidates,
+        items=candidates,
     )
     ranking, trace = GatewayNewsRanker(client).rank(batch, profile)
 
@@ -124,21 +115,23 @@ def run_news_pipeline(
         ranking,
         limit=profile.presentation.max_items,
         eligible_only=uses_top_market_policy,
+        selected_only=(uses_modern_selection and not uses_top_market_policy),
     )
-    model_summary = _model_summary([*screening_traces, trace])
+    model_summary = _model_summary([trace])
     document = NewsRunDocument(
         run_id=run_id,
         profile=profile_id,
         retrieved_at=now,
         retrieval_window=retrieval_window,
         source_diagnostics=diagnostics,
+        retrieved_items=retrieved,
         retrieved_count=len(retrieved),
         deduplicated_count=len(deduplicated),
         candidate_count=len(candidates),
-        finalist_count=len(ranking_candidates),
+        finalist_count=len(candidates),
         candidates=candidates,
-        screening=screening,
-        screening_traces=screening_traces,
+        screening=None,
+        screening_traces=[],
         ranking=ranking,
         ranking_trace=trace,
         model_summary=model_summary,

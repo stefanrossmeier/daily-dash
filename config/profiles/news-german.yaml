@@ -13,16 +13,16 @@ keywords:
   exclude: []
 
 ranking:
-  prefilter_limit: 60
-  top_k: 12
+  candidate_limit: 150
+  top_k: 20
   llm_enabled: true
   model_alias: rank-cheap
   prompt:
     id: news-ranking
-    version: v5
+    version: v10
   min_score: 0.50
 
 presentation:
   title: German News
   language: de
-  max_items: 12
+  max_items: 20

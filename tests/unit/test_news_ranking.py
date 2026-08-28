@@ -1,6 +1,8 @@
 from datetime import UTC, datetime
 from pathlib import Path
 
+import pytest
+
 from daily_dash.config.loader import load_news_profile
 from daily_dash.contracts.common import SourceKind
 from daily_dash.contracts.source import CandidateBatch, SourceItem
@@ -28,6 +30,7 @@ def _candidate(item_id: str, title: str) -> SourceItem:
 class FakeGateway:
     def __init__(self) -> None:
         self.user = ""
+        self.calls = 0
 
     def chat_structured(
         self,
@@ -41,8 +44,9 @@ class FakeGateway:
         response_schema: dict[str, object],
     ) -> GatewayResponse:
         del purpose, profile, system, response_schema
+        self.calls += 1
         self.user = user
-        assert response_schema_name == "daily_dash_news_ranking_v8"
+        assert response_schema_name == "daily_dash_news_ranking_v10"
         return GatewayResponse(
             alias=alias,
             provider="openrouter",
@@ -111,7 +115,8 @@ def test_ranker_preserves_raw_llm_rank_score_order_before_top_policy() -> None:
     # GatewayNewsRanker preserves the raw LLM ordering. The Top pipeline
     # applies its deterministic market policy after this ranking step.
     assert content.ranking == ["two", "one"]
-    assert trace.prompt_version == "v8"
+    assert trace.prompt_version == "v10"
+    assert gateway.calls == 1
     assert trace.attempts == 1
 
 
@@ -137,6 +142,29 @@ def test_model_input_excludes_original_article_urls() -> None:
     assert '"summary"' not in gateway.user
     assert '"published_at"' not in gateway.user
     assert '"headline": "Emergency rate cut"' in gateway.user
+
+
+def test_all_news_profiles_use_v10_with_profile_neutral_selection_instruction() -> None:
+    for profile_id in ("news-top", "news-alternative", "news-german"):
+        profile = load_news_profile(_REPO_ROOT / "config" / "profiles" / f"{profile_id}.yaml")
+        gateway = FakeGateway()
+
+        _, trace = GatewayNewsRanker(gateway).rank(
+            CandidateBatch(
+                run_id=f"{profile_id}-v10-test",
+                profile=profile_id,
+                items=[
+                    _candidate("one", "Emergency rate cut"),
+                    _candidate("two", "Market plumbing change"),
+                ],
+            ),
+            profile,
+        )
+
+        assert trace.prompt_version == "v10"
+        assert gateway.calls == 1
+        assert "this news profile" in gateway.user
+        assert "Top-News consideration" not in gateway.user
 
 
 def test_v6_schema_requires_rank_score_event_key_and_market_breadth() -> None:
@@ -176,7 +204,7 @@ def test_v5_schema_remains_reproducible_without_market_breadth() -> None:
     assert "market_breadth" not in schema["required"]
 
 
-def test_v8_uses_market_breadth_schema_without_new_semantic_fields() -> None:
+def test_v10_uses_market_breadth_schema_without_new_semantic_fields() -> None:
     schema = _ranking_schema(["C001"], include_market_breadth=True)
     root = schema["properties"]
     assert isinstance(root, dict)
@@ -193,10 +221,9 @@ def test_v8_uses_market_breadth_schema_without_new_semantic_fields() -> None:
     assert "market_breadth" in required
 
 
-class ScreeningGateway:
+class InvalidGateway:
     def __init__(self) -> None:
         self.calls = 0
-        self.users: list[str] = []
 
     def chat_structured(
         self,
@@ -209,52 +236,81 @@ class ScreeningGateway:
         response_schema_name: str,
         response_schema: dict[str, object],
     ) -> GatewayResponse:
-        del profile, system, response_schema
+        del purpose, profile, system, user, response_schema_name, response_schema
         self.calls += 1
-        self.users.append(user)
-        assert alias == "rank-cheap"
-        assert purpose == "news-screening"
-        assert response_schema_name == "daily_dash_news_screening_v1"
-
-        import json
-        import re
-
-        slot_match = re.search(r"Slots: (\[[^\n]+\])", user)
-        assert slot_match is not None
-        slots = json.loads(slot_match.group(1))
         return GatewayResponse(
             alias=alias,
             provider="openrouter",
-            model="openai/gpt-5.4-nano",
-            content={
-                "evaluations": {
-                    slot: {
-                        "relevance": 60,
-                        "market_impact": 50,
-                        "market_breadth": 50,
-                    }
-                    for slot in slots
-                }
-            },
-            usage=GatewayUsage(cost_usd=0.001),
-            latency_ms=10,
+            model="test/model",
+            content={"evaluations": {}},
+            usage=GatewayUsage(),
+            latency_ms=1,
         )
 
 
-def test_screening_batches_headline_only_and_limits_finalists() -> None:
-    from daily_dash.ranking.news import GatewayNewsScreener
+class SelfDuplicateGateway(FakeGateway):
+    def chat_structured(
+        self,
+        *,
+        alias: str,
+        purpose: str,
+        profile: str,
+        system: str,
+        user: str,
+        response_schema_name: str,
+        response_schema: dict[str, object],
+    ) -> GatewayResponse:
+        response = super().chat_structured(
+            alias=alias,
+            purpose=purpose,
+            profile=profile,
+            system=system,
+            user=user,
+            response_schema_name=response_schema_name,
+            response_schema=response_schema,
+        )
+        evaluations = response.content["evaluations"]
+        assert isinstance(evaluations, dict)
+        first = evaluations["C001"]
+        assert isinstance(first, dict)
+        first["duplicate_of_slot"] = "C001"
+        return response
 
+
+def test_ranker_normalizes_self_duplicate_relation_without_retry() -> None:
     profile = load_news_profile(_REPO_ROOT / "config" / "profiles" / "news-top.yaml")
-    gateway = ScreeningGateway()
-    items = [_candidate(f"item-{index:02d}", f"Headline {index:02d}") for index in range(35)]
+    gateway = SelfDuplicateGateway()
 
-    content, traces, finalists = GatewayNewsScreener(gateway).screen(items, profile)
+    content, trace = GatewayNewsRanker(gateway).rank(
+        CandidateBatch(
+            run_id="self-duplicate",
+            profile="news-top",
+            items=[
+                _candidate("one", "Emergency rate cut"),
+                _candidate("two", "Market plumbing change"),
+            ],
+        ),
+        profile,
+    )
 
-    assert gateway.calls == 2
-    assert len(traces) == 2
-    assert len(content.evaluations) == 35
-    assert len(content.finalist_ids) == 30
-    assert len(finalists) == 30
-    assert all("publisher.example" not in user for user in gateway.users)
-    assert all('"source"' not in user for user in gateway.users)
-    assert all('"headline"' in user for user in gateway.users)
+    evaluations = {evaluation.id: evaluation for evaluation in content.evaluations}
+    assert evaluations["one"].duplicate_of_id is None
+    assert gateway.calls == 1
+    assert trace.attempts == 1
+
+
+def test_ranker_does_not_issue_application_level_repair_call() -> None:
+    profile = load_news_profile(_REPO_ROOT / "config" / "profiles" / "news-top.yaml")
+    gateway = InvalidGateway()
+
+    with pytest.raises(RuntimeError, match="failed local validation"):
+        GatewayNewsRanker(gateway).rank(
+            CandidateBatch(
+                run_id="invalid-response",
+                profile="news-top",
+                items=[_candidate("one", "Emergency rate cut")],
+            ),
+            profile,
+        )
+
+    assert gateway.calls == 1

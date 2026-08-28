@@ -13,24 +13,16 @@ keywords:
   exclude: []
 
 ranking:
-  prefilter_limit: 100
-  top_k: 12
+  candidate_limit: 150
+  top_k: 20
   llm_enabled: true
   model_alias: rank-cheap
   prompt:
     id: news-ranking
-    version: v8
-  min_score: 0.55
-  screening:
-    enabled: true
-    batch_size: 25
-    finalist_limit: 30
-    model_alias: rank-cheap
-    prompt:
-      id: news-screening
-      version: v1
+    version: v10
+  min_score: 0.50
 
 presentation:
   title: Top News
   language: en
-  max_items: 12
+  max_items: 20

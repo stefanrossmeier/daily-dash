@@ -180,3 +180,21 @@ def test_eligible_only_skips_candidates_rejected_by_top_policy() -> None:
 
     assert selected == ["accepted"]
     assert suppressions == []
+
+
+def test_selected_only_skips_candidates_rejected_by_model() -> None:
+    rejected = _evaluation("rejected", "weak-event", 95).model_copy(update={"selected": False})
+    accepted = _evaluation("accepted", "strong-event", 80)
+    ranking = NewsRankingContent(
+        evaluations=[rejected, accepted],
+        ranking=["rejected", "accepted"],
+    )
+
+    selected, suppressions = select_distinct_events(
+        ranking,
+        limit=2,
+        selected_only=True,
+    )
+
+    assert selected == ["accepted"]
+    assert suppressions == []

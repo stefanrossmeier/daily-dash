@@ -7,9 +7,9 @@ _REPO_ROOT = Path(__file__).parents[2]
 
 def test_news_profiles_reference_versioned_prompt() -> None:
     expected_versions = {
-        "news-top": "v8",
-        "news-alternative": "v5",
-        "news-german": "v5",
+        "news-top": "v10",
+        "news-alternative": "v10",
+        "news-german": "v10",
     }
 
     for profile_id, expected_version in expected_versions.items():
@@ -30,14 +30,22 @@ def test_news_source_sets_have_enabled_real_sources() -> None:
         assert all("example.com" not in str(source.url) for source in enabled)
 
 
-def test_top_news_uses_large_source_neutral_candidate_pool() -> None:
+def test_all_news_profiles_use_shared_150_candidate_cap() -> None:
+    for profile_id in ("news-top", "news-alternative", "news-german"):
+        profile = load_news_profile(_REPO_ROOT / "config" / "profiles" / f"{profile_id}.yaml")
+        assert profile.ranking.candidate_limit == 150
+
+
+def test_news_profiles_allow_up_to_20_selected_items() -> None:
+    for profile_id in ("news-top", "news-alternative", "news-german"):
+        profile = load_news_profile(_REPO_ROOT / "config" / "profiles" / f"{profile_id}.yaml")
+        assert profile.ranking.top_k == 20
+        assert profile.presentation.max_items == 20
+
+
+def test_top_news_keeps_source_neutral_weights_and_market_threshold() -> None:
     profile = load_news_profile(_REPO_ROOT / "config" / "profiles" / "news-top.yaml")
     source_set = load_news_source_set(_REPO_ROOT / "config" / "sources" / "news-top.yaml")
 
-    assert profile.ranking.prefilter_limit == 100
-    assert profile.ranking.min_score == 0.55
-    assert profile.ranking.screening is not None
-    assert profile.ranking.screening.batch_size == 25
-    assert profile.ranking.screening.finalist_limit == 30
-    assert profile.ranking.screening.model_alias == "rank-cheap"
+    assert profile.ranking.min_score == 0.50
     assert all(source.weight == 1.0 for source in source_set.sources)

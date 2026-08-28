@@ -47,7 +47,7 @@ class ModelGatewayDeadlineTests(unittest.TestCase):
 
         asyncio.run(run())
 
-    def test_gateway_retries_same_model_once_without_failover(self) -> None:
+    def test_gateway_retries_same_model_twice_without_failover(self) -> None:
         async def run() -> None:
             success = httpx.Response(
                 200,
@@ -65,7 +65,8 @@ class ModelGatewayDeadlineTests(unittest.TestCase):
             )
             post = AsyncMock(
                 side_effect=[
-                    httpx.ReadTimeout("provider stalled"),
+                    httpx.ReadTimeout("provider stalled once"),
+                    httpx.ReadTimeout("provider stalled twice"),
                     success,
                 ]
             )
@@ -77,7 +78,7 @@ class ModelGatewayDeadlineTests(unittest.TestCase):
                             "rank-cheap": {
                                 "provider": "openrouter",
                                 "model": "openai/gpt-5.4-nano",
-                                "max_attempts": 2,
+                                "max_attempts": 3,
                                 "timeout_seconds": 180,
                             }
                         }
@@ -101,13 +102,21 @@ class ModelGatewayDeadlineTests(unittest.TestCase):
                 )
 
             self.assertEqual(response.model, "openai/gpt-5.4-nano")
-            self.assertEqual(response.attempts, 2)
+            self.assertEqual(response.attempts, 3)
             self.assertFalse(response.usage_complete)
-            self.assertEqual(len(response.attempt_errors), 1)
-            self.assertIn("provider stalled", response.attempt_errors[0])
-            self.assertEqual(post.await_count, 2)
+            self.assertEqual(len(response.attempt_errors), 2)
+            self.assertIn("provider stalled once", response.attempt_errors[0])
+            self.assertIn("provider stalled twice", response.attempt_errors[1])
+            self.assertEqual(post.await_count, 3)
             models = [call.kwargs["payload"]["model"] for call in post.await_args_list]
-            self.assertEqual(models, ["openai/gpt-5.4-nano", "openai/gpt-5.4-nano"])
+            self.assertEqual(
+                models,
+                [
+                    "openai/gpt-5.4-nano",
+                    "openai/gpt-5.4-nano",
+                    "openai/gpt-5.4-nano",
+                ],
+            )
 
         asyncio.run(run())
 

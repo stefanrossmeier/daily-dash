@@ -50,6 +50,19 @@ def _run(args: argparse.Namespace) -> None:
                     if document.model_summary is not None
                     else document.ranking_trace.usage.cost_usd
                 ),
+                "model_calls": (
+                    document.model_summary.calls if document.model_summary is not None else 1
+                ),
+                "model_attempts": (
+                    document.model_summary.attempts
+                    if document.model_summary is not None
+                    else document.ranking_trace.attempts
+                ),
+                "model_retries": (
+                    document.model_summary.retries
+                    if document.model_summary is not None
+                    else max(document.ranking_trace.attempts - 1, 0)
+                ),
                 "model_usage_complete": (
                     document.model_summary.usage_complete
                     if document.model_summary is not None

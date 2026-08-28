@@ -50,7 +50,7 @@ class ModelGatewayClient:
         self,
         base_url: str | None = None,
         *,
-        timeout_seconds: float = 390.0,
+        timeout_seconds: float = 600.0,
     ) -> None:
         configured_url = (
             base_url or os.getenv("DAILY_DASH_MODEL_GATEWAY_URL") or "http://127.0.0.1:18080"

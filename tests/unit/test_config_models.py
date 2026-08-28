@@ -20,7 +20,7 @@ def test_news_profile_validates() -> None:
                 "exclude": ["sports"],
             },
             "ranking": {
-                "prefilter_limit": 40,
+                "candidate_limit": 40,
                 "top_k": 10,
                 "llm_enabled": True,
                 "model_alias": "rank-cheap",
@@ -57,7 +57,7 @@ def test_news_profile_rejects_unknown_fields() -> None:
         )
 
 
-def test_news_profile_rejects_top_k_above_prefilter_limit() -> None:
+def test_news_profile_rejects_top_k_above_candidate_limit() -> None:
     with pytest.raises(ValidationError):
         NewsProfile.model_validate(
             {
@@ -68,7 +68,7 @@ def test_news_profile_rejects_top_k_above_prefilter_limit() -> None:
                 "retrieval": {},
                 "keywords": {},
                 "ranking": {
-                    "prefilter_limit": 10,
+                    "candidate_limit": 10,
                     "top_k": 20,
                 },
                 "presentation": {

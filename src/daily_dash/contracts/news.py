@@ -133,7 +133,7 @@ class NewsRankingTrace(BaseModel):
 
 
 class NewsModelSummary(BaseModel):
-    """Aggregate model usage across screening and final ranking stages."""
+    """Aggregate logical model calls and provider attempts for one News run."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -141,7 +141,25 @@ class NewsModelSummary(BaseModel):
     latency_ms: int = Field(ge=0)
     calls: int = Field(ge=1)
     attempts: int = Field(ge=1)
+    retries: int = Field(default=0, ge=0)
     usage_complete: bool = True
+
+    @model_validator(mode="before")
+    @classmethod
+    def derive_retries(cls, value: object) -> object:
+        if isinstance(value, dict) and "retries" not in value:
+            attempts = value.get("attempts")
+            calls = value.get("calls")
+            if isinstance(attempts, int) and isinstance(calls, int):
+                value = {**value, "retries": max(attempts - calls, 0)}
+        return value
+
+    @model_validator(mode="after")
+    def validate_retry_count(self) -> Self:
+        expected = max(self.attempts - self.calls, 0)
+        if self.retries != expected:
+            raise ValueError("retries must equal attempts minus logical calls")
+        return self
 
 
 class NewsDuplicateSuppression(BaseModel):
@@ -166,6 +184,7 @@ class NewsRunDocument(BaseModel):
     retrieval_window: NewsRetrievalWindow | None = None
 
     source_diagnostics: list[NewsSourceDiagnostic]
+    retrieved_items: list[SourceItem] = Field(default_factory=list)
     retrieved_count: int = Field(ge=0)
     deduplicated_count: int = Field(ge=0)
     candidate_count: int = Field(ge=0)
