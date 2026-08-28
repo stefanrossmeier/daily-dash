@@ -61,3 +61,40 @@ def test_markets_pipeline_connects_all_three_stages() -> None:
     assert artifact.profile == "markets"
     assert "DAX" in artifact.content
     assert "+1.00%" in artifact.content
+
+
+def test_markets_pipeline_can_return_persisted_artifact_path(tmp_path) -> None:
+    from daily_dash.pipelines.markets import run_markets_pipeline
+    from daily_dash.storage import JsonFileMarketSnapshotStore
+
+    profile = MarketsProfile.model_validate(
+        {
+            "profile_id": "markets",
+            "pipeline": "markets",
+            "source_set": "markets",
+            "presentation": {},
+        }
+    )
+    source_set = MarketSourceSet.model_validate(
+        {
+            "pipeline": "markets",
+            "source_set_id": "markets",
+            "provider": "yfinance",
+            "assets": [],
+        }
+    )
+    now = datetime(2026, 8, 26, 18, 0, tzinfo=UTC)
+
+    document, output_path = run_markets_pipeline(
+        profile,
+        source_set,
+        FakeRetriever(),
+        run_id="run-1",
+        now=now,
+        snapshot_store=JsonFileMarketSnapshotStore(tmp_path),
+    )
+
+    assert document.raw.run_id == "run-1"
+    assert document.report.profile == "markets"
+    assert output_path.parent == tmp_path / "markets" / "snapshots"
+    assert output_path.exists()

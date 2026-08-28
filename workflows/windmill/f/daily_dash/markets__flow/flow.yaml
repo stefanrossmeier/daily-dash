@@ -1,5 +1,5 @@
 summary: DailyDash Markets
-description: Retrieve, persist and deliver the DailyDash Markets report.
+description: Generate the weekday Markets artifact, persist it durably, then deliver it to Telegram.
 value:
   modules:
     - id: run_markets
@@ -9,18 +9,9 @@ value:
         path: f/daily_dash/run_markets
         tag_override: dailydash
         input_transforms:
-          telegram_token:
-            type: static
-            value: "$var:f/daily_dash/telegram_token"
-          telegram_chat_id:
-            type: static
-            value: "$var:f/daily_dash/telegram_chat_id"
           data_repo:
             type: static
             value: /data/daily-dash-data
-          delivery:
-            type: static
-            value: telegram
 
     - id: persist_data
       summary: Persist generated data
@@ -47,6 +38,23 @@ value:
           commit_message:
             type: static
             value: "data(markets): persist generated snapshot"
+
+    - id: deliver_markets
+      summary: Deliver Markets to Telegram
+      value:
+        type: script
+        path: f/daily_dash/deliver_markets
+        tag_override: dailydash
+        input_transforms:
+          artifact_path:
+            type: javascript
+            expr: results.run_markets.artifact_path
+          telegram_token:
+            type: javascript
+            expr: variable("f/daily_dash/telegram_token")
+          telegram_chat_id:
+            type: javascript
+            expr: variable("f/daily_dash/telegram_chat_id")
 
 schema:
   $schema: https://json-schema.org/draft/2020-12/schema

@@ -59,3 +59,25 @@ def test_market_snapshot_is_written_as_json(tmp_path) -> None:
     restored = MarketSnapshotDocument.model_validate_json(path.read_text(encoding="utf-8"))
 
     assert restored == document
+
+
+def test_market_snapshot_store_reads_written_document(tmp_path) -> None:
+    collected_at = datetime(2026, 8, 27, 6, 15, tzinfo=UTC)
+    document = MarketSnapshotDocument(
+        raw=RawMarketSnapshot(
+            run_id="abcdef12-3456-7890",
+            source_set="markets",
+            retrieved_at=collected_at,
+            assets=[],
+        ),
+        report=MarketReportData(
+            run_id="abcdef12-3456-7890",
+            profile="markets",
+            generated_at=collected_at,
+            assets=[],
+        ),
+    )
+
+    path = JsonFileMarketSnapshotStore(tmp_path).save(document)
+
+    assert JsonFileMarketSnapshotStore.read(path) == document

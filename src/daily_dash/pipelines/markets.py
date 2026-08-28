@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from pathlib import Path
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
@@ -13,15 +14,14 @@ from daily_dash.retrieval.markets import MarketRetriever
 from daily_dash.storage import MarketSnapshotStore
 
 
-def run_markets(
+def _build_market_snapshot(
     profile: MarketsProfile,
     source_set: MarketSourceSet,
     retriever: MarketRetriever,
     *,
     run_id: str | None = None,
     now: datetime | None = None,
-    snapshot_store: MarketSnapshotStore | None = None,
-) -> ReportArtifact:
+) -> MarketSnapshotDocument:
     effective_run_id = run_id or str(uuid4())
     effective_now = now or datetime.now(ZoneInfo(profile.presentation.timezone))
 
@@ -32,12 +32,51 @@ def run_markets(
     )
     processed = process_market_snapshot(raw, profile_id=profile.profile_id)
 
-    if snapshot_store is not None:
-        snapshot_store.save(
-            MarketSnapshotDocument(
-                raw=raw,
-                report=processed,
-            )
-        )
+    return MarketSnapshotDocument(
+        raw=raw,
+        report=processed,
+    )
 
-    return render_markets_report(processed, profile)
+
+def run_markets(
+    profile: MarketsProfile,
+    source_set: MarketSourceSet,
+    retriever: MarketRetriever,
+    *,
+    run_id: str | None = None,
+    now: datetime | None = None,
+    snapshot_store: MarketSnapshotStore | None = None,
+) -> ReportArtifact:
+    document = _build_market_snapshot(
+        profile,
+        source_set,
+        retriever,
+        run_id=run_id,
+        now=now,
+    )
+
+    if snapshot_store is not None:
+        snapshot_store.save(document)
+
+    return render_markets_report(document.report, profile)
+
+
+def run_markets_pipeline(
+    profile: MarketsProfile,
+    source_set: MarketSourceSet,
+    retriever: MarketRetriever,
+    *,
+    snapshot_store: MarketSnapshotStore,
+    run_id: str | None = None,
+    now: datetime | None = None,
+) -> tuple[MarketSnapshotDocument, Path]:
+    """Run Markets and persist its immutable output artifact before delivery."""
+    document = _build_market_snapshot(
+        profile,
+        source_set,
+        retriever,
+        run_id=run_id,
+        now=now,
+    )
+    output_path = snapshot_store.save(document)
+    return document, output_path

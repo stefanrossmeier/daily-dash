@@ -17,6 +17,10 @@ class MarketSnapshotStore(Protocol):
 class JsonFileMarketSnapshotStore:
     """Persist market snapshots as readable JSON files."""
 
+    @staticmethod
+    def read(path: Path) -> MarketSnapshotDocument:
+        return MarketSnapshotDocument.model_validate_json(path.read_text(encoding="utf-8"))
+
     def __init__(self, data_repo: Path) -> None:
         self._snapshot_dir = data_repo / "markets" / "snapshots"
 
