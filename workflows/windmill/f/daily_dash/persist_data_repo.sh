@@ -4,7 +4,7 @@ set -Eeuo pipefail
 deploy_key="$1"
 repo_path="${2:-/data/daily-dash-data}"
 data_path="$3"
-remote_url="${4:-git@github.com:stefanrossmeier/daily-dash-data.git}"
+remote_url="${4:-}"
 branch="${5:-main}"
 commit_message="${6:-data: persist generated data}"
 
@@ -18,19 +18,24 @@ case "$data_path" in
     ;;
 esac
 
+if [[ -z "$remote_url" ]]; then
+  echo "Git remote URL is required" >&2
+  exit 3
+fi
+
 if [[ ! -d "$repo_path/.git" ]]; then
   echo "Git repository not found: $repo_path" >&2
-  exit 3
+  exit 4
 fi
 
 if ! command -v git >/dev/null 2>&1; then
   echo "git is not available" >&2
-  exit 4
+  exit 5
 fi
 
 if ! command -v ssh >/dev/null 2>&1; then
   echo "ssh is not available" >&2
-  exit 5
+  exit 6
 fi
 
 lock_dir="$repo_path/.git/daily-dash-persist.lock"
@@ -46,7 +51,7 @@ fi
 
 if ! mkdir "$lock_dir" 2>/dev/null; then
   echo "Another DailyDash Git persistence operation is running" >&2
-  exit 6
+  exit 7
 fi
 
 tmp_dir="$(mktemp -d)"
@@ -76,7 +81,7 @@ current_branch="$(git -C "$repo_path" branch --show-current)"
 
 if [[ "$current_branch" != "$branch" ]]; then
   echo "Expected branch '$branch', found '$current_branch'" >&2
-  exit 7
+  exit 8
 fi
 
 # Refuse to interact with a repository whose index already contains staged
@@ -85,7 +90,7 @@ fi
 if ! git -C "$repo_path" diff --cached --quiet; then
   echo "Repository already contains staged changes" >&2
   git -C "$repo_path" diff --cached --name-only >&2
-  exit 8
+  exit 9
 fi
 
 echo "Fetching remote branch..."
@@ -96,7 +101,7 @@ git -C "$repo_path" fetch "$remote_url" "$branch"
 if ! git -C "$repo_path" merge-base --is-ancestor FETCH_HEAD HEAD; then
   echo "Remote branch contains commits not present locally" >&2
   echo "Synchronize the data repository before retrying" >&2
-  exit 9
+  exit 10
 fi
 
 git -C "$repo_path" config user.name "$author_name"

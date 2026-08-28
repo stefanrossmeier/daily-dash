@@ -16,6 +16,7 @@ require uv
 require node
 require npm
 require docker
+require curl
 
 NODE_MAJOR="$(node -p 'Number(process.versions.node.split(".")[0])')"
 

@@ -1,0 +1,48 @@
+services:
+  windmill_worker_dailydash:
+    build:
+      context: ${DAILY_DASH_SOURCE:?DAILY_DASH_SOURCE is required}
+      dockerfile: deploy/example/windmill-worker.Dockerfile
+      args:
+        WM_IMAGE: ${WM_IMAGE}
+
+    image: daily-dash-windmill-worker:local
+
+    restart: unless-stopped
+
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - MODE=worker
+      - WORKER_TAGS=dailydash
+      - DAILY_DASH_HOME=/opt/daily-dash
+      - DAILY_DASH_BIN=/opt/daily-dash/.venv/bin/daily-dash
+      - DAILY_DASH_DATA_REPO=/data/daily-dash-data
+      - DAILY_DASH_CONFIG_DIR=/opt/daily-dash/config
+      - DAILY_DASH_MODEL_GATEWAY_URL=http://daily_dash_model_gateway:8080
+      - DAILY_DASH_ASSETS_DIR=/opt/daily-dash/assets
+
+    volumes:
+      - ${DAILY_DASH_DATA_SOURCE:?DAILY_DASH_DATA_SOURCE is required}:/data/daily-dash-data
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+  daily_dash_model_gateway:
+    build:
+      context: ${DAILY_DASH_SOURCE:?DAILY_DASH_SOURCE is required}
+      dockerfile: deploy/example/model-gateway.Dockerfile
+
+    image: daily-dash-model-gateway:local
+
+    restart: unless-stopped
+
+    environment:
+      - MODEL_GATEWAY_CONFIG=/app/config/model-gateway.yaml
+      - OPENROUTER_API_KEY_FILE=/run/secrets/openrouter_api_key
+
+    volumes:
+      - ${DAILY_DASH_OPENROUTER_KEY_FILE:?DAILY_DASH_OPENROUTER_KEY_FILE is required}:/run/secrets/openrouter_api_key:ro
+
+    ports:
+      - "127.0.0.1:18080:8080"

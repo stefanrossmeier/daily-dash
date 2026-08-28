@@ -36,8 +36,17 @@ def test_news_flows_run_persist_then_deliver() -> None:
         run_transforms = modules[0]["value"]["input_transforms"]
         assert run_transforms["profile"]["value"] == profile
 
-        persist_text = str(modules[1]["value"]["input_transforms"])
+        persist = modules[1]["value"]["input_transforms"]
+        persist_text = str(persist)
         assert subtree in persist_text
+        assert persist["remote_url"] == {
+            "type": "javascript",
+            "expr": 'variable("f/daily_dash/data_repo_remote_url")',
+        }
+        assert persist["branch"] == {
+            "type": "javascript",
+            "expr": 'variable("f/daily_dash/data_repo_branch")',
+        }
 
         deliver = modules[2]["value"]["input_transforms"]
         assert deliver["artifact_path"]["expr"] == ("results.run_news.artifact_path")

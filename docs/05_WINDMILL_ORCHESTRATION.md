@@ -74,20 +74,30 @@ independently of the Windmill server version.
 
 ## Local Windmill deployment
 
-The operational Windmill Docker Compose deployment is intentionally not stored
-inside this application repository.
-
-An example local location is:
+The operational local Windmill deployment is reproducible from this repository.
+The checked-in source of truth lives under:
 
 ~~~text
-~/repos/daily-dash-windmill-local
+deploy/local-windmill/
 ~~~
 
-The eventual VPS deployment should likewise be managed separately from the
-DailyDash application repository.
+A machine-specific runtime directory (for example `../daily-dash-windmill-local`)
+is materialized with:
 
-The public repository contains only the worker-image definition and workflow
-definitions required to run DailyDash.
+~~~bash
+./scripts/bootstrap-local-windmill.sh \
+  --target ../daily-dash-windmill-local \
+  --data-repo ../daily-dash-data
+~~~
+
+The generated directory contains local absolute paths and secret-file references,
+so it is runtime state rather than another source repository. Refresh it from the
+checked-in deployment source instead of hand-maintaining divergent Compose files.
+
+Lifecycle commands are wrapped by `scripts/local-windmill.sh`; workspace definitions
+are synchronized with `scripts/sync-windmill-workspace.sh`.
+
+See `docs/09_LOCAL_WINDMILL_BOOTSTRAP.md` for a complete clean-machine bootstrap.
 
 ## Workspace
 
@@ -144,12 +154,23 @@ Tokens must never be committed to Git.
 
 Runtime secrets belong in Windmill secret variables.
 
-Examples:
+DailyDash runtime secrets include:
 
 ~~~text
 f/daily_dash/telegram_token
 f/daily_dash/telegram_chat_id
+f/daily_dash/data_repo_deploy_key
 ~~~
+
+Installation-specific non-secret variables include:
+
+~~~text
+f/daily_dash/data_repo_remote_url
+f/daily_dash/data_repo_branch
+~~~
+
+Use `scripts/configure-windmill-workspace.sh` to install these values after the CLI
+workspace has been configured.
 
 Secrets must never appear in:
 
@@ -262,32 +283,31 @@ The host data repository is mounted into the worker as:
 /var/code/daily-dash-data -> /data/daily-dash-data
 ~~~
 
-### Secrets
+### Workspace configuration
 
-Telegram credentials are stored as Windmill secret variables:
+Telegram credentials and the private data-repository deploy key are Windmill secret
+variables. The data remote URL and branch are non-secret Windmill variables. None are
+hard-coded in the checked-in flows.
 
-~~~text
-f/daily_dash/telegram_token
-f/daily_dash/telegram_chat_id
+Configure all required values with:
+
+~~~bash
+./scripts/configure-windmill-workspace.sh
 ~~~
 
-Secrets are uploaded with `scripts/wmill-set-secret.sh`.
+The helper uses temporary ignored variable specifications rather than committing
+credentials or embedding installation-specific repository URLs in workflow source.
 
-This helper uses a temporary ignored variable specification rather than placing
-secret values directly on the Windmill CLI command line.
+### Current state
 
-### Current limitations
+Markets and News use checked-in Windmill flows. Production-style data persistence is
+performed by a generic Git persistence step, and schedules are generated from
+`config/schedules.yaml` and synchronized with the workspace definitions.
 
-At this milestone:
-
-- snapshot creation is automatic;
-- Telegram delivery is automatic;
-- Git add/commit/push of collected data is still manual;
-- the pipeline is manually triggered through Windmill;
-- no production schedule exists yet.
-
-The next milestone is a Windmill flow with explicit persistence verification
-and automatic Git commit/push, followed by scheduling.
+Installation-specific values such as Telegram credentials, the private data-repository
+remote/deploy key and OpenRouter credentials are intentionally not synchronized from
+Git. The clean-machine setup and variable/secret bootstrap are documented in
+`docs/09_LOCAL_WINDMILL_BOOTSTRAP.md`.
 
 ## Automatic Git persistence
 

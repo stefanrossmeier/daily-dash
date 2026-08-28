@@ -30,11 +30,11 @@ value:
           type: static
           value: news/alternative
         remote_url:
-          type: static
-          value: git@github.com:stefanrossmeier/daily-dash-data.git
+          type: javascript
+          expr: variable("f/daily_dash/data_repo_remote_url")
         branch:
-          type: static
-          value: main
+          type: javascript
+          expr: variable("f/daily_dash/data_repo_branch")
         commit_message:
           type: static
           value: news/alternative

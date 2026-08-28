@@ -29,7 +29,7 @@ schema:
     remote_url:
       type: string
       description: ''
-      default: git@github.com:stefanrossmeier/daily-dash-data.git
+      default: null
       originalType: string
     repo_path:
       type: string
@@ -39,3 +39,4 @@ schema:
   required:
     - deploy_key
     - data_path
+    - remote_url
