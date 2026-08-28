@@ -1,0 +1,10 @@
+schema_version: 1
+profile_id: markets-weekend
+pipeline: markets-weekend
+source_set: markets-weekend
+
+presentation:
+  title: Weekend Markets (IG)
+  timezone: Europe/Berlin
+  change_highlight_threshold_pct: 1.0
+  data_issue_limit: 8

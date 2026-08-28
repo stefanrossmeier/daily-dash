@@ -14,6 +14,7 @@ def test_repository_configuration_is_valid() -> None:
 
     assert result.profile_ids == (
         "markets",
+        "markets-weekend",
         "news-alternative",
         "news-german",
         "news-top",
@@ -21,6 +22,7 @@ def test_repository_configuration_is_valid() -> None:
 
     assert result.source_set_ids == (
         "markets",
+        "markets-weekend",
         "news-alternative",
         "news-german",
         "news-top",

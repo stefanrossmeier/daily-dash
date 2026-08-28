@@ -351,3 +351,21 @@ The complete verified Markets path is:
         |
         v
     private daily-dash-data repository
+
+
+## Weekend Markets
+
+Weekend Markets is a separate no-LLM pipeline from the weekday Yahoo Finance snapshot.
+It retrieves public no-login weekend quotes from IG for US crude, Germany 40, US Tech
+100, gold, Wall Street and EUR/USD. The production flow follows the same durability
+invariant as News and weekday Markets:
+
+~~~text
+run_markets_weekend
+    -> persist_data
+    -> deliver_markets_weekend
+~~~
+
+Snapshots are written under `markets/weekend/snapshots` in the private data sink. The
+central schedule registry enables the flow only on Saturday and Sunday at 10:30 and
+20:30 Europe/Berlin. No LLM or model gateway is involved.

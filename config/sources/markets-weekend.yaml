@@ -1,0 +1,35 @@
+schema_version: 1
+pipeline: markets-weekend
+source_set_id: markets-weekend
+provider: ig-weekend
+
+quotes:
+  - id: oil-us-crude
+    name: Oil (US Crude)
+    url: https://www.ig.com/de/indizes/maerkte-indizes/weekend-oil---us-crude
+    price_decimals: 1
+
+  - id: germany-40
+    name: Germany 40 (DAX)
+    url: https://www.ig.com/de/indizes/maerkte-indizes/weekend-germany-40
+    price_decimals: 1
+
+  - id: us-tech-100
+    name: US Tech 100
+    url: https://www.ig.com/de/indizes/maerkte-indizes/weekend-us-tech-100-e1
+    price_decimals: 1
+
+  - id: gold
+    name: Gold
+    url: https://www.ig.com/de/indizes/maerkte-indizes/weekend-gold
+    price_decimals: 1
+
+  - id: wall-street
+    name: Wall Street
+    url: https://www.ig.com/de/indizes/maerkte-indizes/weekend-wall-street
+    price_decimals: 1
+
+  - id: eurusd
+    name: EUR/USD
+    url: https://www.ig.com/de/indizes/markets-indizes/wochenend-eurusd
+    price_decimals: 5

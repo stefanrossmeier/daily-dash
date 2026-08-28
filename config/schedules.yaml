@@ -41,7 +41,7 @@ schedules:
 
   markets-weekend:
     schedule_id: markets-weekend
-    enabled: false
+    enabled: true
     flow_path: f/daily_dash/markets_weekend
     timezone: Europe/Berlin
     days: [SAT, SUN]

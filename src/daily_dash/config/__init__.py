@@ -7,6 +7,8 @@ from daily_dash.config.loader import (
     load_profile,
     load_schedule_registry,
     load_source_set,
+    load_weekend_market_source_set,
+    load_weekend_markets_profile,
 )
 from daily_dash.config.models import (
     KeywordConfig,
@@ -26,6 +28,9 @@ from daily_dash.config.models import (
     ScheduleRegistry,
     ScheduleWindowConfig,
     SourceSet,
+    WeekendMarketQuoteConfig,
+    WeekendMarketSourceSet,
+    WeekendMarketsProfile,
 )
 from daily_dash.config.paths import default_config_dir
 from daily_dash.config.settings import TelegramSettings
@@ -52,6 +57,9 @@ __all__ = [
     "ScheduleWindowConfig",
     "SourceSet",
     "TelegramSettings",
+    "WeekendMarketQuoteConfig",
+    "WeekendMarketSourceSet",
+    "WeekendMarketsProfile",
     "load_market_source_set",
     "load_markets_profile",
     "load_news_profile",
@@ -59,6 +67,8 @@ __all__ = [
     "load_profile",
     "load_schedule_registry",
     "load_source_set",
+    "load_weekend_market_source_set",
+    "load_weekend_markets_profile",
     "default_config_dir",
     "validate_config_tree",
 ]

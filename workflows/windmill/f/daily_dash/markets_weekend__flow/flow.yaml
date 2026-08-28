@@ -1,0 +1,64 @@
+summary: DailyDash Weekend Markets
+description: Generate the weekend IG market artifact, persist it durably, then deliver it to Telegram.
+value:
+  modules:
+    - id: run_markets_weekend
+      summary: Run Weekend Markets
+      value:
+        type: script
+        path: f/daily_dash/run_markets_weekend
+        tag_override: dailydash
+        input_transforms:
+          data_repo:
+            type: static
+            value: /data/daily-dash-data
+
+    - id: persist_data
+      summary: Persist generated data
+      value:
+        type: script
+        path: f/daily_dash/persist_data_repo
+        tag_override: dailydash
+        input_transforms:
+          deploy_key:
+            type: static
+            value: "$var:f/daily_dash/data_repo_deploy_key"
+          repo_path:
+            type: static
+            value: /data/daily-dash-data
+          data_path:
+            type: static
+            value: markets/weekend/snapshots
+          remote_url:
+            type: javascript
+            expr: 'variable("f/daily_dash/data_repo_remote_url")'
+          branch:
+            type: javascript
+            expr: 'variable("f/daily_dash/data_repo_branch")'
+          commit_message:
+            type: static
+            value: "data(markets-weekend): persist generated snapshot"
+
+    - id: deliver_markets_weekend
+      summary: Deliver Weekend Markets to Telegram
+      value:
+        type: script
+        path: f/daily_dash/deliver_markets_weekend
+        tag_override: dailydash
+        input_transforms:
+          artifact_path:
+            type: javascript
+            expr: results.run_markets_weekend.artifact_path
+          telegram_token:
+            type: javascript
+            expr: variable("f/daily_dash/telegram_token")
+          telegram_chat_id:
+            type: javascript
+            expr: variable("f/daily_dash/telegram_chat_id")
+
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  order: []
+  properties: {}
+  required: []

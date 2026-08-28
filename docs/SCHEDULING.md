@@ -19,8 +19,8 @@ so late RSS publication timestamps are less likely to be missed. Duplicate URL/t
 handling and semantic duplicate handling remain responsible for overlap inside a run.
 
 The current registry contains independent schedules for Top, German and Alternative
-News, the implemented weekday Markets snapshot, and a disabled weekend-Markets entry
-that records the intended weekend-only cadence until that pipeline exists.
+News, the weekday Markets snapshot, and the separate Weekend Markets pipeline. Weekend
+Markets runs only on Saturday and Sunday at 10:30 and 20:30 Europe/Berlin.
 
 For deterministic tests and manual replays, News accepts explicit ISO-8601
 `--window-start` and `--window-end` values. Both must be supplied and include timezone

@@ -1,0 +1,8 @@
+summary: DailyDash markets-weekend 20:30
+schedule: 0 30 20 * * SAT,SUN
+timezone: Europe/Berlin
+enabled: true
+script_path: f/daily_dash/markets_weekend
+is_flow: true
+args: {}
+no_flow_overlap: true

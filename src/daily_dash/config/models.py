@@ -211,6 +211,18 @@ class MarketsProfile(BaseModel):
     presentation: MarketPresentationConfig
 
 
+class WeekendMarketsProfile(BaseModel):
+    """Configuration for the weekend market-quotes pipeline."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    schema_version: Literal[1] = 1
+    profile_id: str = Field(min_length=1, pattern=IDENTIFIER_PATTERN)
+    pipeline: Literal["markets-weekend"] = "markets-weekend"
+    source_set: str = Field(min_length=1, pattern=IDENTIFIER_PATTERN)
+    presentation: MarketPresentationConfig
+
+
 class RssSourceConfig(BaseModel):
     """Configuration for one RSS or Atom feed."""
 
@@ -286,5 +298,36 @@ class MarketSourceSet(BaseModel):
         return self
 
 
-type Profile = NewsProfile | MarketsProfile
-type SourceSet = NewsSourceSet | MarketSourceSet
+class WeekendMarketQuoteConfig(BaseModel):
+    """One public IG weekend market page."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    id: str = Field(min_length=1, pattern=IDENTIFIER_PATTERN)
+    name: str = Field(min_length=1)
+    url: HttpUrl
+    price_decimals: int = Field(default=2, ge=0, le=8)
+    enabled: bool = True
+
+
+class WeekendMarketSourceSet(BaseModel):
+    """IG weekend instruments retrieved from public no-login pages."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    schema_version: Literal[1] = 1
+    pipeline: Literal["markets-weekend"] = "markets-weekend"
+    source_set_id: str = Field(min_length=1, pattern=IDENTIFIER_PATTERN)
+    provider: Literal["ig-weekend"] = "ig-weekend"
+    quotes: list[WeekendMarketQuoteConfig]
+
+    @model_validator(mode="after")
+    def validate_unique_quote_ids(self) -> Self:
+        ids = [quote.id for quote in self.quotes]
+        if len(ids) != len(set(ids)):
+            raise ValueError("quote ids must be unique within a weekend market source set")
+        return self
+
+
+type Profile = NewsProfile | MarketsProfile | WeekendMarketsProfile
+type SourceSet = NewsSourceSet | MarketSourceSet | WeekendMarketSourceSet

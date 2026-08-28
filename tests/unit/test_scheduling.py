@@ -69,10 +69,11 @@ def test_weekend_market_schedule_contains_only_weekend_slots() -> None:
     assert previous == datetime(2026, 8, 30, 10, 30, tzinfo=BERLIN)
 
 
-def test_windmill_specs_come_from_registry_and_skip_disabled_future_pipeline() -> None:
+def test_windmill_specs_come_from_registry() -> None:
     specs = windmill_schedule_specs(REGISTRY)
 
     assert specs["news_top_0600"]["schedule"] == "0 0 6 * * *"
     assert specs["markets_0805"]["schedule"] == "0 5 8 * * MON,TUE,WED,THU,FRI"
     assert specs["markets_0805"]["script_path"] == "f/daily_dash/markets"
-    assert not any(name.startswith("markets_weekend_") for name in specs)
+    assert specs["markets_weekend_1030"]["schedule"] == "0 30 10 * * SAT,SUN"
+    assert specs["markets_weekend_2030"]["script_path"] == "f/daily_dash/markets_weekend"

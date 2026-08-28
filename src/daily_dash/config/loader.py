@@ -15,6 +15,8 @@ from daily_dash.config.models import (
     Profile,
     ScheduleRegistry,
     SourceSet,
+    WeekendMarketSourceSet,
+    WeekendMarketsProfile,
 )
 
 
@@ -40,11 +42,13 @@ def load_profile(path: Path) -> Profile:
     raw = _read_yaml(path)
     pipeline = raw.get("pipeline")
 
-    model: type[NewsProfile] | type[MarketsProfile]
+    model: type[NewsProfile] | type[MarketsProfile] | type[WeekendMarketsProfile]
     if pipeline == "news":
         model = NewsProfile
     elif pipeline == "markets":
         model = MarketsProfile
+    elif pipeline == "markets-weekend":
+        model = WeekendMarketsProfile
     else:
         raise ConfigurationError(f"unknown profile pipeline in {path}: {pipeline!r}")
 
@@ -58,11 +62,13 @@ def load_source_set(path: Path) -> SourceSet:
     raw = _read_yaml(path)
     pipeline = raw.get("pipeline")
 
-    model: type[NewsSourceSet] | type[MarketSourceSet]
+    model: type[NewsSourceSet] | type[MarketSourceSet] | type[WeekendMarketSourceSet]
     if pipeline == "news":
         model = NewsSourceSet
     elif pipeline == "markets":
         model = MarketSourceSet
+    elif pipeline == "markets-weekend":
+        model = WeekendMarketSourceSet
     else:
         raise ConfigurationError(f"unknown source-set pipeline in {path}: {pipeline!r}")
 
@@ -106,3 +112,17 @@ def load_schedule_registry(path: Path) -> ScheduleRegistry:
         return ScheduleRegistry.model_validate(raw)
     except ValidationError as exc:
         raise ConfigurationError(f"invalid schedule registry {path}: {exc}") from exc
+
+
+def load_weekend_markets_profile(path: Path) -> WeekendMarketsProfile:
+    profile = load_profile(path)
+    if not isinstance(profile, WeekendMarketsProfile):
+        raise ConfigurationError(f"expected weekend markets profile: {path}")
+    return profile
+
+
+def load_weekend_market_source_set(path: Path) -> WeekendMarketSourceSet:
+    source_set = load_source_set(path)
+    if not isinstance(source_set, WeekendMarketSourceSet):
+        raise ConfigurationError(f"expected weekend market source set: {path}")
+    return source_set

@@ -1,7 +1,7 @@
 # DailyDash
 
 DailyDash is a reproducible, Windmill-orchestrated financial dashboard pipeline for
-market snapshots and ranked news briefings. The public repository contains the
+weekday market snapshots, public weekend market quotes, and ranked news briefings. The public repository contains the
 application, model-gateway configuration, Windmill workflows/schedules, worker image,
 and the source files needed to recreate the local self-hosted Windmill environment.
 
@@ -63,3 +63,12 @@ DailyDash deliberately keeps three concerns separate:
 - `daily-dash-data`: a separate private Git repository used only as an output sink.
 
 No secret values or private data are required or stored in the public repository.
+
+
+## Implemented workflows
+
+- Weekday Markets: Yahoo Finance cross-asset snapshot, Monday-Friday.
+- Weekend Markets: public IG weekend quotes, Saturday-Sunday, no LLM.
+- News: Top, Alternative and German ranked briefings.
+
+All publishing workflows follow `generate artifact -> durable persistence -> external delivery`.

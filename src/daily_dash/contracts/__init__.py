@@ -17,6 +17,13 @@ from daily_dash.contracts.ranking import RankedBatch, RankedItem, RankingDecisio
 from daily_dash.contracts.report import DeliveryResult, ReportArtifact
 from daily_dash.contracts.run import CostSummary, ModelCall, RunManifest
 from daily_dash.contracts.source import CandidateBatch, SourceItem
+from daily_dash.contracts.weekend_market import (
+    RawWeekendMarketQuote,
+    RawWeekendMarketSnapshot,
+    WeekendMarketQuote,
+    WeekendMarketReportData,
+    WeekendMarketSnapshotDocument,
+)
 
 __all__ = [
     "ArtifactFormat",
@@ -40,4 +47,9 @@ __all__ = [
     "RunManifest",
     "SourceItem",
     "SourceKind",
+    "RawWeekendMarketQuote",
+    "RawWeekendMarketSnapshot",
+    "WeekendMarketQuote",
+    "WeekendMarketReportData",
+    "WeekendMarketSnapshotDocument",
 ]
