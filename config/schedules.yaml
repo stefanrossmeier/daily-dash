@@ -1,0 +1,48 @@
+schema_version: 1
+
+schedules:
+  news-top:
+    schedule_id: news-top
+    enabled: true
+    flow_path: f/daily_dash/news_top
+    timezone: Europe/Berlin
+    days: [MON, TUE, WED, THU, FRI, SAT, SUN]
+    slots_local: ["00:00", "06:00", "12:00", "18:00"]
+    window:
+      grace_minutes: 60
+
+  news-german:
+    schedule_id: news-german
+    enabled: true
+    flow_path: f/daily_dash/news_german
+    timezone: Europe/Berlin
+    days: [MON, TUE, WED, THU, FRI, SAT, SUN]
+    slots_local: ["07:05", "10:05", "12:05", "15:05", "18:05", "21:10"]
+    window:
+      grace_minutes: 60
+
+  news-alternative:
+    schedule_id: news-alternative
+    enabled: true
+    flow_path: f/daily_dash/news_alternative
+    timezone: Europe/Berlin
+    days: [MON, TUE, WED, THU, FRI, SAT, SUN]
+    slots_local: ["07:10", "10:10", "12:10", "15:10", "18:10", "21:20"]
+    window:
+      grace_minutes: 60
+
+  markets:
+    schedule_id: markets
+    enabled: true
+    flow_path: f/daily_dash/markets
+    timezone: Europe/Berlin
+    days: [MON, TUE, WED, THU, FRI]
+    slots_local: ["08:05", "09:30", "11:20", "14:30", "15:40", "17:30", "19:00", "22:00"]
+
+  markets-weekend:
+    schedule_id: markets-weekend
+    enabled: false
+    flow_path: f/daily_dash/markets_weekend
+    timezone: Europe/Berlin
+    days: [SAT, SUN]
+    slots_local: ["10:30", "20:30"]

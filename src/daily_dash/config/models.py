@@ -10,6 +10,84 @@ from daily_dash.contracts.market import MarketGroup
 IDENTIFIER_PATTERN = r"^[a-z0-9][a-z0-9-]*$"
 
 
+DayOfWeek = Literal["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]
+
+
+class ScheduleWindowConfig(BaseModel):
+    """Retrieval window policy derived from scheduled execution slots."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    grace_minutes: int = Field(default=60, ge=0, le=360)
+
+
+class PipelineScheduleConfig(BaseModel):
+    """Schedule definition shared by DailyDash and Windmill."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    schedule_id: str = Field(min_length=1, pattern=IDENTIFIER_PATTERN)
+    enabled: bool = True
+    flow_path: str = Field(min_length=1, pattern=r"^[fug]/[A-Za-z0-9_./-]+$")
+    timezone: str = Field(default="Europe/Berlin", min_length=1)
+    days: list[DayOfWeek] = Field(min_length=1)
+    slots_local: list[str] = Field(min_length=1)
+    window: ScheduleWindowConfig | None = None
+
+    @field_validator("timezone")
+    @classmethod
+    def validate_schedule_timezone(cls, value: str) -> str:
+        try:
+            ZoneInfo(value)
+        except ZoneInfoNotFoundError as exc:
+            raise ValueError(f"unknown timezone: {value}") from exc
+        return value
+
+    @field_validator("days")
+    @classmethod
+    def validate_unique_days(cls, value: list[DayOfWeek]) -> list[DayOfWeek]:
+        if len(value) != len(set(value)):
+            raise ValueError("schedule days must be unique")
+        return value
+
+    @field_validator("slots_local")
+    @classmethod
+    def validate_slots(cls, value: list[str]) -> list[str]:
+        if len(value) != len(set(value)):
+            raise ValueError("schedule slots must be unique")
+
+        for slot in value:
+            try:
+                hour_text, minute_text = slot.split(":", 1)
+                hour = int(hour_text)
+                minute = int(minute_text)
+            except (TypeError, ValueError) as exc:
+                raise ValueError(f"invalid schedule slot: {slot!r}") from exc
+
+            if len(slot) != 5 or not 0 <= hour <= 23 or not 0 <= minute <= 59:
+                raise ValueError(f"invalid schedule slot: {slot!r}")
+
+        return value
+
+
+class ScheduleRegistry(BaseModel):
+    """Versioned registry of all DailyDash production schedules."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    schema_version: Literal[1] = 1
+    schedules: dict[str, PipelineScheduleConfig]
+
+    @model_validator(mode="after")
+    def validate_schedule_ids(self) -> Self:
+        for key, schedule in self.schedules.items():
+            if key != schedule.schedule_id:
+                raise ValueError(
+                    f"schedule key {key!r} does not match schedule_id {schedule.schedule_id!r}"
+                )
+        return self
+
+
 class RetrievalConfig(BaseModel):
     """Retrieval limits shared by news profiles."""
 
@@ -28,6 +106,38 @@ class KeywordConfig(BaseModel):
     exclude: list[str] = Field(default_factory=list)
 
 
+class PromptRefConfig(BaseModel):
+    """Reference to a versioned prompt asset."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    id: str = Field(
+        default="news-ranking",
+        min_length=1,
+        pattern=IDENTIFIER_PATTERN,
+    )
+
+    version: str = Field(
+        default="v1",
+        min_length=1,
+        pattern=IDENTIFIER_PATTERN,
+    )
+
+
+class ScreeningConfig(BaseModel):
+    """Lightweight semantic screen used before the rich Top-News ranking."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    enabled: bool = True
+    batch_size: int = Field(default=25, ge=5, le=50)
+    finalist_limit: int = Field(default=30, ge=1, le=100)
+    model_alias: str = Field(default="rank-cheap", min_length=1)
+    prompt: PromptRefConfig = Field(
+        default_factory=lambda: PromptRefConfig(id="news-screening", version="v1")
+    )
+
+
 class RankingConfig(BaseModel):
     """Candidate reduction and semantic ranking configuration."""
 
@@ -39,12 +149,19 @@ class RankingConfig(BaseModel):
     llm_enabled: bool = True
     model_alias: str = Field(default="rank-cheap", min_length=1)
 
+    prompt: PromptRefConfig = Field(
+        default_factory=PromptRefConfig,
+    )
+
     min_score: float = Field(default=0.5, ge=0.0, le=1.0)
+    screening: ScreeningConfig | None = None
 
     @model_validator(mode="after")
     def validate_limits(self) -> Self:
         if self.top_k > self.prefilter_limit:
             raise ValueError("top_k must not exceed prefilter_limit")
+        if self.screening is not None and self.screening.finalist_limit > self.prefilter_limit:
+            raise ValueError("screening finalist_limit must not exceed prefilter_limit")
         return self
 
 

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Fixture Financial News</title>
+    <link>https://example.test/</link>
+    <description>Test feed</description>
+    <item>
+      <title>Central bank unexpectedly cuts rates</title>
+      <link>https://example.test/rates?utm_source=rss</link>
+      <description><![CDATA[<p>A material policy surprise.</p>]]></description>
+      <pubDate>Thu, 27 Aug 2026 08:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Old article outside window</title>
+      <link>https://example.test/old</link>
+      <description>Old.</description>
+      <pubDate>Mon, 24 Aug 2026 08:00:00 GMT</pubDate>
+    </item>
+  </channel>
+</rss>

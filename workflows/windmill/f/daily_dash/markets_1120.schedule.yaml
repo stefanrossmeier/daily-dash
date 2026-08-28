@@ -1,0 +1,8 @@
+summary: DailyDash markets 11:20
+schedule: 0 20 11 * * MON,TUE,WED,THU,FRI
+timezone: Europe/Berlin
+enabled: true
+script_path: f/daily_dash/markets
+is_flow: true
+args: {}
+no_flow_overlap: true

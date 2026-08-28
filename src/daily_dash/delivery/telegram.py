@@ -53,11 +53,13 @@ class TelegramDelivery:
         *,
         client: httpx.Client | None = None,
         timeout_seconds: float = 25.0,
+        parse_mode: str = "Markdown",
     ) -> None:
         self._token = token
         self._chat_id = chat_id
         self._client = client
         self._timeout_seconds = timeout_seconds
+        self._parse_mode = parse_mode
 
     @staticmethod
     def _message_id(payload: Any) -> str | None:
@@ -84,7 +86,7 @@ class TelegramDelivery:
                     data={
                         "chat_id": self._chat_id,
                         "text": part,
-                        "parse_mode": "Markdown",
+                        "parse_mode": self._parse_mode,
                     },
                 )
                 response.raise_for_status()

@@ -1,0 +1,23 @@
+schema_version: 1
+
+aliases:
+  rank-cheap:
+    provider: openrouter
+    model: openai/gpt-5.4-nano
+    max_attempts: 2
+    timeout_seconds: 180
+    require_structured_output: true
+
+  rank-budget:
+    provider: openrouter
+    model: deepseek/deepseek-v4-flash-0731
+    max_attempts: 1
+    timeout_seconds: 180
+    require_structured_output: true
+
+  rank-baseline:
+    provider: openrouter
+    model: openai/gpt-5-nano
+    max_attempts: 1
+    timeout_seconds: 180
+    require_structured_output: true

@@ -5,6 +5,7 @@ description = "Self-hosted data intelligence pipelines with LLM-assisted ranking
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "feedparser>=6.0.14,<7",
     "httpx>=0.28.1",
     "pydantic>=2.13.4",
     "pydantic-settings>=2.15.0",

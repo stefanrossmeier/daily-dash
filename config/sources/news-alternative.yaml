@@ -2,12 +2,93 @@ schema_version: 1
 pipeline: news
 source_set_id: news-alternative
 
+# Initial conservative alternative/independent set migrated from legacy DailyDash.
+# Being alternative is not itself a ranking bonus.
 sources:
-  - id: placeholder-alternative
-    name: Placeholder Alternative News Feed
+  - id: zerohedge
+    name: ZeroHedge
     kind: rss
-    url: https://example.com/alternative-news.xml
-    enabled: false
+    url: https://cms.zerohedge.com/fullrss2.xml
+    enabled: true
     weight: 1.0
-    tags:
-      - placeholder
+    tags: [alternative]
+
+  - id: naked-capitalism
+    name: Naked Capitalism
+    kind: rss
+    url: https://www.nakedcapitalism.com/feed
+    enabled: true
+    weight: 1.0
+    tags: [alternative, analysis]
+
+  - id: wolf-street
+    name: Wolf Street
+    kind: rss
+    url: https://wolfstreet.com/feed
+    enabled: true
+    weight: 1.0
+    tags: [alternative, analysis]
+
+  - id: fxstreet
+    name: FXStreet News
+    kind: rss
+    url: https://www.fxstreet.com/rss/news
+    enabled: true
+    weight: 1.0
+    tags: [markets, fx, high-volume]
+
+  - id: calculated-risk
+    name: Calculated Risk
+    kind: rss
+    url: https://feeds.feedburner.com/CalculatedRisk
+    enabled: true
+    weight: 1.0
+    tags: [analysis, macro]
+
+  - id: mishtalk
+    name: MishTalk
+    kind: rss
+    url: https://mishtalk.com/feed
+    enabled: true
+    weight: 1.0
+    tags: [alternative, analysis]
+
+  - id: ritholtz
+    name: The Big Picture
+    kind: rss
+    url: https://ritholtz.com/feed
+    enabled: true
+    weight: 1.0
+    tags: [analysis, markets]
+
+  - id: abnormal-returns
+    name: Abnormal Returns
+    kind: rss
+    url: https://abnormalreturns.com/feed
+    enabled: true
+    weight: 1.0
+    tags: [analysis, markets]
+
+  - id: pragmatic-capitalism
+    name: Pragmatic Capitalism
+    kind: rss
+    url: https://www.pragcap.com/feed
+    enabled: true
+    weight: 1.0
+    tags: [analysis, macro]
+
+  - id: wealth-common-sense
+    name: A Wealth of Common Sense
+    kind: rss
+    url: https://awealthofcommonsense.com/feed
+    enabled: true
+    weight: 1.0
+    tags: [analysis, markets]
+
+  - id: felder-report
+    name: The Felder Report
+    kind: rss
+    url: https://thefelderreport.com/feed
+    enabled: true
+    weight: 1.0
+    tags: [alternative, analysis]

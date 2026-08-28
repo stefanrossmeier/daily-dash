@@ -1,4 +1,6 @@
 version: v2
 locks:
+  f/daily_dash/deliver_news: f92d2f4d48d0959a1820752f08a1b0df89bb2a3710ff623b04b0041b67f23e5c
   f/daily_dash/persist_data_repo: e4dc9510ecaf8b1c5763d8fc377840ea97fcf0074b56ce387c4940c2716610fc
   f/daily_dash/run_markets: 8c31788ad48644d94dd9b663bc259d019d434b4a1cf160fd1421dd192cef2b1a
+  f/daily_dash/run_news: 9ea6933e4ae869f79b970f7b0cec1800a7ea0707a4aa6cc0040ea9adb819a2aa

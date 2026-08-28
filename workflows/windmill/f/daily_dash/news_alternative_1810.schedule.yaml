@@ -1,0 +1,8 @@
+summary: DailyDash news-alternative 18:10
+schedule: 0 10 18 * * *
+timezone: Europe/Berlin
+enabled: true
+script_path: f/daily_dash/news_alternative
+is_flow: true
+args: {}
+no_flow_overlap: true

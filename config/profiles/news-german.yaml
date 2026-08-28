@@ -5,7 +5,7 @@ pipeline: news
 source_set: news-german
 
 retrieval:
-  lookback_hours: 24
+  lookback_hours: 10
   max_items_per_source: 50
 
 keywords:
@@ -13,13 +13,16 @@ keywords:
   exclude: []
 
 ranking:
-  prefilter_limit: 40
-  top_k: 10
+  prefilter_limit: 60
+  top_k: 12
   llm_enabled: true
   model_alias: rank-cheap
+  prompt:
+    id: news-ranking
+    version: v5
   min_score: 0.50
 
 presentation:
   title: German News
   language: de
-  max_items: 10
+  max_items: 12

@@ -28,6 +28,12 @@ uv run pytest \
   --cov-report=term-missing
 
 echo
+echo "==> Running model gateway tests"
+uv run --project services/model-gateway python -m unittest discover \
+  -s services/model-gateway/tests \
+  -p 'test_*.py'
+
+echo
 echo "==> Validating configuration"
 uv run daily-dash validate-config
 

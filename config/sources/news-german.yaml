@@ -3,11 +3,90 @@ pipeline: news
 source_set_id: news-german
 
 sources:
-  - id: placeholder-german
-    name: Placeholder German News Feed
+  - id: handelsblatt-finanzen
+    name: Handelsblatt Finanzen
     kind: rss
-    url: https://example.com/german-news.xml
-    enabled: false
+    url: https://www.handelsblatt.com/contentexport/feed/finanzen/
+    enabled: true
     weight: 1.0
-    tags:
-      - placeholder
+    tags: [germany, finance]
+
+  - id: handelsblatt-top
+    name: Handelsblatt Top
+    kind: rss
+    url: https://www.handelsblatt.com/contentexport/feed/top-themen
+    enabled: true
+    weight: 1.0
+    tags: [germany, business]
+
+  - id: manager-magazin
+    name: manager magazin
+    kind: rss
+    url: https://www.manager-magazin.de/news/index.rss
+    enabled: true
+    weight: 1.0
+    tags: [germany, business]
+
+  - id: capital-de
+    name: Capital.de
+    kind: rss
+    url: https://www.capital.de/rss
+    enabled: true
+    weight: 1.0
+    tags: [germany, business]
+
+  - id: ntv-wirtschaft
+    name: n-tv Wirtschaft & Börse
+    kind: rss
+    url: https://www.n-tv.de/181.rss
+    enabled: true
+    weight: 1.0
+    tags: [germany, markets]
+
+  - id: boerse-frankfurt
+    name: Börse Frankfurt
+    kind: rss
+    url: https://api.boerse-frankfurt.de/v1/feeds/news.rss
+    enabled: true
+    weight: 1.0
+    tags: [germany, markets]
+
+  - id: bundesbank-all
+    name: Bundesbank Allgemein
+    kind: rss
+    url: https://www.bundesbank.de/service/rss/de/633290/feed.rss
+    enabled: true
+    weight: 1.0
+    tags: [official, germany, central-bank]
+
+  - id: bundesbank-press
+    name: Bundesbank Pressenotizen
+    kind: rss
+    url: https://www.bundesbank.de/service/rss/de/633286/feed.rss
+    enabled: true
+    weight: 1.0
+    tags: [official, germany, central-bank]
+
+  - id: destatis
+    name: Destatis Aktuell
+    kind: rss
+    url: https://www.destatis.de/SiteGlobals/Functions/RSSFeed/DE/RSSNewsfeed/Aktuell.xml?nn=241288
+    enabled: true
+    weight: 1.0
+    tags: [official, germany, macro]
+
+  - id: ecb-press
+    name: ECB Press
+    kind: rss
+    url: https://www.ecb.europa.eu/rss/press.html
+    enabled: true
+    weight: 1.0
+    tags: [official, europe, central-bank]
+
+  - id: fed-press
+    name: Federal Reserve Press
+    kind: rss
+    url: https://www.federalreserve.gov/feeds/press_all.xml
+    enabled: true
+    weight: 1.0
+    tags: [official, global, central-bank]

@@ -2,12 +2,117 @@ schema_version: 1
 pipeline: news
 source_set_id: news-top
 
+# Initial conservative source set migrated from legacy DailyDash.
+# Source membership is configuration. Semantic importance is decided by the ranker.
 sources:
-  - id: placeholder-top
-    name: Placeholder Top News Feed
+  - id: ft-world
+    name: FT World
     kind: rss
-    url: https://example.com/top-news.xml
-    enabled: false
-    weight: 1.0
-    tags:
-      - placeholder
+    url: https://www.ft.com/world?format=rss
+    enabled: true
+    tags: [mainstream, global]
+
+  - id: ft-europe
+    name: FT Europe
+    kind: rss
+    url: https://www.ft.com/europe?format=rss
+    enabled: true
+    tags: [mainstream, europe]
+
+  - id: ft-eurozone
+    name: FT Eurozone
+    kind: rss
+    url: https://www.ft.com/eurozone?format=rss
+    enabled: true
+    tags: [mainstream, europe, macro]
+
+  - id: ft-markets
+    name: FT Markets
+    kind: rss
+    url: https://www.ft.com/markets?format=rss
+    enabled: true
+    tags: [mainstream, markets]
+
+  - id: bloomberg-markets
+    name: Bloomberg Markets
+    kind: rss
+    url: https://feeds.bloomberg.com/markets/news.rss
+    enabled: true
+    tags: [mainstream, markets]
+
+  - id: cnbc-top
+    name: CNBC Top
+    kind: rss
+    url: https://www.cnbc.com/id/100003114/device/rss/rss.html
+    enabled: true
+    tags: [mainstream, business]
+
+  - id: cnbc-markets
+    name: CNBC Markets
+    kind: rss
+    url: https://www.cnbc.com/id/10001147/device/rss/rss.html
+    enabled: true
+    tags: [mainstream, markets]
+
+  - id: wsj-markets
+    name: WSJ Markets
+    kind: rss
+    url: https://feeds.a.dj.com/rss/RSSMarketsMain.xml
+    enabled: true
+    tags: [mainstream, markets]
+
+  - id: marketwatch-top
+    name: MarketWatch Top Stories
+    kind: rss
+    url: http://feeds.marketwatch.com/marketwatch/topstories/
+    enabled: true
+    tags: [mainstream, markets]
+
+  - id: investing-latest
+    name: Investing.com Latest
+    kind: rss
+    url: https://www.investing.com/rss/news_25.rss
+    enabled: true
+    tags: [markets]
+
+  - id: investing-europe
+    name: Investing.com Europe
+    kind: rss
+    url: https://www.investing.com/rss/news_285.rss
+    enabled: true
+    tags: [markets, europe]
+
+  - id: politico-eu
+    name: POLITICO EU
+    kind: rss
+    url: https://www.politico.eu/feed/
+    enabled: true
+    tags: [politics, europe]
+
+  - id: euronews-economy
+    name: Euronews Economy
+    kind: rss
+    url: https://www.euronews.com/rss?level=theme&name=economy
+    enabled: true
+    tags: [economy, europe]
+
+  - id: ec-ecfin
+    name: European Commission ECFIN
+    kind: rss
+    url: https://economy-finance.ec.europa.eu/node/2/rss_en?format=rss
+    enabled: true
+    tags: [official, economy, europe]
+
+  - id: ecb-press
+    name: ECB Press
+    kind: rss
+    url: https://www.ecb.europa.eu/rss/press.html
+    enabled: true
+    tags: [official, central-bank]
+
+  - id: fed-press
+    name: Federal Reserve Press
+    kind: rss
+    url: https://www.federalreserve.gov/feeds/press_all.xml
+    enabled: true
+    tags: [official, central-bank]

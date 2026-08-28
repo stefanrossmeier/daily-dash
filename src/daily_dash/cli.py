@@ -79,7 +79,8 @@ def _run_validate_config(args: argparse.Namespace, parser: argparse.ArgumentPars
     print(
         "Configuration valid: "
         f"{result.profile_count} profiles, "
-        f"{result.source_set_count} source sets"
+        f"{result.source_set_count} source sets, "
+        f"{result.schedule_count} schedules"
     )
 
 

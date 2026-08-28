@@ -1,0 +1,8 @@
+summary: DailyDash news-top 18:00
+schedule: 0 0 18 * * *
+timezone: Europe/Berlin
+enabled: true
+script_path: f/daily_dash/news_top
+is_flow: true
+args: {}
+no_flow_overlap: true

@@ -1,0 +1,8 @@
+summary: DailyDash news-german 07:05
+schedule: 0 5 7 * * *
+timezone: Europe/Berlin
+enabled: true
+script_path: f/daily_dash/news_german
+is_flow: true
+args: {}
+no_flow_overlap: true

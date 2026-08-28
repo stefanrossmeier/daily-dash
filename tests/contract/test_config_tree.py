@@ -26,6 +26,14 @@ def test_repository_configuration_is_valid() -> None:
         "news-top",
     )
 
+    assert result.schedule_ids == (
+        "markets",
+        "markets-weekend",
+        "news-alternative",
+        "news-german",
+        "news-top",
+    )
+
 
 def test_all_news_variants_use_same_pipeline() -> None:
     profiles = [

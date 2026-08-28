@@ -1,0 +1,62 @@
+summary: DailyDash Alternative News
+description: Retrieve and rank News, persist the immutable run artifact, then deliver
+  original-article links to Telegram.
+value:
+  modules:
+  - id: run_news
+    summary: Run Alternative News
+    value:
+      type: script
+      path: f/daily_dash/run_news
+      tag_override: dailydash
+      input_transforms:
+        profile:
+          type: static
+          value: news-alternative
+  - id: persist_data_repo
+    summary: Persist Alternative News artifact
+    value:
+      type: script
+      path: f/daily_dash/persist_data_repo
+      tag_override: dailydash
+      input_transforms:
+        deploy_key:
+          type: static
+          value: $var:f/daily_dash/data_repo_deploy_key
+        repo_path:
+          type: static
+          value: /data/daily-dash-data
+        data_path:
+          type: static
+          value: news/alternative
+        remote_url:
+          type: static
+          value: git@github.com:stefanrossmeier/daily-dash-data.git
+        branch:
+          type: static
+          value: main
+        commit_message:
+          type: static
+          value: news/alternative
+  - id: deliver_news
+    summary: Deliver Alternative News to Telegram
+    value:
+      type: script
+      path: f/daily_dash/deliver_news
+      tag_override: dailydash
+      input_transforms:
+        artifact_path:
+          type: javascript
+          expr: results.run_news.artifact_path
+        telegram_token:
+          type: javascript
+          expr: variable("f/daily_dash/telegram_token")
+        telegram_chat_id:
+          type: javascript
+          expr: variable("f/daily_dash/telegram_chat_id")
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  order: []
+  properties: {}
+  required: []

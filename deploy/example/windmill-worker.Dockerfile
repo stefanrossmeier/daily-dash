@@ -12,6 +12,7 @@ WORKDIR /opt/daily-dash
 COPY pyproject.toml uv.lock README.md .python-version ./
 COPY src ./src
 COPY config ./config
+COPY assets /opt/daily-dash/assets
 
 RUN uv sync \
     --frozen \

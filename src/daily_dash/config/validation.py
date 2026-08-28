@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from daily_dash.config.errors import ConfigurationError
-from daily_dash.config.loader import load_profile, load_source_set
+from daily_dash.config.loader import load_profile, load_schedule_registry, load_source_set
 from daily_dash.config.models import Profile, SourceSet
 
 
@@ -12,6 +12,7 @@ from daily_dash.config.models import Profile, SourceSet
 class ConfigValidationResult:
     profile_ids: tuple[str, ...]
     source_set_ids: tuple[str, ...]
+    schedule_ids: tuple[str, ...]
 
     @property
     def profile_count(self) -> int:
@@ -20,6 +21,10 @@ class ConfigValidationResult:
     @property
     def source_set_count(self) -> int:
         return len(self.source_set_ids)
+
+    @property
+    def schedule_count(self) -> int:
+        return len(self.schedule_ids)
 
 
 def validate_config_tree(config_dir: Path) -> ConfigValidationResult:
@@ -62,6 +67,8 @@ def validate_config_tree(config_dir: Path) -> ConfigValidationResult:
 
         source_sets[source_set.source_set_id] = source_set
 
+    registry = load_schedule_registry(config_dir / "schedules.yaml")
+
     for profile in profiles.values():
         resolved_source_set = source_sets.get(profile.source_set)
         if resolved_source_set is None:
@@ -77,7 +84,19 @@ def validate_config_tree(config_dir: Path) -> ConfigValidationResult:
                 f"'{resolved_source_set.pipeline}'"
             )
 
+    for profile_id in profiles:
+        schedule = registry.schedules.get(profile_id)
+        if schedule is None:
+            raise ConfigurationError(f"profile '{profile_id}' has no schedule registry entry")
+        if not schedule.enabled:
+            raise ConfigurationError(f"profile '{profile_id}' has a disabled production schedule")
+        if profile_id.startswith("news-") and schedule.window is None:
+            raise ConfigurationError(
+                f"news profile '{profile_id}' schedule has no retrieval window"
+            )
+
     return ConfigValidationResult(
         profile_ids=tuple(sorted(profiles)),
         source_set_ids=tuple(sorted(source_sets)),
+        schedule_ids=tuple(sorted(registry.schedules)),
     )

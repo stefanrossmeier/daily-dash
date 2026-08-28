@@ -1,0 +1,7 @@
+id: news-screening
+version: v1
+
+system: system.md
+
+profiles:
+  news-top: profiles/top.md

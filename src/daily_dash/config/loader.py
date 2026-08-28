@@ -13,6 +13,7 @@ from daily_dash.config.models import (
     NewsProfile,
     NewsSourceSet,
     Profile,
+    ScheduleRegistry,
     SourceSet,
 )
 
@@ -97,3 +98,11 @@ def load_market_source_set(path: Path) -> MarketSourceSet:
     if not isinstance(source_set, MarketSourceSet):
         raise ConfigurationError(f"expected market source set: {path}")
     return source_set
+
+
+def load_schedule_registry(path: Path) -> ScheduleRegistry:
+    raw = _read_yaml(path)
+    try:
+        return ScheduleRegistry.model_validate(raw)
+    except ValidationError as exc:
+        raise ConfigurationError(f"invalid schedule registry {path}: {exc}") from exc

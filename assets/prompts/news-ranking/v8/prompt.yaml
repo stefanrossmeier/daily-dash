@@ -1,0 +1,9 @@
+id: news-ranking
+version: v8
+
+system: system.md
+
+profiles:
+  news-top: profiles/top.md
+  news-alternative: profiles/alternative.md
+  news-german: profiles/german.md

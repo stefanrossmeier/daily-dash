@@ -1,0 +1,100 @@
+[
+  {
+    "id": "fed-emergency-cut",
+    "source": "Financial Wire",
+    "published_at": "2026-08-27T09:30:00Z",
+    "title": "Federal Reserve unexpectedly cuts rates by 75 basis points after emergency meeting",
+    "summary": "Markets had overwhelmingly expected rates to remain unchanged. The central bank cited rapidly deteriorating financial conditions."
+  },
+  {
+    "id": "oil-terminal-outage",
+    "source": "Energy Wire",
+    "published_at": "2026-08-27T09:20:00Z",
+    "title": "Major export terminal outage removes roughly two million barrels per day from global oil supply",
+    "summary": "Officials said repairs could take several weeks. Oil futures rose sharply after the announcement."
+  },
+  {
+    "id": "european-bank-stress",
+    "source": "Business News",
+    "published_at": "2026-08-27T09:10:00Z",
+    "title": "Large European bank seeks emergency liquidity support after deposit outflows",
+    "summary": "Authorities said they were monitoring the situation and preparing measures to contain possible contagion."
+  },
+  {
+    "id": "german-auto-warning",
+    "source": "German Business Daily",
+    "published_at": "2026-08-27T08:50:00Z",
+    "title": "Major German automaker cuts full-year profit guidance sharply",
+    "summary": "The company cited weaker Chinese demand, tariffs and higher restructuring costs. Shares fell in premarket trading."
+  },
+  {
+    "id": "ai-acquisition",
+    "source": "Technology Wire",
+    "published_at": "2026-08-27T08:40:00Z",
+    "title": "Large technology company agrees to acquire AI chip developer for $40 billion",
+    "summary": "The transaction would be among the largest semiconductor acquisitions and could reshape competition in AI infrastructure."
+  },
+  {
+    "id": "german-fiscal-package",
+    "source": "German News",
+    "published_at": "2026-08-27T08:25:00Z",
+    "title": "German government agrees major multi-year infrastructure investment package",
+    "summary": "The package substantially increases planned spending on transport, power networks and digital infrastructure."
+  },
+  {
+    "id": "shipping-insurance",
+    "source": "Independent Shipping Journal",
+    "published_at": "2026-08-27T08:10:00Z",
+    "title": "War-risk insurance premiums triple on key shipping route as vessels begin rerouting",
+    "summary": "Several major operators have quietly altered routes. The development has received limited coverage from large financial outlets."
+  },
+  {
+    "id": "grid-transformers",
+    "source": "Independent Energy Analysis",
+    "published_at": "2026-08-27T07:55:00Z",
+    "title": "Transformer shortages could delay planned European data-center connections",
+    "summary": "Grid operators report delivery times exceeding two years, potentially constraining electricity access for large AI infrastructure projects."
+  },
+  {
+    "id": "inflation-inline",
+    "source": "Macro News",
+    "published_at": "2026-08-27T09:35:00Z",
+    "title": "Euro-area inflation matches economists' forecast exactly",
+    "summary": "Headline and core inflation were both in line with consensus expectations and little changed from the prior month."
+  },
+  {
+    "id": "ecb-expected-hold",
+    "source": "Financial News",
+    "published_at": "2026-08-27T09:40:00Z",
+    "title": "ECB leaves rates unchanged as widely expected",
+    "summary": "The statement contained no material changes to the central bank's previous guidance."
+  },
+  {
+    "id": "analyst-target",
+    "source": "Market Blog",
+    "published_at": "2026-08-27T09:42:00Z",
+    "title": "Broker raises price target on large software company by 3%",
+    "summary": "The analyst maintained the existing rating and made only small changes to earnings estimates."
+  },
+  {
+    "id": "stock-up-no-catalyst",
+    "source": "Market News",
+    "published_at": "2026-08-27T09:44:00Z",
+    "title": "Industrial stock rises 2.1% in morning trading",
+    "summary": "The article identifies no company announcement, macroeconomic event or other new catalyst."
+  },
+  {
+    "id": "minor-german-tax",
+    "source": "Regional German News",
+    "published_at": "2026-08-27T09:00:00Z",
+    "title": "German municipality adjusts local commercial tax rate",
+    "summary": "The change affects companies operating in one medium-sized municipality and has no broader national application."
+  },
+  {
+    "id": "celebrity-fashion",
+    "source": "Lifestyle News",
+    "published_at": "2026-08-27T09:46:00Z",
+    "title": "Celebrity launches new clothing collection",
+    "summary": "The collection will be sold online beginning next month."
+  }
+]
