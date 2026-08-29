@@ -29,6 +29,7 @@ class GatewayResponse(BaseModel):
     attempts: int = Field(default=1, ge=1)
     attempt_errors: list[str] = Field(default_factory=list)
     usage_complete: bool = True
+    provider_metadata: dict[str, object] = Field(default_factory=dict)
 
 
 class StructuredChatClient(Protocol):
@@ -80,6 +81,42 @@ class ModelGatewayClient:
                     {"role": "system", "content": system},
                     {"role": "user", "content": user},
                 ],
+                "response_schema_name": response_schema_name,
+                "response_schema": response_schema,
+            },
+            timeout=self._timeout_seconds,
+        )
+
+        if response.is_error:
+            raise RuntimeError(
+                f"model gateway returned HTTP {response.status_code}: {response.text}"
+            )
+
+        return GatewayResponse.model_validate(response.json())
+
+    def x_search_structured(
+        self,
+        *,
+        alias: str,
+        purpose: str,
+        profile: str,
+        input_text: str,
+        allowed_x_handles: list[str],
+        from_date: str,
+        to_date: str,
+        response_schema_name: str,
+        response_schema: dict[str, object],
+    ) -> GatewayResponse:
+        response = httpx.post(
+            f"{self._base_url}/v1/x-search",
+            json={
+                "alias": alias,
+                "purpose": purpose,
+                "profile": profile,
+                "input": input_text,
+                "allowed_x_handles": allowed_x_handles,
+                "from_date": from_date,
+                "to_date": to_date,
                 "response_schema_name": response_schema_name,
                 "response_schema": response_schema,
             },

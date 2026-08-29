@@ -1,0 +1,11 @@
+schema_version: 1
+pipeline: x-watchlist
+source_set_id: x-watchlist
+provider: grok-x-search
+handles:
+  - KobeissiLetter
+  - AndreasSteno
+  - markoinny
+  - NickTimiraos
+  - DeItaone
+  - elerianm

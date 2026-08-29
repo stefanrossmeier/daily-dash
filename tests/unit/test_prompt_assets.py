@@ -364,3 +364,29 @@ def test_load_polymarket_ranking_v5_prompt_adds_controlled_theme() -> None:
     assert "energy-shipping" in normalized
     assert "maximum of two published signals per theme" in prompt.profile_text
     assert len(prompt.combined_sha256) == 64
+
+
+def test_load_x_watchlist_prompts() -> None:
+    retrieval = load_prompt_asset(
+        "x-watchlist-retrieval",
+        "v3",
+        "x-watchlist",
+        assets_dir=_ASSETS_DIR,
+    )
+    ranking = load_prompt_asset(
+        "x-watchlist-ranking",
+        "v3",
+        "x-watchlist",
+        assets_dir=_ASSETS_DIR,
+    )
+    assert retrieval.version == "v3"
+    assert "Prioritize recall" in retrieval.system
+    assert "Do not first perform an unbounded account search" in retrieval.system
+    assert "all allowed handles" in retrieval.profile_text
+    assert ranking.version == "v3"
+    assert "information_value" in ranking.system
+    assert "reasonable chance" in ranking.system
+    assert "Do not penalize a post merely because it is analysis" in ranking.system
+    assert "same underlying event" in ranking.system
+    assert "Missing a potentially useful topic is worse" in ranking.profile_text
+    assert "at most one post per topic" in ranking.profile_text

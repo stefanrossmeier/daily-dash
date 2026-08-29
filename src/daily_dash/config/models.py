@@ -258,6 +258,75 @@ class WsbProfile(BaseModel):
         return self
 
 
+class XWatchlistRetrievalConfig(BaseModel):
+    """Grok-native X retrieval configuration for the curated watchlist."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    model_alias: str = Field(default="x-retrieve", min_length=1)
+    prompt: PromptRefConfig = Field(
+        default_factory=lambda: PromptRefConfig(id="x-watchlist-retrieval", version="v3")
+    )
+    max_items: int = Field(default=80, ge=1, le=200)
+    require_citation_evidence: bool = True
+
+
+class XWatchlistRankingConfig(BaseModel):
+    """Semantic market-signal ranking for retrieved X posts."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    batch_size: int = Field(default=20, ge=1, le=50)
+    top_k: int = Field(default=12, ge=1, le=50)
+    llm_enabled: bool = True
+    model_alias: str = Field(default="rank-cheap", min_length=1)
+    prompt: PromptRefConfig = Field(
+        default_factory=lambda: PromptRefConfig(id="x-watchlist-ranking", version="v3")
+    )
+    min_semantic_score: float = Field(default=0.35, ge=0.0, le=1.0)
+    min_relevance: int = Field(default=35, ge=0, le=100)
+    min_market_impact: int = Field(default=15, ge=0, le=100)
+    min_information_value: int = Field(default=30, ge=0, le=100)
+    max_items_per_topic: int = Field(default=1, ge=1, le=5)
+
+
+class XWatchlistPresentationConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    title: str = Field(default="X Watchlist", min_length=1)
+    timezone: str = Field(default="Europe/Berlin", min_length=1)
+    max_items: int = Field(default=12, ge=1, le=50)
+
+    @field_validator("timezone")
+    @classmethod
+    def validate_timezone(cls, value: str) -> str:
+        try:
+            ZoneInfo(value)
+        except ZoneInfoNotFoundError as exc:
+            raise ValueError(f"unknown timezone: {value}") from exc
+        return value
+
+
+class XWatchlistProfile(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    schema_version: Literal[1] = 1
+    profile_id: Literal["x-watchlist"] = "x-watchlist"
+    pipeline: Literal["x-watchlist"] = "x-watchlist"
+    source_set: str = Field(min_length=1, pattern=IDENTIFIER_PATTERN)
+    retrieval: XWatchlistRetrievalConfig
+    ranking: XWatchlistRankingConfig
+    presentation: XWatchlistPresentationConfig
+
+    @model_validator(mode="after")
+    def validate_limits(self) -> Self:
+        if self.presentation.max_items > self.ranking.top_k:
+            raise ValueError("X Watchlist presentation.max_items must not exceed ranking.top_k")
+        if self.ranking.top_k > self.retrieval.max_items:
+            raise ValueError("X Watchlist ranking.top_k must not exceed retrieval.max_items")
+        return self
+
+
 class PolymarketRetrievalConfig(BaseModel):
     """Event-level Polymarket retrieval limits for semantic and hot lanes."""
 
@@ -503,6 +572,29 @@ class WsbSourceSet(BaseModel):
         return value
 
 
+class XWatchlistSourceSet(BaseModel):
+    """Curated X handles discoverable only through Grok-native X search."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    schema_version: Literal[1] = 1
+    pipeline: Literal["x-watchlist"] = "x-watchlist"
+    source_set_id: Literal["x-watchlist"] = "x-watchlist"
+    provider: Literal["grok-x-search"] = "grok-x-search"
+    handles: list[str] = Field(min_length=1, max_length=20)
+
+    @field_validator("handles")
+    @classmethod
+    def validate_handles(cls, value: list[str]) -> list[str]:
+        normalized = [item.strip().lstrip("@") for item in value if item.strip()]
+        if not normalized:
+            raise ValueError("X Watchlist handles must not be empty")
+        folded = [item.casefold() for item in normalized]
+        if len(folded) != len(set(folded)):
+            raise ValueError("X Watchlist handles must be unique")
+        return normalized
+
+
 class PolymarketSourceSet(BaseModel):
     """Public Polymarket API endpoints used by the report."""
 
@@ -634,6 +726,7 @@ class YieldSourceSet(BaseModel):
 type Profile = (
     NewsProfile
     | WsbProfile
+    | XWatchlistProfile
     | PolymarketProfile
     | MarketsProfile
     | WeekendMarketsProfile
@@ -642,6 +735,7 @@ type Profile = (
 type SourceSet = (
     NewsSourceSet
     | WsbSourceSet
+    | XWatchlistSourceSet
     | PolymarketSourceSet
     | MarketSourceSet
     | WeekendMarketSourceSet

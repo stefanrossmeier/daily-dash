@@ -1,0 +1,28 @@
+schema_version: 1
+profile_id: x-watchlist
+pipeline: x-watchlist
+source_set: x-watchlist
+retrieval:
+  model_alias: x-retrieve
+  prompt:
+    id: x-watchlist-retrieval
+    version: v3
+  max_items: 80
+  require_citation_evidence: true
+ranking:
+  batch_size: 20
+  top_k: 12
+  llm_enabled: true
+  model_alias: rank-cheap
+  prompt:
+    id: x-watchlist-ranking
+    version: v3
+  min_semantic_score: 0.35
+  min_relevance: 35
+  min_market_impact: 15
+  min_information_value: 30
+  max_items_per_topic: 1
+presentation:
+  title: X Watchlist
+  timezone: Europe/Berlin
+  max_items: 12

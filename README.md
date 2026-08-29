@@ -1,7 +1,7 @@
 # DailyDash
 
 DailyDash is a reproducible, Windmill-orchestrated financial dashboard pipeline for
-weekday market snapshots, public weekend market quotes, and ranked news briefings. The public repository contains the
+weekday market snapshots, public weekend market quotes, ranked news briefings, and a Grok-native X watchlist. The public repository contains the
 application, model-gateway configuration, Windmill workflows/schedules, worker image,
 and the source files needed to recreate the local self-hosted Windmill environment.
 
@@ -54,6 +54,7 @@ configuration, is documented in:
 - [`docs/05_WINDMILL_ORCHESTRATION.md`](docs/05_WINDMILL_ORCHESTRATION.md)
 - [`docs/SCHEDULING.md`](docs/SCHEDULING.md)
 - [`docs/12_POLYMARKET_PIPELINE.md`](docs/12_POLYMARKET_PIPELINE.md)
+- [`docs/14_X_WATCHLIST_PIPELINE.md`](docs/14_X_WATCHLIST_PIPELINE.md)
 
 ## Repository boundaries
 
@@ -74,5 +75,6 @@ No secret values or private data are required or stored in the public repository
 - Smart News: GPT-5.4-nano macro-theme clustering with a preserved 18-hour rolling context window.
 - WSB: semantically ranked broad-market / market-moving retail signals plus a bounded extreme-hot lane.
 - Polymarket: event-level LLM market signals plus a separate no-LLM global hot-topics lane.
+- X Watchlist: Grok-native X retrieval across six curated accounts, followed by separate semantic market-signal ranking.
 
 All publishing workflows follow `generate artifact -> durable persistence -> external delivery`.

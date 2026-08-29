@@ -77,3 +77,23 @@ def test_news_profile_rejects_top_k_above_candidate_limit() -> None:
                 },
             }
         )
+
+
+def test_x_watchlist_profile_and_source_set_load() -> None:
+    from pathlib import Path
+
+    from daily_dash.config.loader import load_x_watchlist_profile, load_x_watchlist_source_set
+
+    root = Path(__file__).resolve().parents[2]
+    profile = load_x_watchlist_profile(root / "config/profiles/x-watchlist.yaml")
+    source = load_x_watchlist_source_set(root / "config/sources/x-watchlist.yaml")
+    assert profile.retrieval.model_alias == "x-retrieve"
+    assert profile.ranking.model_alias == "rank-cheap"
+    assert source.handles == [
+        "KobeissiLetter",
+        "AndreasSteno",
+        "markoinny",
+        "NickTimiraos",
+        "DeItaone",
+        "elerianm",
+    ]

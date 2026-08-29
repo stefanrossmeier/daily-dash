@@ -21,6 +21,8 @@ from daily_dash.config.models import (
     WeekendMarketsProfile,
     WsbProfile,
     WsbSourceSet,
+    XWatchlistProfile,
+    XWatchlistSourceSet,
     YieldProfile,
     YieldSourceSet,
 )
@@ -51,6 +53,7 @@ def load_profile(path: Path) -> Profile:
     model: (
         type[NewsProfile]
         | type[WsbProfile]
+        | type[XWatchlistProfile]
         | type[PolymarketProfile]
         | type[MarketsProfile]
         | type[WeekendMarketsProfile]
@@ -60,6 +63,8 @@ def load_profile(path: Path) -> Profile:
         model = NewsProfile
     elif pipeline == "wsb":
         model = WsbProfile
+    elif pipeline == "x-watchlist":
+        model = XWatchlistProfile
     elif pipeline == "polymarket":
         model = PolymarketProfile
     elif pipeline == "markets":
@@ -84,6 +89,7 @@ def load_source_set(path: Path) -> SourceSet:
     model: (
         type[NewsSourceSet]
         | type[WsbSourceSet]
+        | type[XWatchlistSourceSet]
         | type[PolymarketSourceSet]
         | type[MarketSourceSet]
         | type[WeekendMarketSourceSet]
@@ -93,6 +99,8 @@ def load_source_set(path: Path) -> SourceSet:
         model = NewsSourceSet
     elif pipeline == "wsb":
         model = WsbSourceSet
+    elif pipeline == "x-watchlist":
+        model = XWatchlistSourceSet
     elif pipeline == "polymarket":
         model = PolymarketSourceSet
     elif pipeline == "markets":
@@ -199,4 +207,18 @@ def load_wsb_source_set(path: Path) -> WsbSourceSet:
     source_set = load_source_set(path)
     if not isinstance(source_set, WsbSourceSet):
         raise ConfigurationError(f"expected WSB source set: {path}")
+    return source_set
+
+
+def load_x_watchlist_profile(path: Path) -> XWatchlistProfile:
+    profile = load_profile(path)
+    if not isinstance(profile, XWatchlistProfile):
+        raise ConfigurationError(f"expected X Watchlist profile: {path}")
+    return profile
+
+
+def load_x_watchlist_source_set(path: Path) -> XWatchlistSourceSet:
+    source_set = load_source_set(path)
+    if not isinstance(source_set, XWatchlistSourceSet):
+        raise ConfigurationError(f"expected X Watchlist source set: {path}")
     return source_set

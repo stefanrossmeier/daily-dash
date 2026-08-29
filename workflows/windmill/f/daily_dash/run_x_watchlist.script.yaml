@@ -1,0 +1,14 @@
+summary: Run DailyDash X Watchlist report
+description: Retrieve the curated X watchlist through Grok-native X search, rank market relevance, and write one immutable artifact.
+lock: ''
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    data_repo:
+      type: string
+      description: Local DailyDash data repository path used as the output sink.
+      default: /data/daily-dash-data
+      originalType: string
+  required: []

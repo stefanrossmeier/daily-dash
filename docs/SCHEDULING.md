@@ -20,14 +20,16 @@ so late RSS publication timestamps are less likely to be missed. Duplicate URL/t
 handling and semantic duplicate handling remain responsible for overlap inside a run.
 
 The current registry contains independent schedules for Top, German, Alternative and Smart
-News, the weekday Markets snapshot, Weekend Markets, WSB and Polymarket. Smart News runs
+News, the weekday Markets snapshot, Weekend Markets, WSB, Polymarket and X Watchlist. Smart News runs
 every day at 07:15, 12:15 and 21:00 Europe/Berlin. Unlike the article-ranking News profiles,
 it deliberately preserves its legacy rolling 18-hour retrieval window because overlapping
 context is part of the theme-clustering product behavior. Weekend Markets runs only on
 Saturday and Sunday at 10:30 and 20:30. WSB runs daily at 20:35 and Polymarket runs daily
-at 20:45, both in Europe/Berlin. The one-run-per-day alternative-data reports record a
+at 20:45. X Watchlist runs every day at 08:20 and 20:20. All use Europe/Berlin. The one-run-per-day alternative-data reports record a
 current daily-cycle window with a one-hour overlap; Polymarket's provider metrics themselves
 remain live snapshot/rolling metrics rather than historical replay data.
+
+X Watchlist uses the exact interval between its two scheduled slots with zero grace; Grok receives a coarse date envelope and application code enforces the exact timestamp boundary.
 
 For deterministic tests and manual replays, News accepts explicit ISO-8601
 `--window-start` and `--window-end` values. Both must be supplied and include timezone

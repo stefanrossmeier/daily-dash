@@ -86,3 +86,13 @@ schedules:
     slots_local: ["20:35"]
     window:
       grace_minutes: 60
+
+  x-watchlist:
+    schedule_id: x-watchlist
+    enabled: true
+    flow_path: f/daily_dash/x_watchlist
+    timezone: Europe/Berlin
+    days: [MON, TUE, WED, THU, FRI, SAT, SUN]
+    slots_local: ["08:20", "20:20"]
+    window:
+      grace_minutes: 0

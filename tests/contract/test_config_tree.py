@@ -21,6 +21,7 @@ def test_repository_configuration_is_valid() -> None:
         "news-top",
         "polymarket",
         "wsb",
+        "x-watchlist",
         "yields",
     )
 
@@ -33,6 +34,7 @@ def test_repository_configuration_is_valid() -> None:
         "news-top",
         "polymarket",
         "wsb",
+        "x-watchlist",
         "yields",
     )
 
@@ -45,6 +47,7 @@ def test_repository_configuration_is_valid() -> None:
         "news-top",
         "polymarket",
         "wsb",
+        "x-watchlist",
         "yields",
     )
 

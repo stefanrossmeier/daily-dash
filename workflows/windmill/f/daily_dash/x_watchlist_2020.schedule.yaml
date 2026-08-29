@@ -1,0 +1,8 @@
+summary: DailyDash x-watchlist 20:20
+schedule: 0 20 20 * * *
+timezone: Europe/Berlin
+enabled: true
+script_path: f/daily_dash/x_watchlist
+is_flow: true
+args: {}
+no_flow_overlap: true
