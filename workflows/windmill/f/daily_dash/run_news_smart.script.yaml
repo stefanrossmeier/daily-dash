@@ -1,0 +1,14 @@
+summary: Run DailyDash Smart News
+description: Generate and write one immutable Smart News theme artifact. Delivery is orchestrated separately after durable persistence.
+lock: ''
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    data_repo:
+      type: string
+      description: Local DailyDash data repository path used as the output sink.
+      default: /data/daily-dash-data
+      originalType: string
+  required: []

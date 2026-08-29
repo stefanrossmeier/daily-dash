@@ -1,0 +1,1 @@
+Generate the JSON object exactly as specified. Prioritize the biggest macro and cross-market developments, not isolated corporate stories. Summaries must directly describe the developments and must not refer to the items, headlines, articles, or source material itself.

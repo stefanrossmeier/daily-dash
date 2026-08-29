@@ -70,5 +70,6 @@ No secret values or private data are required or stored in the public repository
 - Weekday Markets: Yahoo Finance cross-asset snapshot, Monday-Friday.
 - Weekend Markets: public IG weekend quotes, Saturday-Sunday, no LLM.
 - News: Top, Alternative and German ranked briefings.
+- Smart News: GPT-5.4-nano macro-theme clustering with a preserved 18-hour rolling context window.
 
 All publishing workflows follow `generate artifact -> durable persistence -> external delivery`.

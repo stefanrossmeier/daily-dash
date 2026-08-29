@@ -17,6 +17,7 @@ def test_repository_configuration_is_valid() -> None:
         "markets-weekend",
         "news-alternative",
         "news-german",
+        "news-smart",
         "news-top",
         "yields",
     )
@@ -26,6 +27,7 @@ def test_repository_configuration_is_valid() -> None:
         "markets-weekend",
         "news-alternative",
         "news-german",
+        "news-smart",
         "news-top",
         "yields",
     )
@@ -35,6 +37,7 @@ def test_repository_configuration_is_valid() -> None:
         "markets-weekend",
         "news-alternative",
         "news-german",
+        "news-smart",
         "news-top",
         "yields",
     )
@@ -45,6 +48,7 @@ def test_all_news_variants_use_same_pipeline() -> None:
         load_news_profile(CONFIG_DIR / "profiles" / "news-top.yaml"),
         load_news_profile(CONFIG_DIR / "profiles" / "news-alternative.yaml"),
         load_news_profile(CONFIG_DIR / "profiles" / "news-german.yaml"),
+        load_news_profile(CONFIG_DIR / "profiles" / "news-smart.yaml"),
     ]
 
     assert {profile.pipeline for profile in profiles} == {"news"}

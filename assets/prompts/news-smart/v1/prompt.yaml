@@ -1,0 +1,7 @@
+id: news-smart
+version: v1
+
+system: system.md
+
+profiles:
+  news-smart: profiles/news-smart.md

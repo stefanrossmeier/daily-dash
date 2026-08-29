@@ -53,3 +53,16 @@ schedules:
     timezone: Europe/Berlin
     days: [MON, TUE, WED, THU, FRI]
     slots_local: ["10:03", "18:03"]
+
+  news-smart:
+    schedule_id: news-smart
+    enabled: true
+    flow_path: f/daily_dash/news_smart
+    timezone: Europe/Berlin
+    days: [MON, TUE, WED, THU, FRI, SAT, SUN]
+    slots_local: ["07:15", "12:15", "21:00"]
+    # Smart News intentionally keeps its legacy rolling 18-hour input window.
+    # The schedule window entry satisfies the common News schedule contract;
+    # the Smart News run artifact records its rolling window explicitly.
+    window:
+      grace_minutes: 0

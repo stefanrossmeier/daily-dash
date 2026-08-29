@@ -268,3 +268,20 @@ def test_load_news_ranking_v10_prompt_biases_selection_toward_recall() -> None:
         in normalized_german
     )
     assert len(top.combined_sha256) == 64
+
+
+def test_load_smart_news_v1_prompt_preserves_legacy_theme_brief() -> None:
+    prompt = load_prompt_asset(
+        "news-smart",
+        "v1",
+        "news-smart",
+        assets_dir=_ASSETS_DIR,
+    )
+
+    assert prompt.prompt_id == "news-smart"
+    assert prompt.version == "v1"
+    assert "experienced financial market editor" in prompt.system
+    assert "Use at most {max_themes} themes" in prompt.system
+    assert "Middle East ceasefire hopes push oil lower" in prompt.system
+    assert "Generate the JSON object exactly as specified" in prompt.profile_text
+    assert len(prompt.combined_sha256) == 64

@@ -1,0 +1,28 @@
+schema_version: 1
+profile_id: news-smart
+pipeline: news
+
+source_set: news-smart
+
+retrieval:
+  lookback_hours: 18
+  max_items_per_source: 20
+
+keywords:
+  include: []
+  exclude: []
+
+ranking:
+  candidate_limit: 150
+  top_k: 5
+  llm_enabled: true
+  model_alias: rank-cheap
+  prompt:
+    id: news-smart
+    version: v1
+  min_score: 0.0
+
+presentation:
+  title: DailyDash Smart News Themes
+  language: en
+  max_items: 5
