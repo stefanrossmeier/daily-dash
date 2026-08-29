@@ -1,0 +1,27 @@
+summary: Deliver DailyDash Yield Report
+description: Render a previously persisted Yield Report snapshot and deliver it to Telegram.
+lock: ''
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    artifact_path:
+      type: string
+      description: Path returned by the run_yields step.
+      default: null
+      originalType: string
+    telegram_chat_id:
+      type: string
+      description: ''
+      default: null
+      originalType: string
+    telegram_token:
+      type: string
+      description: ''
+      default: null
+      originalType: string
+  required:
+    - artifact_path
+    - telegram_token
+    - telegram_chat_id

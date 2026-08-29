@@ -17,6 +17,8 @@ from daily_dash.config.models import (
     SourceSet,
     WeekendMarketSourceSet,
     WeekendMarketsProfile,
+    YieldProfile,
+    YieldSourceSet,
 )
 
 
@@ -42,13 +44,17 @@ def load_profile(path: Path) -> Profile:
     raw = _read_yaml(path)
     pipeline = raw.get("pipeline")
 
-    model: type[NewsProfile] | type[MarketsProfile] | type[WeekendMarketsProfile]
+    model: (
+        type[NewsProfile] | type[MarketsProfile] | type[WeekendMarketsProfile] | type[YieldProfile]
+    )
     if pipeline == "news":
         model = NewsProfile
     elif pipeline == "markets":
         model = MarketsProfile
     elif pipeline == "markets-weekend":
         model = WeekendMarketsProfile
+    elif pipeline == "yields":
+        model = YieldProfile
     else:
         raise ConfigurationError(f"unknown profile pipeline in {path}: {pipeline!r}")
 
@@ -62,13 +68,20 @@ def load_source_set(path: Path) -> SourceSet:
     raw = _read_yaml(path)
     pipeline = raw.get("pipeline")
 
-    model: type[NewsSourceSet] | type[MarketSourceSet] | type[WeekendMarketSourceSet]
+    model: (
+        type[NewsSourceSet]
+        | type[MarketSourceSet]
+        | type[WeekendMarketSourceSet]
+        | type[YieldSourceSet]
+    )
     if pipeline == "news":
         model = NewsSourceSet
     elif pipeline == "markets":
         model = MarketSourceSet
     elif pipeline == "markets-weekend":
         model = WeekendMarketSourceSet
+    elif pipeline == "yields":
+        model = YieldSourceSet
     else:
         raise ConfigurationError(f"unknown source-set pipeline in {path}: {pipeline!r}")
 
@@ -125,4 +138,18 @@ def load_weekend_market_source_set(path: Path) -> WeekendMarketSourceSet:
     source_set = load_source_set(path)
     if not isinstance(source_set, WeekendMarketSourceSet):
         raise ConfigurationError(f"expected weekend market source set: {path}")
+    return source_set
+
+
+def load_yield_profile(path: Path) -> YieldProfile:
+    profile = load_profile(path)
+    if not isinstance(profile, YieldProfile):
+        raise ConfigurationError(f"expected yield profile: {path}")
+    return profile
+
+
+def load_yield_source_set(path: Path) -> YieldSourceSet:
+    source_set = load_source_set(path)
+    if not isinstance(source_set, YieldSourceSet):
+        raise ConfigurationError(f"expected yield source set: {path}")
     return source_set

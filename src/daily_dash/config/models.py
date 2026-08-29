@@ -223,6 +223,38 @@ class WeekendMarketsProfile(BaseModel):
     presentation: MarketPresentationConfig
 
 
+class YieldPresentationConfig(BaseModel):
+    """Presentation policy for the deterministic yield report."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    title: str = Field(default="Yield Report", min_length=1)
+    timezone: str = Field(default="Europe/Berlin", min_length=1)
+    data_issue_limit: int = Field(default=8, ge=0, le=100)
+    curve_lookback_points: int = Field(default=5, ge=2, le=20)
+
+    @field_validator("timezone")
+    @classmethod
+    def validate_timezone(cls, value: str) -> str:
+        try:
+            ZoneInfo(value)
+        except ZoneInfoNotFoundError as exc:
+            raise ValueError(f"unknown timezone: {value}") from exc
+        return value
+
+
+class YieldProfile(BaseModel):
+    """Configuration for the official-source yield pipeline."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    schema_version: Literal[1] = 1
+    profile_id: str = Field(min_length=1, pattern=IDENTIFIER_PATTERN)
+    pipeline: Literal["yields"] = "yields"
+    source_set: str = Field(min_length=1, pattern=IDENTIFIER_PATTERN)
+    presentation: YieldPresentationConfig
+
+
 class RssSourceConfig(BaseModel):
     """Configuration for one RSS or Atom feed."""
 
@@ -329,5 +361,45 @@ class WeekendMarketSourceSet(BaseModel):
         return self
 
 
-type Profile = NewsProfile | MarketsProfile | WeekendMarketsProfile
-type SourceSet = NewsSourceSet | MarketSourceSet | WeekendMarketSourceSet
+class YieldSeriesConfig(BaseModel):
+    """One official yield series or benchmark table lookup."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    id: str = Field(min_length=1, pattern=IDENTIFIER_PATTERN)
+    name: str = Field(min_length=1)
+    provider: Literal["fred", "bundesbank", "ecb"]
+    dataset: str | None = None
+    key: str | None = None
+    enabled: bool = True
+
+    @model_validator(mode="after")
+    def validate_provider_fields(self) -> Self:
+        if self.provider == "fred" and not self.key:
+            raise ValueError("FRED yield series require key")
+        if self.provider in {"bundesbank", "ecb"} and (not self.dataset or not self.key):
+            raise ValueError(f"{self.provider} yield series require dataset and key")
+        return self
+
+
+class YieldSourceSet(BaseModel):
+    """Official statistical series consumed by the yield report."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    schema_version: Literal[1] = 1
+    pipeline: Literal["yields"] = "yields"
+    source_set_id: str = Field(min_length=1, pattern=IDENTIFIER_PATTERN)
+    observation_limit: int = Field(default=12, ge=5, le=60)
+    series: list[YieldSeriesConfig]
+
+    @model_validator(mode="after")
+    def validate_unique_series_ids(self) -> Self:
+        ids = [series.id for series in self.series]
+        if len(ids) != len(set(ids)):
+            raise ValueError("series ids must be unique within a yield source set")
+        return self
+
+
+type Profile = NewsProfile | MarketsProfile | WeekendMarketsProfile | YieldProfile
+type SourceSet = NewsSourceSet | MarketSourceSet | WeekendMarketSourceSet | YieldSourceSet

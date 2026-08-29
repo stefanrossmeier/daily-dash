@@ -24,6 +24,16 @@ from daily_dash.contracts.weekend_market import (
     WeekendMarketReportData,
     WeekendMarketSnapshotDocument,
 )
+from daily_dash.contracts.yields import (
+    RawYieldSeries,
+    RawYieldSnapshot,
+    YieldCurveRegime,
+    YieldLevel,
+    YieldObservation,
+    YieldReportData,
+    YieldSnapshotDocument,
+    YieldSpread,
+)
 
 __all__ = [
     "ArtifactFormat",
@@ -52,4 +62,12 @@ __all__ = [
     "WeekendMarketQuote",
     "WeekendMarketReportData",
     "WeekendMarketSnapshotDocument",
+    "RawYieldSeries",
+    "RawYieldSnapshot",
+    "YieldCurveRegime",
+    "YieldLevel",
+    "YieldObservation",
+    "YieldReportData",
+    "YieldSnapshotDocument",
+    "YieldSpread",
 ]

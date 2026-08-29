@@ -18,6 +18,7 @@ def test_repository_configuration_is_valid() -> None:
         "news-alternative",
         "news-german",
         "news-top",
+        "yields",
     )
 
     assert result.source_set_ids == (
@@ -26,6 +27,7 @@ def test_repository_configuration_is_valid() -> None:
         "news-alternative",
         "news-german",
         "news-top",
+        "yields",
     )
 
     assert result.schedule_ids == (
@@ -34,6 +36,7 @@ def test_repository_configuration_is_valid() -> None:
         "news-alternative",
         "news-german",
         "news-top",
+        "yields",
     )
 
 

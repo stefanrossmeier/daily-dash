@@ -1,0 +1,56 @@
+schema_version: 1
+pipeline: yields
+source_set_id: yields
+observation_limit: 12
+
+series:
+  - id: us-3m
+    name: US 3M
+    provider: fred
+    key: DGS3MO
+
+  - id: us-2y
+    name: US 2Y
+    provider: fred
+    key: DGS2
+
+  - id: us-10y
+    name: US 10Y
+    provider: fred
+    key: DGS10
+
+  - id: de-2y
+    name: Germany 2Y
+    provider: bundesbank
+    dataset: BBSIS
+    key: D.I.ZST.ZI.EUR.S1311.B.A604.R02XX.R.A.A._Z._Z.A
+
+  - id: de-10y
+    name: Germany 10Y
+    provider: bundesbank
+    dataset: BBSIS
+    key: D.I.ZST.ZI.EUR.S1311.B.A604.R10XX.R.A.A._Z._Z.A
+
+  - id: eur-aaa-3m
+    name: Euro AAA 3M
+    provider: ecb
+    dataset: YC
+    key: B.U2.EUR.4F.G_N_A.SV_C_YM.SR_3M
+
+  - id: eur-aaa-2y
+    name: Euro AAA 2Y
+    provider: ecb
+    dataset: YC
+    key: B.U2.EUR.4F.G_N_A.SV_C_YM.SR_2Y
+
+  - id: eur-aaa-10y
+    name: Euro AAA 10Y
+    provider: ecb
+    dataset: YC
+    key: B.U2.EUR.4F.G_N_A.SV_C_YM.SR_10Y
+
+  - id: eur-all-10y
+    name: Euro all-ratings 10Y
+    provider: ecb
+    dataset: YC
+    key: B.U2.EUR.4F.G_N_C.SV_C_YM.SR_10Y

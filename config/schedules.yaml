@@ -46,3 +46,10 @@ schedules:
     timezone: Europe/Berlin
     days: [SAT, SUN]
     slots_local: ["10:30", "20:30"]
+  yields:
+    schedule_id: yields
+    enabled: true
+    flow_path: f/daily_dash/yields
+    timezone: Europe/Berlin
+    days: [MON, TUE, WED, THU, FRI]
+    slots_local: ["10:03", "18:03"]

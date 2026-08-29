@@ -1,0 +1,8 @@
+summary: DailyDash yields 10:03
+schedule: 0 3 10 * * MON,TUE,WED,THU,FRI
+timezone: Europe/Berlin
+enabled: true
+script_path: f/daily_dash/yields
+is_flow: true
+args: {}
+no_flow_overlap: true

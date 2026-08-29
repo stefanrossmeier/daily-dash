@@ -77,3 +77,5 @@ def test_windmill_specs_come_from_registry() -> None:
     assert specs["markets_0805"]["script_path"] == "f/daily_dash/markets"
     assert specs["markets_weekend_1030"]["schedule"] == "0 30 10 * * SAT,SUN"
     assert specs["markets_weekend_2030"]["script_path"] == "f/daily_dash/markets_weekend"
+    assert specs["yields_1003"]["schedule"] == "0 3 10 * * MON,TUE,WED,THU,FRI"
+    assert specs["yields_1803"]["script_path"] == "f/daily_dash/yields"
