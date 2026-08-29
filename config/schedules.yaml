@@ -67,6 +67,16 @@ schedules:
     window:
       grace_minutes: 0
 
+  polymarket:
+    schedule_id: polymarket
+    enabled: true
+    flow_path: f/daily_dash/polymarket
+    timezone: Europe/Berlin
+    days: [MON, TUE, WED, THU, FRI, SAT, SUN]
+    slots_local: ["20:45"]
+    window:
+      grace_minutes: 60
+
   wsb:
     schedule_id: wsb
     enabled: true

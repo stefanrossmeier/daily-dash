@@ -19,6 +19,7 @@ def test_repository_configuration_is_valid() -> None:
         "news-german",
         "news-smart",
         "news-top",
+        "polymarket",
         "wsb",
         "yields",
     )
@@ -30,6 +31,7 @@ def test_repository_configuration_is_valid() -> None:
         "news-german",
         "news-smart",
         "news-top",
+        "polymarket",
         "wsb",
         "yields",
     )
@@ -41,6 +43,7 @@ def test_repository_configuration_is_valid() -> None:
         "news-german",
         "news-smart",
         "news-top",
+        "polymarket",
         "wsb",
         "yields",
     )

@@ -285,3 +285,82 @@ def test_load_smart_news_v1_prompt_preserves_legacy_theme_brief() -> None:
     assert "Middle East ceasefire hopes push oil lower" in prompt.system
     assert "Generate the JSON object exactly as specified" in prompt.profile_text
     assert len(prompt.combined_sha256) == 64
+
+
+def test_load_polymarket_ranking_v1_prompt_separates_semantics_from_activity() -> None:
+    prompt = load_prompt_asset(
+        "polymarket-ranking",
+        "v1",
+        "polymarket",
+        assets_dir=_ASSETS_DIR,
+    )
+    normalized = " ".join(prompt.system.split())
+    assert prompt.prompt_id == "polymarket-ranking"
+    assert prompt.version == "v1"
+    assert "prediction_signal" in prompt.system
+    assert "Activity, volume, liquidity, prices" in normalized
+    assert "exceptionally hot" in prompt.profile_text
+    assert len(prompt.combined_sha256) == 64
+
+
+def test_load_polymarket_ranking_v2_prompt_groups_contract_variants_by_topic() -> None:
+    prompt = load_prompt_asset(
+        "polymarket-ranking",
+        "v2",
+        "polymarket",
+        assets_dir=_ASSETS_DIR,
+    )
+    assert prompt.prompt_id == "polymarket-ranking"
+    assert prompt.version == "v2"
+    assert "topic_key" in prompt.system
+    assert "fed-september-2026-rate-decision" in prompt.system
+    assert "Multiple mutually exclusive outcomes" in prompt.profile_text
+    assert len(prompt.combined_sha256) == 64
+
+
+def test_load_polymarket_ranking_v3_prompt_groups_deadline_variants_by_topic() -> None:
+    prompt = load_prompt_asset(
+        "polymarket-ranking",
+        "v3",
+        "polymarket",
+        assets_dir=_ASSETS_DIR,
+    )
+    assert prompt.prompt_id == "polymarket-ranking"
+    assert prompt.version == "v3"
+    assert "strait-of-hormuz-traffic-normalization" in prompt.system
+    assert "deadline dates" in prompt.system
+    assert "shorter or longer deadline alone" in prompt.profile_text
+    assert len(prompt.combined_sha256) == 64
+
+
+def test_load_polymarket_ranking_v4_prompt_ranks_events_not_child_contracts() -> None:
+    prompt = load_prompt_asset(
+        "polymarket-ranking",
+        "v4",
+        "polymarket",
+        assets_dir=_ASSETS_DIR,
+    )
+    normalized = " ".join(prompt.system.split())
+    assert prompt.prompt_id == "polymarket-ranking"
+    assert prompt.version == "v4"
+    assert "Polymarket EVENTS" in prompt.system
+    assert "child contract questions" in normalized
+    assert "separate deterministic lane" in normalized
+    assert "Hormuz traffic normalization" in prompt.profile_text
+    assert len(prompt.combined_sha256) == 64
+
+
+def test_load_polymarket_ranking_v5_prompt_adds_controlled_theme() -> None:
+    prompt = load_prompt_asset(
+        "polymarket-ranking",
+        "v5",
+        "polymarket",
+        assets_dir=_ASSETS_DIR,
+    )
+    normalized = " ".join(prompt.system.split())
+    assert prompt.prompt_id == "polymarket-ranking"
+    assert prompt.version == "v5"
+    assert "monetary-policy" in normalized
+    assert "energy-shipping" in normalized
+    assert "maximum of two published signals per theme" in prompt.profile_text
+    assert len(prompt.combined_sha256) == 64

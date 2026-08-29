@@ -12,6 +12,8 @@ from daily_dash.config.models import (
     MarketsProfile,
     NewsProfile,
     NewsSourceSet,
+    PolymarketProfile,
+    PolymarketSourceSet,
     Profile,
     ScheduleRegistry,
     SourceSet,
@@ -49,6 +51,7 @@ def load_profile(path: Path) -> Profile:
     model: (
         type[NewsProfile]
         | type[WsbProfile]
+        | type[PolymarketProfile]
         | type[MarketsProfile]
         | type[WeekendMarketsProfile]
         | type[YieldProfile]
@@ -57,6 +60,8 @@ def load_profile(path: Path) -> Profile:
         model = NewsProfile
     elif pipeline == "wsb":
         model = WsbProfile
+    elif pipeline == "polymarket":
+        model = PolymarketProfile
     elif pipeline == "markets":
         model = MarketsProfile
     elif pipeline == "markets-weekend":
@@ -79,6 +84,7 @@ def load_source_set(path: Path) -> SourceSet:
     model: (
         type[NewsSourceSet]
         | type[WsbSourceSet]
+        | type[PolymarketSourceSet]
         | type[MarketSourceSet]
         | type[WeekendMarketSourceSet]
         | type[YieldSourceSet]
@@ -87,6 +93,8 @@ def load_source_set(path: Path) -> SourceSet:
         model = NewsSourceSet
     elif pipeline == "wsb":
         model = WsbSourceSet
+    elif pipeline == "polymarket":
+        model = PolymarketSourceSet
     elif pipeline == "markets":
         model = MarketSourceSet
     elif pipeline == "markets-weekend":
@@ -163,6 +171,20 @@ def load_yield_source_set(path: Path) -> YieldSourceSet:
     source_set = load_source_set(path)
     if not isinstance(source_set, YieldSourceSet):
         raise ConfigurationError(f"expected yield source set: {path}")
+    return source_set
+
+
+def load_polymarket_profile(path: Path) -> PolymarketProfile:
+    profile = load_profile(path)
+    if not isinstance(profile, PolymarketProfile):
+        raise ConfigurationError(f"expected Polymarket profile: {path}")
+    return profile
+
+
+def load_polymarket_source_set(path: Path) -> PolymarketSourceSet:
+    source_set = load_source_set(path)
+    if not isinstance(source_set, PolymarketSourceSet):
+        raise ConfigurationError(f"expected Polymarket source set: {path}")
     return source_set
 
 

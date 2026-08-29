@@ -258,6 +258,122 @@ class WsbProfile(BaseModel):
         return self
 
 
+class PolymarketRetrievalConfig(BaseModel):
+    """Event-level Polymarket retrieval limits for semantic and hot lanes."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    candidate_limit: int = Field(default=30, ge=1, le=100)
+    semantic_event_limit_per_tag: int = Field(default=60, ge=5, le=200)
+    global_event_limit: int = Field(default=100, ge=10, le=500)
+    hot_activity_pool_limit: int = Field(default=30, ge=5, le=100)
+    liquidity_min: float = Field(default=5000.0, ge=0.0)
+    semantic_tag_slugs: list[str] = Field(
+        default_factory=lambda: [
+            "finance",
+            "crypto",
+            "politics",
+            "geopolitics",
+            "economy",
+            "tech",
+        ],
+        min_length=1,
+    )
+    trade_window_minutes: int = Field(default=120, ge=15, le=1440)
+    trade_event_batch_size: int = Field(default=10, ge=1, le=30)
+    trade_page_limit: int = Field(default=1000, ge=100, le=10000)
+    max_trade_pages: int = Field(default=2, ge=1, le=2)
+    description_limit_chars: int = Field(default=1200, ge=200, le=10000)
+    event_market_question_limit: int = Field(default=6, ge=1, le=20)
+
+    @field_validator("semantic_tag_slugs")
+    @classmethod
+    def validate_semantic_tag_slugs(cls, value: list[str]) -> list[str]:
+        normalized = [item.strip().lower() for item in value if item.strip()]
+        if not normalized:
+            raise ValueError("Polymarket semantic_tag_slugs must not be empty")
+        if len(normalized) != len(set(normalized)):
+            raise ValueError("Polymarket semantic_tag_slugs must be unique")
+        return normalized
+
+
+class PolymarketRankingConfig(BaseModel):
+    """LLM ranking of financially material Polymarket events."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    batch_size: int = Field(default=20, ge=1, le=50)
+    top_k: int = Field(default=7, ge=1, le=30)
+    llm_enabled: bool = True
+    model_alias: str = Field(default="rank-cheap", min_length=1)
+    prompt: PromptRefConfig = Field(
+        default_factory=lambda: PromptRefConfig(id="polymarket-ranking", version="v5")
+    )
+    min_ranking_score: int = Field(default=50, ge=0, le=100)
+    min_relevance: int = Field(default=55, ge=0, le=100)
+    min_market_impact: int = Field(default=35, ge=0, le=100)
+    min_market_breadth: int = Field(default=45, ge=0, le=100)
+    min_prediction_signal: int = Field(default=60, ge=0, le=100)
+    max_items_per_topic: int = Field(default=1, ge=1, le=5)
+    max_items_per_theme: int = Field(default=2, ge=1, le=5)
+
+
+class PolymarketHotConfig(BaseModel):
+    """Deterministic global Polymarket activity lane; no LLM is used."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    max_items: int = Field(default=3, ge=0, le=10)
+    min_volume_24h: float = Field(default=500000.0, ge=0.0)
+    min_recent_trades: int = Field(default=100, ge=0)
+    min_comments: int = Field(default=50, ge=0)
+    min_abs_1h_change: float = Field(default=0.05, ge=0.0, le=1.0)
+    min_abs_1d_change: float = Field(default=0.10, ge=0.0, le=1.0)
+
+
+class PolymarketPresentationConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    title: str = Field(default="Polymarket — Signals & Hot Topics", min_length=1)
+    timezone: str = Field(default="Europe/Berlin", min_length=1)
+    max_signal_items: int = Field(default=7, ge=1, le=30)
+    max_hot_items: int = Field(default=3, ge=0, le=10)
+
+    @field_validator("timezone")
+    @classmethod
+    def validate_timezone(cls, value: str) -> str:
+        try:
+            ZoneInfo(value)
+        except ZoneInfoNotFoundError as exc:
+            raise ValueError(f"unknown timezone: {value}") from exc
+        return value
+
+
+class PolymarketProfile(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    schema_version: Literal[1] = 1
+    profile_id: Literal["polymarket"] = "polymarket"
+    pipeline: Literal["polymarket"] = "polymarket"
+    source_set: str = Field(min_length=1, pattern=IDENTIFIER_PATTERN)
+    retrieval: PolymarketRetrievalConfig
+    ranking: PolymarketRankingConfig
+    hot: PolymarketHotConfig
+    presentation: PolymarketPresentationConfig
+
+    @model_validator(mode="after")
+    def validate_limits(self) -> Self:
+        if self.presentation.max_signal_items > self.ranking.top_k:
+            raise ValueError(
+                "Polymarket presentation.max_signal_items must not exceed ranking.top_k"
+            )
+        if self.ranking.top_k > self.retrieval.candidate_limit:
+            raise ValueError("Polymarket ranking.top_k must not exceed retrieval.candidate_limit")
+        if self.presentation.max_hot_items > self.hot.max_items:
+            raise ValueError("Polymarket presentation.max_hot_items must not exceed hot.max_items")
+        return self
+
+
 class MarketPresentationConfig(BaseModel):
     """Presentation policy for the market snapshot."""
 
@@ -387,6 +503,20 @@ class WsbSourceSet(BaseModel):
         return value
 
 
+class PolymarketSourceSet(BaseModel):
+    """Public Polymarket API endpoints used by the report."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    schema_version: Literal[1] = 1
+    pipeline: Literal["polymarket"] = "polymarket"
+    source_set_id: Literal["polymarket"] = "polymarket"
+    provider: Literal["polymarket-public-api"] = "polymarket-public-api"
+    gamma_events_url: HttpUrl
+    data_trades_url: HttpUrl
+    user_agent: str = Field(min_length=1)
+
+
 class MarketAthConfig(BaseModel):
     """Optional ATH series used for one market asset."""
 
@@ -501,7 +631,19 @@ class YieldSourceSet(BaseModel):
         return self
 
 
-type Profile = NewsProfile | WsbProfile | MarketsProfile | WeekendMarketsProfile | YieldProfile
+type Profile = (
+    NewsProfile
+    | WsbProfile
+    | PolymarketProfile
+    | MarketsProfile
+    | WeekendMarketsProfile
+    | YieldProfile
+)
 type SourceSet = (
-    NewsSourceSet | WsbSourceSet | MarketSourceSet | WeekendMarketSourceSet | YieldSourceSet
+    NewsSourceSet
+    | WsbSourceSet
+    | PolymarketSourceSet
+    | MarketSourceSet
+    | WeekendMarketSourceSet
+    | YieldSourceSet
 )

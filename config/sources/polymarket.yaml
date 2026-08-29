@@ -1,0 +1,7 @@
+schema_version: 1
+pipeline: polymarket
+source_set_id: polymarket
+provider: polymarket-public-api
+gamma_events_url: https://gamma-api.polymarket.com/events
+data_trades_url: https://data-api.polymarket.com/trades
+user_agent: daily-dash-polymarket/2.0 (+public portfolio project)

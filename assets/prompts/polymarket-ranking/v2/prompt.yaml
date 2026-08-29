@@ -1,0 +1,5 @@
+id: polymarket-ranking
+version: v2
+system: system.md
+profiles:
+  polymarket: profiles/polymarket.md

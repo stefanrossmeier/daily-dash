@@ -53,6 +53,7 @@ configuration, is documented in:
 - [`docs/09_LOCAL_WINDMILL_BOOTSTRAP.md`](docs/09_LOCAL_WINDMILL_BOOTSTRAP.md)
 - [`docs/05_WINDMILL_ORCHESTRATION.md`](docs/05_WINDMILL_ORCHESTRATION.md)
 - [`docs/SCHEDULING.md`](docs/SCHEDULING.md)
+- [`docs/12_POLYMARKET_PIPELINE.md`](docs/12_POLYMARKET_PIPELINE.md)
 
 ## Repository boundaries
 
@@ -71,5 +72,7 @@ No secret values or private data are required or stored in the public repository
 - Weekend Markets: public IG weekend quotes, Saturday-Sunday, no LLM.
 - News: Top, Alternative and German ranked briefings.
 - Smart News: GPT-5.4-nano macro-theme clustering with a preserved 18-hour rolling context window.
+- WSB: semantically ranked broad-market / market-moving retail signals plus a bounded extreme-hot lane.
+- Polymarket: event-level LLM market signals plus a separate no-LLM global hot-topics lane.
 
 All publishing workflows follow `generate artifact -> durable persistence -> external delivery`.

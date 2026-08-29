@@ -1,0 +1,50 @@
+schema_version: 1
+profile_id: polymarket
+pipeline: polymarket
+source_set: polymarket
+retrieval:
+  candidate_limit: 30
+  semantic_event_limit_per_tag: 60
+  global_event_limit: 100
+  hot_activity_pool_limit: 30
+  liquidity_min: 5000
+  semantic_tag_slugs:
+    - finance
+    - crypto
+    - politics
+    - geopolitics
+    - economy
+    - tech
+  trade_window_minutes: 120
+  trade_event_batch_size: 10
+  trade_page_limit: 1000
+  max_trade_pages: 2
+  description_limit_chars: 1200
+  event_market_question_limit: 6
+ranking:
+  batch_size: 20
+  top_k: 7
+  llm_enabled: true
+  model_alias: rank-cheap
+  prompt:
+    id: polymarket-ranking
+    version: v5
+  min_ranking_score: 50
+  min_relevance: 55
+  min_market_impact: 35
+  min_market_breadth: 45
+  min_prediction_signal: 60
+  max_items_per_topic: 1
+  max_items_per_theme: 2
+hot:
+  max_items: 3
+  min_volume_24h: 500000
+  min_recent_trades: 100
+  min_comments: 50
+  min_abs_1h_change: 0.05
+  min_abs_1d_change: 0.10
+presentation:
+  title: Polymarket — Signals & Hot Topics
+  timezone: Europe/Berlin
+  max_signal_items: 7
+  max_hot_items: 3

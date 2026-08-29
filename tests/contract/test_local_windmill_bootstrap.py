@@ -98,6 +98,7 @@ def test_persistence_flow_has_no_author_specific_remote() -> None:
         flow_root / "news_german__flow/flow.yaml",
         flow_root / "news_smart__flow/flow.yaml",
         flow_root / "wsb__flow/flow.yaml",
+        flow_root / "polymarket__flow/flow.yaml",
     ):
         text = flow.read_text(encoding="utf-8")
         assert "stefanrossmeier/daily-dash-data" not in text

@@ -94,6 +94,10 @@ def validate_config_tree(config_dir: Path) -> ConfigValidationResult:
             raise ConfigurationError(
                 f"news profile '{profile_id}' schedule has no retrieval window"
             )
+        if profile_id in {"wsb", "polymarket"} and schedule.window is None:
+            raise ConfigurationError(
+                f"daily-cycle profile '{profile_id}' schedule has no retrieval window"
+            )
 
     return ConfigValidationResult(
         profile_ids=tuple(sorted(profiles)),
