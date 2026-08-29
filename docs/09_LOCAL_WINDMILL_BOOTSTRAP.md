@@ -92,7 +92,7 @@ The script:
 
 1. copies the checked-in Compose/Caddy deployment source;
 2. writes a local `.env` containing absolute host paths;
-3. creates an ignored `secrets/` directory and an empty 0600 OpenRouter key file;
+3. creates an ignored `secrets/` directory with 0600 one-value credential/config files;
 4. initializes an empty `daily-dash-data` Git checkout when the target path does not
    already contain a repository;
 5. records the DailyDash source revision used for the generated deployment.
@@ -110,24 +110,47 @@ changes:
 `--force` refreshes tracked infrastructure files but preserves an existing `.env` and
 secret files. Add `--rewrite-env` only when host paths have changed.
 
-## 4. Configure the OpenRouter key
+## 4. Configure local secret files
 
-The model gateway reads the OpenRouter credential from a host file mounted read-only
-into the container. Put only the key itself in:
+The generated runtime keeps application credentials out of `.env`. `.env` contains
+Compose/runtime paths only. Installation-specific credentials live as one-value files
+under:
 
 ```text
-../daily-dash-windmill-local/secrets/openrouter_api_key
+../daily-dash-windmill-local/secrets/
+├── openrouter_api_key
+├── data_repo_deploy_key
+├── telegram_token
+├── telegram_chat_id
+├── reddit_client_id
+├── reddit_client_secret
+└── reddit_user_agent
 ```
 
-The bootstrap script creates this file with mode 0600. Never commit it.
+The bootstrap script creates the directory with mode `0700` and each placeholder file
+with mode `0600`. Put one raw value in each file, with no shell assignment and no
+quotes. Never commit this directory.
 
-To use an existing key file instead:
+The model gateway reads `openrouter_api_key` directly as a read-only mounted file.
+To use an existing OpenRouter key file instead, bootstrap with:
 
 ```bash
 ./scripts/bootstrap-local-windmill.sh \
   --target ../daily-dash-windmill-local \
   --data-repo ../daily-dash-data \
   --openrouter-key-file ~/.config/daily-dash/openrouter_api_key
+```
+
+The other files are local provisioning inputs. Helper scripts read them and upload the
+corresponding values to Windmill without writing credentials into the repository or
+root `.env`.
+
+For WSB Reddit OAuth configuration, use the dedicated interactive helper instead of
+editing the files manually:
+
+```bash
+DAILY_DASH_WINDMILL_DIR=../daily-dash-windmill-local \
+  ./scripts/configure-wsb-reddit.sh
 ```
 
 ## 5. Start Windmill
@@ -197,8 +220,30 @@ committed.
 
 ## 7. Configure installation-specific Windmill values
 
-The checked-in flows contain no author-specific data-repository URL. They resolve the
-following workspace values at runtime:
+The checked-in flows contain no author-specific data-repository URL or credentials.
+They resolve installation values from Windmill at runtime.
+
+The canonical local secret inputs are the files from section 4. For the base
+persistence/Telegram setup, populate:
+
+```text
+secrets/data_repo_deploy_key
+secrets/telegram_token
+secrets/telegram_chat_id
+```
+
+The data-repository remote and branch are not secrets. Supply the remote URL when
+provisioning; the branch defaults to `main`:
+
+```bash
+export DAILY_DASH_DATA_REPO_REMOTE_URL='git@github.com:YOUR_ACCOUNT/daily-dash-data.git'
+export DAILY_DASH_DATA_REPO_BRANCH='main'
+
+DAILY_DASH_WINDMILL_DIR=../daily-dash-windmill-local \
+  ./scripts/configure-windmill-workspace.sh
+```
+
+`configure-windmill-workspace.sh` reads the secret files and creates/updates:
 
 ```text
 f/daily_dash/data_repo_remote_url     non-secret
@@ -208,25 +253,25 @@ f/daily_dash/telegram_token           secret
 f/daily_dash/telegram_chat_id         secret
 ```
 
-Export your own values:
+Environment variables with the same secret names are still accepted as explicit
+overrides for CI/secret-manager injection, but local development should use the
+`secrets/` files. Secret values are never written to `.env`.
+
+WSB has separate Reddit credentials and does not require rerunning the base workspace
+provisioning. Configure and upload them with:
 
 ```bash
-export DAILY_DASH_DATA_REPO_REMOTE_URL='git@github.com:YOUR_ACCOUNT/daily-dash-data.git'
-export DAILY_DASH_DATA_REPO_BRANCH='main'
-export DAILY_DASH_DATA_REPO_DEPLOY_KEY="$(cat ~/.ssh/daily-dash-data-deploy-key)"
-export DAILY_DASH_TELEGRAM_TOKEN='...'
-export DAILY_DASH_TELEGRAM_CHAT_ID='...'
+DAILY_DASH_WINDMILL_DIR=../daily-dash-windmill-local \
+  ./scripts/configure-wsb-reddit.sh --windmill
 ```
 
-Then upload them to the currently selected Windmill workspace:
+This creates:
 
-```bash
-./scripts/configure-windmill-workspace.sh
+```text
+f/daily_dash/reddit_client_id       secret
+f/daily_dash/reddit_client_secret   secret
+f/daily_dash/reddit_user_agent      non-secret
 ```
-
-The helpers create temporary ignored variable specifications and do not put secret
-values in Git. Avoid placing real values in shell history when preparing a shared or
-production machine; environment injection from a password/secret manager is preferred.
 
 The persistence script currently uses GitHub's published SSH host key and therefore
 expects a GitHub SSH remote for the production-style Git sink.

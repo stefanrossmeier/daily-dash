@@ -179,6 +179,85 @@ class NewsProfile(BaseModel):
         return self
 
 
+class WsbRetrievalConfig(BaseModel):
+    """Candidate-pool limits for the WallStreetBets pipeline."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    candidate_limit: int = Field(default=80, ge=1, le=300)
+    listing_limit: int = Field(default=100, ge=10, le=100)
+    max_new_pages: int = Field(default=10, ge=1, le=20)
+    text_limit_chars: int = Field(default=1800, ge=200, le=10000)
+
+
+class WsbRankingConfig(BaseModel):
+    """Semantic WSB classification plus bounded activity tie-breaking."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    batch_size: int = Field(default=20, ge=1, le=50)
+    top_k: int = Field(default=10, ge=1, le=50)
+    llm_enabled: bool = True
+    model_alias: str = Field(default="rank-cheap", min_length=1)
+    prompt: PromptRefConfig = Field(
+        default_factory=lambda: PromptRefConfig(id="wsb-ranking", version="v1")
+    )
+    semantic_weight: float = Field(default=0.85, ge=0.0, le=1.0)
+    activity_weight: float = Field(default=0.15, ge=0.0, le=1.0)
+    min_semantic_score: float = Field(default=0.50, ge=0.0, le=1.0)
+    min_relevance: int = Field(default=55, ge=0, le=100)
+    min_market_impact: int = Field(default=35, ge=0, le=100)
+    min_market_breadth: int = Field(default=45, ge=0, le=100)
+    min_positioning_signal: int = Field(default=60, ge=0, le=100)
+    extreme_activity_max_items: int = Field(default=1, ge=0, le=5)
+    extreme_activity_min_heat: float = Field(default=75.0, ge=0.0)
+    extreme_activity_min_score: int = Field(default=2500, ge=0)
+    extreme_activity_min_comments: int = Field(default=300, ge=0)
+
+    @model_validator(mode="after")
+    def validate_weights(self) -> Self:
+        if abs((self.semantic_weight + self.activity_weight) - 1.0) > 1e-9:
+            raise ValueError("WSB semantic_weight + activity_weight must equal 1")
+        return self
+
+
+class WsbPresentationConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    title: str = Field(default="WSB — Market-Relevant Bets", min_length=1)
+    timezone: str = Field(default="Europe/Berlin", min_length=1)
+    max_items: int = Field(default=10, ge=1, le=50)
+
+    @field_validator("timezone")
+    @classmethod
+    def validate_timezone(cls, value: str) -> str:
+        try:
+            ZoneInfo(value)
+        except ZoneInfoNotFoundError as exc:
+            raise ValueError(f"unknown timezone: {value}") from exc
+        return value
+
+
+class WsbProfile(BaseModel):
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    schema_version: Literal[1] = 1
+    profile_id: Literal["wsb"] = "wsb"
+    pipeline: Literal["wsb"] = "wsb"
+    source_set: str = Field(min_length=1, pattern=IDENTIFIER_PATTERN)
+    retrieval: WsbRetrievalConfig
+    ranking: WsbRankingConfig
+    presentation: WsbPresentationConfig
+
+    @model_validator(mode="after")
+    def validate_limits(self) -> Self:
+        if self.presentation.max_items > self.ranking.top_k:
+            raise ValueError("WSB presentation.max_items must not exceed ranking.top_k")
+        if self.ranking.top_k > self.retrieval.candidate_limit:
+            raise ValueError("WSB ranking.top_k must not exceed retrieval.candidate_limit")
+        return self
+
+
 class MarketPresentationConfig(BaseModel):
     """Presentation policy for the market snapshot."""
 
@@ -285,6 +364,27 @@ class NewsSourceSet(BaseModel):
         if len(ids) != len(set(ids)):
             raise ValueError("source ids must be unique within a source set")
         return self
+
+
+class WsbSourceSet(BaseModel):
+    """Reddit listing configuration for the WallStreetBets report."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    schema_version: Literal[1] = 1
+    pipeline: Literal["wsb"] = "wsb"
+    source_set_id: str = Field(min_length=1, pattern=IDENTIFIER_PATTERN)
+    provider: Literal["reddit"] = "reddit"
+    subreddit: str = Field(default="wallstreetbets", min_length=1)
+    listings: list[Literal["hot", "rising", "new", "top_day", "top_week"]]
+    rss_url: HttpUrl
+
+    @field_validator("listings")
+    @classmethod
+    def validate_unique_listings(cls, value: list[str]) -> list[str]:
+        if len(value) != len(set(value)):
+            raise ValueError("WSB listings must be unique")
+        return value
 
 
 class MarketAthConfig(BaseModel):
@@ -401,5 +501,7 @@ class YieldSourceSet(BaseModel):
         return self
 
 
-type Profile = NewsProfile | MarketsProfile | WeekendMarketsProfile | YieldProfile
-type SourceSet = NewsSourceSet | MarketSourceSet | WeekendMarketSourceSet | YieldSourceSet
+type Profile = NewsProfile | WsbProfile | MarketsProfile | WeekendMarketsProfile | YieldProfile
+type SourceSet = (
+    NewsSourceSet | WsbSourceSet | MarketSourceSet | WeekendMarketSourceSet | YieldSourceSet
+)

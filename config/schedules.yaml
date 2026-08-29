@@ -66,3 +66,13 @@ schedules:
     # the Smart News run artifact records its rolling window explicitly.
     window:
       grace_minutes: 0
+
+  wsb:
+    schedule_id: wsb
+    enabled: true
+    flow_path: f/daily_dash/wsb
+    timezone: Europe/Berlin
+    days: [MON, TUE, WED, THU, FRI, SAT, SUN]
+    slots_local: ["20:35"]
+    window:
+      grace_minutes: 60

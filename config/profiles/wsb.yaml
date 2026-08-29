@@ -1,0 +1,32 @@
+schema_version: 1
+profile_id: wsb
+pipeline: wsb
+source_set: wsb
+retrieval:
+  candidate_limit: 80
+  listing_limit: 100
+  max_new_pages: 10
+  text_limit_chars: 1800
+ranking:
+  batch_size: 20
+  top_k: 10
+  llm_enabled: true
+  model_alias: rank-cheap
+  prompt:
+    id: wsb-ranking
+    version: v1
+  semantic_weight: 0.85
+  activity_weight: 0.15
+  min_semantic_score: 0.50
+  min_relevance: 55
+  min_market_impact: 35
+  min_market_breadth: 45
+  min_positioning_signal: 60
+  extreme_activity_max_items: 1
+  extreme_activity_min_heat: 75.0
+  extreme_activity_min_score: 2500
+  extreme_activity_min_comments: 300
+presentation:
+  title: WSB — Signals & Hot Topics
+  timezone: Europe/Berlin
+  max_items: 10

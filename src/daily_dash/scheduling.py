@@ -131,6 +131,66 @@ def resolve_schedule_window(
     )
 
 
+def resolve_daily_cycle_window(
+    registry: ScheduleRegistry,
+    schedule_id: str,
+    reference_time: datetime,
+    *,
+    explicit_start: datetime | None = None,
+    explicit_end: datetime | None = None,
+) -> NewsRetrievalWindow:
+    """Resolve a once-daily window against the current local calendar cycle.
+
+    Before today's scheduled slot, an ad-hoc run covers from the previous
+    day's slot (minus grace) through the current reference time. At or after
+    today's slot, the window ends at the scheduled slot. This keeps manual
+    runs useful without extending past the production cutoff.
+    """
+    if (explicit_start is None) != (explicit_end is None):
+        raise ValueError("explicit window start and end must be supplied together")
+    if explicit_start is not None and explicit_end is not None:
+        return resolve_schedule_window(
+            registry,
+            schedule_id,
+            reference_time,
+            explicit_start=explicit_start,
+            explicit_end=explicit_end,
+        )
+
+    schedule = registry.schedules.get(schedule_id)
+    if schedule is None:
+        raise ValueError(f"unknown schedule: {schedule_id}")
+    if schedule.window is None:
+        raise ValueError(f"schedule does not define a retrieval window: {schedule_id}")
+    if set(schedule.days) != set(_DAY_INDEX) or len(schedule.slots_local) != 1:
+        raise ValueError(f"daily-cycle window requires one slot on every day: {schedule_id}")
+    if reference_time.tzinfo is None:
+        raise ValueError("reference time must be timezone-aware")
+
+    timezone = ZoneInfo(schedule.timezone)
+    reference_local = reference_time.astimezone(timezone)
+    slot_local = schedule.slots_local[0]
+    scheduled_local = _scheduled_instant(reference_local.date(), slot_local, timezone)
+    previous_local = _scheduled_instant(
+        reference_local.date() - timedelta(days=1),
+        slot_local,
+        timezone,
+    )
+    grace = timedelta(minutes=schedule.window.grace_minutes)
+    effective_end = min(reference_local, scheduled_local)
+
+    return NewsRetrievalWindow(
+        source="schedule",
+        schedule_id=schedule_id,
+        timezone=schedule.timezone,
+        previous_scheduled_for=previous_local.astimezone(UTC),
+        scheduled_for=scheduled_local.astimezone(UTC),
+        window_start=previous_local.astimezone(UTC) - grace,
+        window_end=effective_end.astimezone(UTC),
+        grace_minutes=schedule.window.grace_minutes,
+    )
+
+
 def windmill_cron_expression(schedule: PipelineScheduleConfig, slot_local: str) -> str:
     slot = _parse_local_time(slot_local)
     if set(schedule.days) == set(_DAY_INDEX):

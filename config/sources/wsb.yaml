@@ -1,0 +1,7 @@
+schema_version: 1
+pipeline: wsb
+source_set_id: wsb
+provider: reddit
+subreddit: wallstreetbets
+listings: [hot, rising, new, top_day, top_week]
+rss_url: https://old.reddit.com/r/wallstreetbets/hot/.rss

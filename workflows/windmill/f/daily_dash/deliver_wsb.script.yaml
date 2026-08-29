@@ -1,0 +1,24 @@
+summary: Deliver DailyDash WSB report
+description: Deliver the exact persisted WSB artifact to Telegram.
+lock: ''
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    artifact_path:
+      type: string
+      default: null
+      originalType: string
+    telegram_chat_id:
+      type: string
+      default: null
+      originalType: string
+    telegram_token:
+      type: string
+      default: null
+      originalType: string
+  required:
+    - artifact_path
+    - telegram_token
+    - telegram_chat_id

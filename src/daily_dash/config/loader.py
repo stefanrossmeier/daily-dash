@@ -17,6 +17,8 @@ from daily_dash.config.models import (
     SourceSet,
     WeekendMarketSourceSet,
     WeekendMarketsProfile,
+    WsbProfile,
+    WsbSourceSet,
     YieldProfile,
     YieldSourceSet,
 )
@@ -45,10 +47,16 @@ def load_profile(path: Path) -> Profile:
     pipeline = raw.get("pipeline")
 
     model: (
-        type[NewsProfile] | type[MarketsProfile] | type[WeekendMarketsProfile] | type[YieldProfile]
+        type[NewsProfile]
+        | type[WsbProfile]
+        | type[MarketsProfile]
+        | type[WeekendMarketsProfile]
+        | type[YieldProfile]
     )
     if pipeline == "news":
         model = NewsProfile
+    elif pipeline == "wsb":
+        model = WsbProfile
     elif pipeline == "markets":
         model = MarketsProfile
     elif pipeline == "markets-weekend":
@@ -70,12 +78,15 @@ def load_source_set(path: Path) -> SourceSet:
 
     model: (
         type[NewsSourceSet]
+        | type[WsbSourceSet]
         | type[MarketSourceSet]
         | type[WeekendMarketSourceSet]
         | type[YieldSourceSet]
     )
     if pipeline == "news":
         model = NewsSourceSet
+    elif pipeline == "wsb":
+        model = WsbSourceSet
     elif pipeline == "markets":
         model = MarketSourceSet
     elif pipeline == "markets-weekend":
@@ -152,4 +163,18 @@ def load_yield_source_set(path: Path) -> YieldSourceSet:
     source_set = load_source_set(path)
     if not isinstance(source_set, YieldSourceSet):
         raise ConfigurationError(f"expected yield source set: {path}")
+    return source_set
+
+
+def load_wsb_profile(path: Path) -> WsbProfile:
+    profile = load_profile(path)
+    if not isinstance(profile, WsbProfile):
+        raise ConfigurationError(f"expected WSB profile: {path}")
+    return profile
+
+
+def load_wsb_source_set(path: Path) -> WsbSourceSet:
+    source_set = load_source_set(path)
+    if not isinstance(source_set, WsbSourceSet):
+        raise ConfigurationError(f"expected WSB source set: {path}")
     return source_set

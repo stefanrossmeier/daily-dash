@@ -147,6 +147,22 @@ else
   chmod 600 "$OPENROUTER_KEY_FILE"
 fi
 
+mkdir -p "$TARGET/secrets"
+chmod 700 "$TARGET/secrets"
+for secret_name in \
+  data_repo_deploy_key \
+  telegram_token \
+  telegram_chat_id \
+  reddit_client_id \
+  reddit_client_secret \
+  reddit_user_agent; do
+  secret_file="$TARGET/secrets/$secret_name"
+  if [[ ! -e "$secret_file" ]]; then
+    : > "$secret_file"
+  fi
+  chmod 600 "$secret_file"
+done
+
 ENV_FILE="$TARGET/.env"
 if [[ ! -e "$ENV_FILE" || "$REWRITE_ENV" == true ]]; then
   cat > "$ENV_FILE" <<ENV
@@ -175,11 +191,11 @@ Local Windmill deployment materialized.
   OpenRouter file: $OPENROUTER_KEY_FILE
 
 Next:
-  1. Put your OpenRouter key in the key file (one line, no quotes).
-  2. Run: DAILY_DASH_WINDMILL_DIR="$TARGET" ./scripts/local-windmill.sh up
-  3. Open http://localhost and complete the Windmill bootstrap login/workspace setup.
-  4. Run ./scripts/configure-windmill-workspace.sh after exporting the required values.
-  5. Run ./scripts/sync-windmill-workspace.sh
+  1. Put your OpenRouter key in secrets/openrouter_api_key (one line, no quotes).
+  2. Populate the other one-value files under secrets/ as needed.
+  3. Run: DAILY_DASH_WINDMILL_DIR="$TARGET" ./scripts/local-windmill.sh up
+  4. Open http://localhost and complete the Windmill bootstrap login/workspace setup.
+  5. Configure base workspace values/secrets, then sync workflow definitions.
 
 See docs/09_LOCAL_WINDMILL_BOOTSTRAP.md for the complete procedure.
 SUMMARY

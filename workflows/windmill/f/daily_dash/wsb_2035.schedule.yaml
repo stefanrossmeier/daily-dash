@@ -1,0 +1,8 @@
+summary: DailyDash wsb 20:35
+schedule: 0 35 20 * * *
+timezone: Europe/Berlin
+enabled: true
+script_path: f/daily_dash/wsb
+is_flow: true
+args: {}
+no_flow_overlap: true

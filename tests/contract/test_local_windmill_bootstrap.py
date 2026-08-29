@@ -63,10 +63,21 @@ def test_bootstrap_materializes_environment_without_secrets_in_git(
     assert f"DAILY_DASH_DATA_SOURCE={data_repo}" in env_text
     assert "WM_IMAGE=ghcr.io/windmill-labs/windmill:1.775.1" in env_text
 
-    key_file = target / "secrets/openrouter_api_key"
-    assert key_file.is_file()
-    assert key_file.read_text(encoding="utf-8") == ""
-    assert stat.S_IMODE(key_file.stat().st_mode) == 0o600
+    secret_names = (
+        "openrouter_api_key",
+        "data_repo_deploy_key",
+        "telegram_token",
+        "telegram_chat_id",
+        "reddit_client_id",
+        "reddit_client_secret",
+        "reddit_user_agent",
+    )
+    for name in secret_names:
+        secret_file = target / "secrets" / name
+        assert secret_file.is_file()
+        assert secret_file.read_text(encoding="utf-8") == ""
+        assert stat.S_IMODE(secret_file.stat().st_mode) == 0o600
+    assert stat.S_IMODE((target / "secrets").stat().st_mode) == 0o700
 
     assert (data_repo / ".git").is_dir()
     branch = subprocess.run(
@@ -86,6 +97,7 @@ def test_persistence_flow_has_no_author_specific_remote() -> None:
         flow_root / "news_alternative__flow/flow.yaml",
         flow_root / "news_german__flow/flow.yaml",
         flow_root / "news_smart__flow/flow.yaml",
+        flow_root / "wsb__flow/flow.yaml",
     ):
         text = flow.read_text(encoding="utf-8")
         assert "stefanrossmeier/daily-dash-data" not in text

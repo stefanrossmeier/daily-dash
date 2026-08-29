@@ -9,6 +9,6 @@ Materialize a machine-specific deployment directory with:
 ./scripts/bootstrap-local-windmill.sh
 ```
 
-The bootstrap script copies these files and writes a local `.env` containing
-absolute checkout/key paths. The generated `.env` and `secrets/` directory are
-never intended for Git.
+The bootstrap script copies these files and writes a local `.env` containing only
+Compose/runtime paths. Application credentials are stored as one-value files under
+the generated `secrets/` directory. Neither `.env` nor `secrets/` is intended for Git.

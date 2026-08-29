@@ -1,0 +1,32 @@
+summary: Run DailyDash WSB report
+description: Retrieve WallStreetBets threads through approved Reddit OAuth access, semantically classify market relevance, and write one immutable artifact.
+lock: ''
+kind: script
+schema:
+  $schema: https://json-schema.org/draft/2020-12/schema
+  type: object
+  properties:
+    data_repo:
+      type: string
+      description: Local DailyDash data repository path used as the output sink.
+      default: /data/daily-dash-data
+      originalType: string
+    reddit_client_id:
+      type: string
+      description: Approved Reddit Data API OAuth client id.
+      default: null
+      originalType: string
+    reddit_client_secret:
+      type: string
+      description: Approved Reddit Data API OAuth client secret.
+      default: null
+      originalType: string
+    reddit_user_agent:
+      type: string
+      description: Transparent Reddit API User-Agent.
+      default: null
+      originalType: string
+  required:
+    - reddit_client_id
+    - reddit_client_secret
+    - reddit_user_agent

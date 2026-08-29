@@ -1,0 +1,5 @@
+id: wsb-ranking
+version: v1
+system: system.md
+profiles:
+  wsb: profiles/wsb.md
