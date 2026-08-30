@@ -220,6 +220,7 @@ workspace definitions or generated schedules/flows need synchronization.
 
 ## Next reading
 
+- [`docs/VPS_DEPLOYMENT.md`](docs/VPS_DEPLOYMENT.md) — fresh VPS to production-style DailyDash deployment
 - [`docs/09_LOCAL_WINDMILL_BOOTSTRAP.md`](docs/09_LOCAL_WINDMILL_BOOTSTRAP.md) — complete clean-machine setup
 - [`docs/05_WINDMILL_ORCHESTRATION.md`](docs/05_WINDMILL_ORCHESTRATION.md) — orchestration model
 - [`docs/16_ARCHITECTURE_BOUNDARIES.md`](docs/16_ARCHITECTURE_BOUNDARIES.md) — code-layer boundaries

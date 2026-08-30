@@ -217,6 +217,7 @@ tool, not a market-data redistribution service.
 The documentation index is [`docs/README.md`](docs/README.md). Good starting points are:
 
 - [Quickstart](QUICKSTART.md)
+- [VPS Deployment](docs/VPS_DEPLOYMENT.md)
 - [Architecture Boundaries](docs/16_ARCHITECTURE_BOUNDARIES.md)
 - [Windmill Orchestration](docs/05_WINDMILL_ORCHESTRATION.md)
 - [Local Windmill Bootstrap](docs/09_LOCAL_WINDMILL_BOOTSTRAP.md)

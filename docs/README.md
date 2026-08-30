@@ -8,6 +8,7 @@ design, pipeline, orchestration, and operational documentation.
 
 | Document | What it covers |
 | --- | --- |
+| [`VPS_DEPLOYMENT.md`](VPS_DEPLOYMENT.md) | zero-to-running single-VPS deployment under `/var/code`, HTTPS, secrets, backups, updates |
 | [`09_LOCAL_WINDMILL_BOOTSTRAP.md`](09_LOCAL_WINDMILL_BOOTSTRAP.md) | clean-machine self-hosted Windmill setup, local secrets, data sink, workspace provisioning |
 | [`16_ARCHITECTURE_BOUNDARIES.md`](16_ARCHITECTURE_BOUNDARIES.md) | dependency directions and layer responsibilities |
 | [`05_WINDMILL_ORCHESTRATION.md`](05_WINDMILL_ORCHESTRATION.md) | orchestration model, workspace, workers, secrets, local/VPS differences |
