@@ -10,6 +10,7 @@ uv run python scripts/generate-news-windmill-flows.py >/dev/null
 uv run python scripts/render-windmill-schedules.py >/dev/null
 
 uv run pytest -q \
+  tests/contract/test_futures_windmill_flow.py \
   tests/contract/test_markets_windmill_flow.py \
   tests/contract/test_news_windmill_flows.py \
   tests/contract/test_polymarket_windmill_flow.py \

@@ -31,6 +31,14 @@ schedules:
     window:
       grace_minutes: 60
 
+  futures:
+    schedule_id: futures
+    enabled: true
+    flow_path: f/daily_dash/futures
+    timezone: Europe/Berlin
+    days: [MON, TUE, WED, THU, FRI]
+    slots_local: ["05:00", "07:15", "12:30", "23:00"]
+
   markets:
     schedule_id: markets
     enabled: true

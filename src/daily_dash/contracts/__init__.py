@@ -5,6 +5,13 @@ from daily_dash.contracts.common import (
     JsonValue,
     SourceKind,
 )
+from daily_dash.contracts.futures import (
+    FuturesQuote,
+    FuturesReportData,
+    FuturesSnapshotDocument,
+    RawFuturesQuote,
+    RawFuturesSnapshot,
+)
 from daily_dash.contracts.market import (
     MarketGroup,
     MarketReportData,
@@ -43,6 +50,9 @@ __all__ = [
     "DeliveryStatus",
     "JsonPrimitive",
     "JsonValue",
+    "FuturesQuote",
+    "FuturesReportData",
+    "FuturesSnapshotDocument",
     "MarketGroup",
     "MarketReportData",
     "MarketSnapshotDocument",
@@ -51,6 +61,8 @@ __all__ = [
     "RankedBatch",
     "RankedItem",
     "RankingDecision",
+    "RawFuturesQuote",
+    "RawFuturesSnapshot",
     "RawMarketAsset",
     "RawMarketSnapshot",
     "ReportArtifact",

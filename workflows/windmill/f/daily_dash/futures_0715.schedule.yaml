@@ -1,0 +1,8 @@
+summary: DailyDash futures 07:15
+schedule: 0 15 7 * * MON,TUE,WED,THU,FRI
+timezone: Europe/Berlin
+enabled: true
+script_path: f/daily_dash/futures
+is_flow: true
+args: {}
+no_flow_overlap: true

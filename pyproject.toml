@@ -10,6 +10,7 @@ dependencies = [
     "pydantic>=2.13.4",
     "pydantic-settings>=2.15.0",
     "pyyaml>=6.0.3",
+    "tradingview-datafeed==2.1.1",
     "yfinance>=1.7.0",
 ]
 

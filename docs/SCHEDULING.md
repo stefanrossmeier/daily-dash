@@ -20,10 +20,10 @@ so late RSS publication timestamps are less likely to be missed. Duplicate URL/t
 handling and semantic duplicate handling remain responsible for overlap inside a run.
 
 The current registry contains independent schedules for Top, German, Alternative and Smart
-News, the weekday Markets snapshot, Weekend Markets, WSB, Polymarket and X Watchlist. Smart News runs
+News, the weekday Markets snapshot, the Futures Snapshot, Weekend Markets, WSB, Polymarket and X Watchlist. Smart News runs
 every day at 07:15, 12:15 and 21:00 Europe/Berlin. Unlike the article-ranking News profiles,
 it deliberately preserves its legacy rolling 18-hour retrieval window because overlapping
-context is part of the theme-clustering product behavior. Weekend Markets runs only on
+context is part of the theme-clustering product behavior. Futures preserves the historical TradingView cadence and runs Monday-Friday at 05:00, 07:15, 12:30 and 23:00. Weekend Markets runs only on
 Saturday and Sunday at 10:30 and 20:30. WSB runs daily at 20:35 and Polymarket runs daily
 at 20:45. X Watchlist runs every day at 08:20 and 20:20. All use Europe/Berlin. The one-run-per-day alternative-data reports record a
 current daily-cycle window with a one-hour overlap; Polymarket's provider metrics themselves

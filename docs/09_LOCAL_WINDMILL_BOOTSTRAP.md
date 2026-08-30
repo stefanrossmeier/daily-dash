@@ -328,7 +328,7 @@ Windmill server + Postgres + Caddy
                 +--> OpenRouter key file (host secret)
 ```
 
-The workspace contains the checked-in Markets/News flows and the generated schedules.
+The workspace contains the checked-in report flows, including Futures, and the generated schedules.
 
 ## 10. End-to-end acceptance
 

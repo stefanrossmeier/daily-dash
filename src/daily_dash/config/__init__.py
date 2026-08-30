@@ -1,5 +1,7 @@
 from daily_dash.config.errors import ConfigurationError
 from daily_dash.config.loader import (
+    load_futures_profile,
+    load_futures_source_set,
     load_market_source_set,
     load_markets_profile,
     load_news_profile,
@@ -19,6 +21,10 @@ from daily_dash.config.loader import (
     load_yield_source_set,
 )
 from daily_dash.config.models import (
+    FuturesAssetConfig,
+    FuturesPresentationConfig,
+    FuturesProfile,
+    FuturesSourceSet,
     KeywordConfig,
     MarketAssetConfig,
     MarketAthConfig,
@@ -66,6 +72,10 @@ from daily_dash.config.validation import ConfigValidationResult, validate_config
 __all__ = [
     "ConfigValidationResult",
     "ConfigurationError",
+    "FuturesAssetConfig",
+    "FuturesPresentationConfig",
+    "FuturesProfile",
+    "FuturesSourceSet",
     "KeywordConfig",
     "MarketAssetConfig",
     "MarketAthConfig",
@@ -106,6 +116,8 @@ __all__ = [
     "WsbRankingConfig",
     "WsbProfile",
     "WsbPresentationConfig",
+    "load_futures_profile",
+    "load_futures_source_set",
     "load_market_source_set",
     "load_markets_profile",
     "load_news_profile",

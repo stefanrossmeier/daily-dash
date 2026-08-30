@@ -525,6 +525,37 @@ class YieldProfile(BaseModel):
     presentation: YieldPresentationConfig
 
 
+class FuturesPresentationConfig(BaseModel):
+    """Presentation policy for the deterministic Futures Snapshot."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    title: str = Field(default="Futures Snapshot", min_length=1)
+    timezone: str = Field(default="Europe/Berlin", min_length=1)
+    data_issue_limit: int = Field(default=8, ge=0, le=100)
+
+    @field_validator("timezone")
+    @classmethod
+    def validate_timezone(cls, value: str) -> str:
+        try:
+            ZoneInfo(value)
+        except ZoneInfoNotFoundError as exc:
+            raise ValueError(f"unknown timezone: {value}") from exc
+        return value
+
+
+class FuturesProfile(BaseModel):
+    """Configuration for the TradingView Futures Snapshot."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    schema_version: Literal[1] = 1
+    profile_id: Literal["futures"] = "futures"
+    pipeline: Literal["futures"] = "futures"
+    source_set: str = Field(min_length=1, pattern=IDENTIFIER_PATTERN)
+    presentation: FuturesPresentationConfig
+
+
 class RssSourceConfig(BaseModel):
     """Configuration for one RSS or Atom feed."""
 
@@ -613,6 +644,43 @@ class PolymarketSourceSet(BaseModel):
     gamma_events_url: HttpUrl
     data_trades_url: HttpUrl
     user_agent: str = Field(min_length=1)
+
+
+class FuturesAssetConfig(BaseModel):
+    """One TradingView continuous-futures row in display order."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    id: str = Field(min_length=1, pattern=IDENTIFIER_PATTERN)
+    name: str = Field(min_length=1)
+    instrument: str = Field(min_length=1)
+    symbol: str = Field(min_length=1)
+    exchange: str = Field(min_length=1)
+    price_decimals: int = Field(default=2, ge=0, le=8)
+    enabled: bool = True
+
+
+class FuturesSourceSet(BaseModel):
+    """TradingView/tvDatafeed settings for the Futures Snapshot."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    schema_version: Literal[1] = 1
+    pipeline: Literal["futures"] = "futures"
+    source_set_id: Literal["futures"] = "futures"
+    provider: Literal["tradingview-datafeed"] = "tradingview-datafeed"
+    intraday_bars: int = Field(default=300, ge=2, le=5000)
+    daily_bars: int = Field(default=30, ge=2, le=5000)
+    fetch_attempts: int = Field(default=2, ge=1, le=5)
+    max_intraday_age_days: int = Field(default=3, ge=1, le=14)
+    assets: list[FuturesAssetConfig]
+
+    @model_validator(mode="after")
+    def validate_unique_asset_ids(self) -> Self:
+        ids = [asset.id for asset in self.assets]
+        if len(ids) != len(set(ids)):
+            raise ValueError("asset ids must be unique within a futures source set")
+        return self
 
 
 class MarketAthConfig(BaseModel):
@@ -737,6 +805,7 @@ type Profile = (
     | MarketsProfile
     | WeekendMarketsProfile
     | YieldProfile
+    | FuturesProfile
 )
 type SourceSet = (
     NewsSourceSet
@@ -746,4 +815,5 @@ type SourceSet = (
     | MarketSourceSet
     | WeekendMarketSourceSet
     | YieldSourceSet
+    | FuturesSourceSet
 )

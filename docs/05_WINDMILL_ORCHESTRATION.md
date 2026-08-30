@@ -170,7 +170,8 @@ f/daily_dash/data_repo_branch
 ~~~
 
 Use `scripts/configure-windmill-workspace.sh` to install these values after the CLI
-workspace has been configured.
+workspace has been configured. Futures uses anonymous TradingView/tvDatafeed access and
+requires no TradingView secret or account variable.
 
 Secrets must never appear in:
 
@@ -359,6 +360,24 @@ The complete verified Markets path is:
         v
     private daily-dash-data repository
 
+
+## Futures Snapshot
+
+Futures is a deterministic no-LLM translation of the historical TradingView/tvDatafeed
+report. It uses the same durability boundary as the other production reports:
+
+~~~text
+run_futures
+    -> persist_data
+    -> deliver_futures
+~~~
+
+The flow is versioned at `workflows/windmill/f/daily_dash/futures__flow/flow.yaml`; its
+weekday 05:00, 07:15, 12:30 and 23:00 Europe/Berlin schedules are generated from
+`config/schedules.yaml`. The run step uses anonymous TradingView/tvDatafeed access and
+receives no Telegram, OpenRouter, or TradingView credential. The exact legacy contract
+universe, source references and row-level failures are persisted before the compact
+Telegram report is rendered. See `docs/17_FUTURES_PIPELINE.md` for retrieval semantics.
 
 ## Weekend Markets
 

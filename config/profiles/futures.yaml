@@ -1,0 +1,8 @@
+schema_version: 1
+profile_id: futures
+pipeline: futures
+source_set: futures
+presentation:
+  title: Futures Snapshot
+  timezone: Europe/Berlin
+  data_issue_limit: 8

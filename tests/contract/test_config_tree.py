@@ -13,6 +13,7 @@ def test_repository_configuration_is_valid() -> None:
     result = validate_config_tree(CONFIG_DIR)
 
     assert result.profile_ids == (
+        "futures",
         "markets",
         "markets-weekend",
         "news-alternative",
@@ -26,6 +27,7 @@ def test_repository_configuration_is_valid() -> None:
     )
 
     assert result.source_set_ids == (
+        "futures",
         "markets",
         "markets-weekend",
         "news-alternative",
@@ -39,6 +41,7 @@ def test_repository_configuration_is_valid() -> None:
     )
 
     assert result.schedule_ids == (
+        "futures",
         "markets",
         "markets-weekend",
         "news-alternative",

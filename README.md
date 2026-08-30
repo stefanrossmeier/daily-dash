@@ -1,7 +1,7 @@
 # DailyDash
 
 DailyDash is a reproducible, Windmill-orchestrated financial dashboard pipeline for
-weekday market snapshots, public weekend market quotes, ranked news briefings, and a Grok-native X watchlist. The public repository contains the
+weekday market snapshots, a deterministic TradingView-backed Futures Snapshot, public weekend market quotes, ranked news briefings, and a Grok-native X watchlist. The public repository contains the
 application, model-gateway configuration, Windmill workflows/schedules, worker image,
 and the source files needed to recreate the local self-hosted Windmill environment.
 
@@ -57,6 +57,7 @@ configuration, is documented in:
 - [`docs/14_X_WATCHLIST_PIPELINE.md`](docs/14_X_WATCHLIST_PIPELINE.md)
 - [`docs/15_DEPLOYMENT_CHECKLIST.md`](docs/15_DEPLOYMENT_CHECKLIST.md)
 - [`docs/16_ARCHITECTURE_BOUNDARIES.md`](docs/16_ARCHITECTURE_BOUNDARIES.md)
+- [`docs/17_FUTURES_PIPELINE.md`](docs/17_FUTURES_PIPELINE.md)
 
 ## Repository boundaries
 
@@ -72,6 +73,7 @@ No secret values or private data are required or stored in the public repository
 ## Implemented workflows
 
 - Weekday Markets: Yahoo Finance cross-asset snapshot, Monday-Friday.
+- Futures Snapshot: deterministic TradingView/tvDatafeed translation of the legacy 20-contract report at 05:00, 07:15, 12:30 and 23:00 Europe/Berlin on weekdays, no LLM.
 - Weekend Markets: public IG weekend quotes, Saturday-Sunday, no LLM.
 - News: Top, Alternative and German ranked briefings.
 - Smart News: GPT-5.4-nano macro-theme clustering with a preserved 18-hour rolling context window.

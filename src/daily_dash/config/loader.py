@@ -8,6 +8,8 @@ from pydantic import ValidationError
 
 from daily_dash.config.errors import ConfigurationError
 from daily_dash.config.models import (
+    FuturesProfile,
+    FuturesSourceSet,
     MarketSourceSet,
     MarketsProfile,
     NewsProfile,
@@ -58,6 +60,7 @@ def load_profile(path: Path) -> Profile:
         | type[MarketsProfile]
         | type[WeekendMarketsProfile]
         | type[YieldProfile]
+        | type[FuturesProfile]
     )
     if pipeline == "news":
         model = NewsProfile
@@ -73,6 +76,8 @@ def load_profile(path: Path) -> Profile:
         model = WeekendMarketsProfile
     elif pipeline == "yields":
         model = YieldProfile
+    elif pipeline == "futures":
+        model = FuturesProfile
     else:
         raise ConfigurationError(f"unknown profile pipeline in {path}: {pipeline!r}")
 
@@ -94,6 +99,7 @@ def load_source_set(path: Path) -> SourceSet:
         | type[MarketSourceSet]
         | type[WeekendMarketSourceSet]
         | type[YieldSourceSet]
+        | type[FuturesSourceSet]
     )
     if pipeline == "news":
         model = NewsSourceSet
@@ -109,6 +115,8 @@ def load_source_set(path: Path) -> SourceSet:
         model = WeekendMarketSourceSet
     elif pipeline == "yields":
         model = YieldSourceSet
+    elif pipeline == "futures":
+        model = FuturesSourceSet
     else:
         raise ConfigurationError(f"unknown source-set pipeline in {path}: {pipeline!r}")
 
@@ -221,4 +229,18 @@ def load_x_watchlist_source_set(path: Path) -> XWatchlistSourceSet:
     source_set = load_source_set(path)
     if not isinstance(source_set, XWatchlistSourceSet):
         raise ConfigurationError(f"expected X Watchlist source set: {path}")
+    return source_set
+
+
+def load_futures_profile(path: Path) -> FuturesProfile:
+    profile = load_profile(path)
+    if not isinstance(profile, FuturesProfile):
+        raise ConfigurationError(f"expected futures profile: {path}")
+    return profile
+
+
+def load_futures_source_set(path: Path) -> FuturesSourceSet:
+    source_set = load_source_set(path)
+    if not isinstance(source_set, FuturesSourceSet):
+        raise ConfigurationError(f"expected futures source set: {path}")
     return source_set

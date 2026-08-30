@@ -1,0 +1,133 @@
+schema_version: 1
+pipeline: futures
+source_set_id: futures
+provider: tradingview-datafeed
+intraday_bars: 300
+daily_bars: 30
+fetch_attempts: 2
+max_intraday_age_days: 3
+assets:
+  - id: sp500
+    name: S&P
+    instrument: E-mini S&P 500 continuous future
+    symbol: ES1!
+    exchange: CME_MINI
+
+  - id: nasdaq
+    name: Nasdaq
+    instrument: E-mini Nasdaq-100 continuous future
+    symbol: NQ1!
+    exchange: CME_MINI
+
+  - id: dow
+    name: Dow
+    instrument: E-mini Dow continuous future
+    symbol: YM1!
+    exchange: CBOT_MINI
+
+  - id: stoxx50
+    name: Stoxx50
+    instrument: EURO STOXX 50 continuous future
+    symbol: FESX1!
+    exchange: EUREX
+
+  - id: dax
+    name: DAX
+    instrument: DAX continuous future
+    symbol: FDAX1!
+    exchange: EUREX
+
+  - id: stoxx600
+    name: Stoxx600
+    instrument: STOXX Europe 600 continuous future
+    symbol: FXXP1!
+    exchange: EUREX
+
+  - id: hsi
+    name: HSI
+    instrument: Hang Seng Index continuous future
+    symbol: HSI1!
+    exchange: HKEX
+
+  - id: nikkei
+    name: Nikkei
+    instrument: Nikkei 225 continuous future
+    symbol: NIY1!
+    exchange: CME
+
+  - id: msci-world
+    name: MSCI World
+    instrument: MSCI World continuous future
+    symbol: MWL1!
+    exchange: ICEUS
+
+  - id: csi500
+    name: CSI500
+    instrument: CSI 500 continuous future
+    symbol: IC1!
+    exchange: CFFEX
+
+  - id: eurusd
+    name: EURUSD
+    instrument: Euro FX continuous future
+    symbol: E71!
+    exchange: CME_MINI
+    price_decimals: 4
+
+  - id: eurchf
+    name: EURCHF
+    instrument: EUR/CHF continuous future
+    symbol: RF1!
+    exchange: CME
+    price_decimals: 4
+
+  - id: us-10y
+    name: US 10Y
+    instrument: Micro 10-Year Yield continuous future
+    symbol: 10Y1!
+    exchange: CBOT_MINI
+    price_decimals: 3
+
+  - id: schatz
+    name: Schatz
+    instrument: Euro-Schatz continuous future
+    symbol: FGBS1!
+    exchange: EUREX
+    price_decimals: 3
+
+  - id: gold
+    name: Gold
+    instrument: Gold continuous future
+    symbol: GC1!
+    exchange: COMEX
+
+  - id: silver
+    name: Silver
+    instrument: Silver continuous future
+    symbol: SI1!
+    exchange: COMEX
+    price_decimals: 3
+
+  - id: brent
+    name: Brent
+    instrument: Brent crude continuous future
+    symbol: BZ1!
+    exchange: NYMEX
+
+  - id: wti
+    name: WTI
+    instrument: WTI crude continuous future
+    symbol: CL1!
+    exchange: NYMEX
+
+  - id: bitcoin
+    name: Bitcoin
+    instrument: Bitcoin continuous future
+    symbol: BTC1!
+    exchange: CME
+
+  - id: ethereum
+    name: Ethereum
+    instrument: Ether continuous future
+    symbol: ETH1!
+    exchange: CME

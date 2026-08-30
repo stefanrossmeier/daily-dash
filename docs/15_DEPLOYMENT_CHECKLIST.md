@@ -37,6 +37,9 @@ Reddit OAuth values       -> WSB run step only
 X Watchlist requires no X login, cookies or browser state. Grok accesses X through the
 model gateway.
 
+Futures requires no TradingView account secret; it preserves the legacy anonymous
+`TvDatafeed()` access path.
+
 ## 3. Rebuild and health-check the runtime
 
 For the standard adjacent local deployment directory:
@@ -62,6 +65,7 @@ only flow edits in the Windmill UI.
 `docs/SCHEDULING.md`, especially:
 
 ```text
+Futures      05:00, 07:15, 12:30, 23:00 Monday-Friday
 WSB          20:35 daily
 Polymarket   20:45 daily
 X Watchlist  08:20 and 20:20 daily
@@ -82,13 +86,15 @@ At minimum, manually run representative flows after the deployment is synchroniz
 ```bash
 cd workflows/windmill
 ../../scripts/wmill.sh flow run f/daily_dash/news_top
+../../scripts/wmill.sh flow run f/daily_dash/futures
 ../../scripts/wmill.sh flow run f/daily_dash/wsb
 ../../scripts/wmill.sh flow run f/daily_dash/polymarket
 ../../scripts/wmill.sh flow run f/daily_dash/x_watchlist
 ```
 
 Also verify Markets/Yields and one of German/Alternative News if those sources are
-reachable from the target host.
+reachable from the target host. Futures is also a useful TradingView WebSocket/network
+smoke test because it exercises the exact production anonymous tvDatafeed path.
 
 For every smoke test, confirm:
 
@@ -97,7 +103,7 @@ For every smoke test, confirm:
   selection diagnostics;
 - empty reports send a clear empty-state message instead of a blank Telegram message;
 - model traces record resolved model, tokens, exact cost, latency and attempts;
-- no provider, Telegram, Reddit or data-repository secret appears in the artifact/logs.
+- no Telegram, Reddit or data-repository secret appears in the artifact/logs.
 
 ## 7. Final Git state
 
