@@ -245,16 +245,23 @@ Windmill job queue
 dedicated DailyDash worker
     |
     v
-daily-dash markets
+markets run command
     |
     +-- Yahoo Finance retrieval
     +-- market processing
-    +-- JSON snapshot persistence
+    +-- JSON snapshot write
+    |
+    v
+persist_data_repo
+    |
+    v
+markets deliver command
+    |
     +-- report rendering
     +-- Telegram delivery
 ~~~
 
-The pipeline was verified with both stdout and Telegram delivery.
+The pipeline is structured so rendering and Telegram delivery occur only after the persisted run artifact exists.
 
 Market snapshots are persisted in the private `daily-dash-data` repository.
 

@@ -1,0 +1,6 @@
+id: x-watchlist-retrieval
+version: v4
+system: system.md
+task: task.md
+profiles:
+  x-watchlist: profiles/x-watchlist.md

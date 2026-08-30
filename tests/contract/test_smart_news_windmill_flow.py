@@ -62,9 +62,12 @@ def test_smart_news_runner_executes_without_positional_args(tmp_path: Path) -> N
     (config_dir / "profiles").mkdir(parents=True)
     (config_dir / "profiles/news-smart.yaml").write_text("profile", encoding="utf-8")
 
-    assets_dir = tmp_path / "assets/prompts/news-smart/v1"
+    assets_dir = tmp_path / "assets/prompts/news-smart/v2"
     assets_dir.mkdir(parents=True)
     (assets_dir / "prompt.yaml").write_text("prompt", encoding="utf-8")
+    policy_dir = tmp_path / "assets/policies/news-smart-macro/v1"
+    policy_dir.mkdir(parents=True)
+    (policy_dir / "policy.yaml").write_text("policy", encoding="utf-8")
 
     data_repo = tmp_path / "data"
     (data_repo / ".git").mkdir(parents=True)

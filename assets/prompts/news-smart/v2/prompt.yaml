@@ -1,0 +1,6 @@
+id: news-smart
+version: v2
+system: system.md
+task: task.md
+profiles:
+  news-smart: profiles/news-smart.md

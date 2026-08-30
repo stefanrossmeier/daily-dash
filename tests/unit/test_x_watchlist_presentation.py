@@ -1,5 +1,7 @@
 from datetime import UTC, datetime
+from pathlib import Path
 
+from daily_dash.config.loader import load_x_watchlist_profile
 from daily_dash.contracts.x_watchlist import (
     XWatchlistEvaluation,
     XWatchlistPost,
@@ -7,6 +9,12 @@ from daily_dash.contracts.x_watchlist import (
     XWatchlistRunDocument,
 )
 from daily_dash.presentation.x_watchlist import render_x_watchlist_report
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+def _profile():
+    return load_x_watchlist_profile(ROOT / "config/profiles/x-watchlist.yaml")
 
 
 def test_report_preserves_original_post_and_x_url() -> None:
@@ -48,7 +56,7 @@ def test_report_preserves_original_post_and_x_url() -> None:
         evaluations=[evaluation],
         selected_ids=["123"],
     )
-    report = render_x_watchlist_report(doc)
+    report = render_x_watchlist_report(doc, _profile())
     assert "@NickTimiraos" in report.content
     assert "Original &lt;market&gt; post" in report.content
     assert "https://x.com/NickTimiraos/status/123" in report.content
@@ -96,6 +104,32 @@ def test_report_does_not_clip_selected_post_text() -> None:
         evaluations=[evaluation],
         selected_ids=["456"],
     )
-    report = render_x_watchlist_report(doc)
+    report = render_x_watchlist_report(doc, _profile())
     assert text in report.content
     assert "Internal rationale" not in report.content
+
+
+def test_empty_x_watchlist_uses_plain_user_facing_message() -> None:
+    doc = XWatchlistRunDocument(
+        run_id="empty-x",
+        retrieved_at=datetime(2026, 8, 29, 20, 20, tzinfo=UTC),
+        window_start=datetime(2026, 8, 29, 8, 20, tzinfo=UTC),
+        window_end=datetime(2026, 8, 29, 20, 20, tzinfo=UTC),
+        timezone="Europe/Berlin",
+        retrieval_diagnostic=XWatchlistRetrievalDiagnostic(
+            ok=True,
+            allowed_handles=["NickTimiraos"],
+            returned_count=0,
+            validated_count=0,
+        ),
+        retrieved_count=0,
+        candidate_count=0,
+        candidates=[],
+        evaluations=[],
+        selected_ids=[],
+    )
+
+    report = render_x_watchlist_report(doc, _profile())
+
+    assert "No relevant X posts were found in this report window." in report.content
+    assert "selected" not in report.content.lower()

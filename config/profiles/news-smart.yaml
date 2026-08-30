@@ -19,10 +19,14 @@ ranking:
   model_alias: rank-cheap
   prompt:
     id: news-smart
-    version: v1
+    version: v2
   min_score: 0.0
 
 presentation:
   title: DailyDash Smart News Themes
   language: en
   max_items: 5
+
+processing_policy:
+  id: news-smart-macro
+  version: v1

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import html
 import re
 from typing import Any
 
@@ -10,134 +9,7 @@ from daily_dash.contracts.smart_news import (
     SmartNewsTheme,
 )
 from daily_dash.contracts.source import SourceItem
-
-MACRO_PRIORITY_TERMS = (
-    "ai",
-    "airline",
-    "airlines",
-    "antitrust",
-    "banking",
-    "banks",
-    "bond",
-    "bonds",
-    "budget",
-    "ceasefire",
-    "central bank",
-    "china",
-    "commodity",
-    "competition",
-    "conflict",
-    "credit",
-    "crude",
-    "currency",
-    "currencies",
-    "cyber",
-    "data center",
-    "diplomacy",
-    "dollar",
-    "ecb",
-    "economic",
-    "economy",
-    "electricity",
-    "energy",
-    "equities",
-    "equity",
-    "eu",
-    "europe",
-    "european union",
-    "fed",
-    "fiscal",
-    "fx",
-    "gas",
-    "gdp",
-    "geopolitics",
-    "government",
-    "growth",
-    "hormuz",
-    "inflation",
-    "iran",
-    "israel",
-    "lebanon",
-    "liquidity",
-    "market",
-    "markets",
-    "middle east",
-    "monetary",
-    "nuclear",
-    "oil",
-    "pboc",
-    "peace",
-    "policy",
-    "power",
-    "rates",
-    "rate cut",
-    "rate cuts",
-    "regulation",
-    "regulatory",
-    "regulator",
-    "regulators",
-    "recession",
-    "risk sentiment",
-    "sanction",
-    "sanctions",
-    "semiconductor",
-    "shipping",
-    "solar",
-    "supply",
-    "supply chain",
-    "tariff",
-    "tech",
-    "technology",
-    "trade",
-    "transport",
-    "treasuries",
-    "treasury",
-    "truce",
-    "utilities",
-    "volatility",
-    "war",
-    "wind",
-    "yield",
-    "yields",
-)
-
-NARROW_CORPORATE_TERMS = (
-    "acquisition",
-    "app",
-    "bankruptcy",
-    "bankruptcy exit",
-    "buyback",
-    "buyout",
-    "dividend",
-    "earnings",
-    "feature",
-    "fundraising",
-    "guidance",
-    "ipo",
-    "liquidation",
-    "m a",
-    "merger",
-    "product",
-    "rollout",
-    "shareholder",
-    "stake",
-    "takeover",
-    "transaction",
-)
-
-_TAG_RE = re.compile(r"<[^>]+>")
-_SPACE_RE = re.compile(r"\s+")
-
-
-def clean_smart_text(value: Any, max_len: int | None = None) -> str:
-    """Preserve the legacy Smart News input cleaning/truncation behavior."""
-
-    text = html.unescape(str(value or ""))
-    text = _TAG_RE.sub(" ", text)
-    text = _SPACE_RE.sub(" ", text).strip()
-    if max_len and len(text) > max_len:
-        return text[: max_len - 1].rstrip() + "..."
-    return text
+from daily_dash.policies import SmartNewsPolicy
 
 
 def select_smart_articles(items: list[SourceItem], *, limit: int) -> list[SourceItem]:
@@ -162,18 +34,6 @@ def select_smart_articles(items: list[SourceItem], *, limit: int) -> list[Source
         reverse=True,
     )
     return deduplicated[:limit]
-
-
-def build_llm_input_for_themes(articles: list[SourceItem]) -> str:
-    lines: list[str] = []
-    for index, article in enumerate(articles, start=1):
-        source = clean_smart_text(article.source, max_len=80)
-        title = clean_smart_text(article.title, max_len=220)
-        summary = clean_smart_text(article.text, max_len=320)
-        lines.append(f"{index}) [{source}] {title}")
-        if summary and summary.casefold() != title.casefold():
-            lines.append(f"   Summary: {summary}")
-    return "\n".join(lines)
 
 
 def _normalize_headline_indices(value: Any, *, max_index: int) -> list[int]:
@@ -231,6 +91,7 @@ def _supporting_articles_for_theme(
 def _macro_profile_for_theme(
     articles: list[SourceItem],
     theme: SmartNewsModelTheme,
+    policy: SmartNewsPolicy,
 ) -> dict[str, int]:
     supporting_articles = _supporting_articles_for_theme(articles, theme)
     combined_text = " ".join(
@@ -252,19 +113,20 @@ def _macro_profile_for_theme(
         for article in supporting_articles
         if article.source.strip()
     }
-    macro_hits = _count_term_hits(combined_text, MACRO_PRIORITY_TERMS)
-    title_macro_hits = _count_term_hits(theme.title, MACRO_PRIORITY_TERMS)
-    narrow_hits = _count_term_hits(combined_text, NARROW_CORPORATE_TERMS)
-    title_narrow_hits = _count_term_hits(theme.title, NARROW_CORPORATE_TERMS)
+    macro_hits = _count_term_hits(combined_text, tuple(policy.macro_priority_terms))
+    title_macro_hits = _count_term_hits(theme.title, tuple(policy.macro_priority_terms))
+    narrow_hits = _count_term_hits(combined_text, tuple(policy.narrow_corporate_terms))
+    title_narrow_hits = _count_term_hits(theme.title, tuple(policy.narrow_corporate_terms))
     support_count = len(supporting_articles)
     source_count = len(sources)
+    scoring = policy.scoring
     score = (
-        macro_hits * 3
-        + title_macro_hits * 2
-        + min(support_count, 4)
-        + min(source_count, 3)
-        - narrow_hits * 2
-        - title_narrow_hits * 2
+        macro_hits * scoring.macro_hit_weight
+        + title_macro_hits * scoring.title_macro_hit_weight
+        + min(support_count, scoring.support_count_cap)
+        + min(source_count, scoring.source_count_cap)
+        - narrow_hits * scoring.narrow_hit_penalty
+        - title_narrow_hits * scoring.title_narrow_hit_penalty
     )
 
     return {
@@ -278,7 +140,7 @@ def _macro_profile_for_theme(
     }
 
 
-def _is_macro_theme_relevant(profile: dict[str, int]) -> bool:
+def _is_macro_theme_relevant(profile: dict[str, int], policy: SmartNewsPolicy) -> bool:
     support_count = profile["support_count"]
     macro_hits = profile["macro_hits"]
     title_macro_hits = profile["title_macro_hits"]
@@ -286,20 +148,35 @@ def _is_macro_theme_relevant(profile: dict[str, int]) -> bool:
     title_narrow_hits = profile["title_narrow_hits"]
     score = profile["score"]
 
+    eligibility = policy.eligibility
     if support_count == 0:
-        return macro_hits >= 5 and title_macro_hits >= 1 and title_narrow_hits == 0
+        return (
+            macro_hits >= eligibility.no_support_min_macro_hits
+            and title_macro_hits >= eligibility.no_support_min_title_macro_hits
+            and title_narrow_hits == 0
+        )
     if support_count == 1:
-        if macro_hits < 3 or title_macro_hits == 0:
+        if (
+            macro_hits < eligibility.one_support_min_macro_hits
+            or title_macro_hits < eligibility.one_support_min_title_macro_hits
+        ):
             return False
-        if title_narrow_hits > 0 and macro_hits < 4:
+        if (
+            title_narrow_hits > 0
+            and macro_hits < eligibility.one_support_title_narrow_override_macro_hits
+        ):
             return False
-    if support_count == 2 and macro_hits < 3:
+    if support_count == 2 and macro_hits < eligibility.two_support_min_macro_hits:
         return False
-    if macro_hits < 3 and title_narrow_hits > 0:
+    if macro_hits < eligibility.title_narrow_min_macro_hits and title_narrow_hits > 0:
         return False
-    if macro_hits < 4 and narrow_hits >= 2 and support_count <= 2:
+    if (
+        macro_hits < eligibility.narrow_cluster_min_macro_hits
+        and narrow_hits >= eligibility.narrow_cluster_min_narrow_hits
+        and support_count <= eligibility.narrow_cluster_max_support_count
+    ):
         return False
-    return score >= 8
+    return score >= eligibility.minimum_score
 
 
 def select_macro_themes(
@@ -307,6 +184,7 @@ def select_macro_themes(
     themes: list[SmartNewsModelTheme],
     *,
     max_themes: int,
+    policy: SmartNewsPolicy,
 ) -> list[SmartNewsModelTheme]:
     """Port of the legacy deterministic Smart News macro-theme filter."""
 
@@ -321,8 +199,8 @@ def select_macro_themes(
                 max_index=len(articles),
             ),
         )
-        profile = _macro_profile_for_theme(articles, sanitized_theme)
-        if _is_macro_theme_relevant(profile):
+        profile = _macro_profile_for_theme(articles, sanitized_theme, policy)
+        if _is_macro_theme_relevant(profile, policy):
             ranked.append((profile["score"], original_index, sanitized_theme))
 
     ranked.sort(key=lambda item: (-item[0], item[1]))

@@ -61,7 +61,7 @@ def test_wsb_classifier_uses_prompt_asset_and_hides_popularity_metrics() -> None
 
     assert evaluations[0].id == "macro"
     assert trace.prompt_id == "wsb-ranking"
-    assert trace.prompt_version == "v1"
+    assert trace.prompt_version == "v2"
     assert trace.resolved_model == "openai/gpt-5.4-nano"
     assert client.request is not None
     assert client.request["alias"] == "rank-cheap"

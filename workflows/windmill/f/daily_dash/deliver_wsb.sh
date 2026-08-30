@@ -10,7 +10,9 @@ export DAILY_DASH_TELEGRAM_CHAT_ID="$telegram_chat_id"
 
 app_home="${DAILY_DASH_HOME:-/opt/daily-dash}"
 python_bin="$app_home/.venv/bin/python"
+config_dir="${DAILY_DASH_CONFIG_DIR:-$app_home/config}"
 
 "$python_bin" -m daily_dash.commands.wsb deliver \
   --artifact "$artifact_path" \
+  --config-dir "$config_dir" \
   > ./result.json

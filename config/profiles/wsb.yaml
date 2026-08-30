@@ -14,7 +14,7 @@ ranking:
   model_alias: rank-cheap
   prompt:
     id: wsb-ranking
-    version: v1
+    version: v2
   semantic_weight: 0.85
   activity_weight: 0.15
   min_semantic_score: 0.50

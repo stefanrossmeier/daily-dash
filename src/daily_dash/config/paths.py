@@ -16,3 +16,17 @@ def default_config_dir() -> Path:
         return Path(home) / "config"
 
     return Path("config")
+
+
+def default_assets_dir() -> Path:
+    """Resolve the DailyDash versioned-assets directory."""
+
+    explicit = os.getenv("DAILY_DASH_ASSETS_DIR")
+    if explicit:
+        return Path(explicit)
+
+    home = os.getenv("DAILY_DASH_HOME")
+    if home:
+        return Path(home) / "assets"
+
+    return Path("assets")

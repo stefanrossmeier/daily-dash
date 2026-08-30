@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
-from zoneinfo import ZoneInfo
 
 from daily_dash.config import WeekendMarketSourceSet, WeekendMarketsProfile
 from daily_dash.contracts import WeekendMarketSnapshotDocument
@@ -22,7 +21,7 @@ def run_weekend_markets_pipeline(
     now: datetime | None = None,
 ) -> tuple[WeekendMarketSnapshotDocument, Path]:
     effective_run_id = run_id or str(uuid4())
-    effective_now = now or datetime.now(ZoneInfo(profile.presentation.timezone))
+    effective_now = now or datetime.now(UTC)
     raw = retriever.retrieve(
         source_set,
         run_id=effective_run_id,

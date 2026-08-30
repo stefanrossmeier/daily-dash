@@ -1,0 +1,1 @@
+Prioritize signal over entertainment. Do not fill a quota. A quiet but genuinely important macro/market thread can outrank a viral meme. A single-company thread should qualify only when the event or crowding has a plausible path to meaningful sector, index, volatility, liquidity, or broader-market effects.

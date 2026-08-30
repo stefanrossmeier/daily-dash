@@ -55,6 +55,8 @@ configuration, is documented in:
 - [`docs/SCHEDULING.md`](docs/SCHEDULING.md)
 - [`docs/12_POLYMARKET_PIPELINE.md`](docs/12_POLYMARKET_PIPELINE.md)
 - [`docs/14_X_WATCHLIST_PIPELINE.md`](docs/14_X_WATCHLIST_PIPELINE.md)
+- [`docs/15_DEPLOYMENT_CHECKLIST.md`](docs/15_DEPLOYMENT_CHECKLIST.md)
+- [`docs/16_ARCHITECTURE_BOUNDARIES.md`](docs/16_ARCHITECTURE_BOUNDARIES.md)
 
 ## Repository boundaries
 

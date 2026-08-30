@@ -28,8 +28,8 @@ if [[ ! -f "$config_dir/profiles/wsb.yaml" ]]; then
   echo "WSB profile not found: $config_dir/profiles/wsb.yaml" >&2
   exit 4
 fi
-if [[ ! -f "$assets_dir/prompts/wsb-ranking/v1/prompt.yaml" ]]; then
-  echo "WSB prompt asset not found: $assets_dir/prompts/wsb-ranking/v1" >&2
+if [[ ! -f "$assets_dir/prompts/wsb-ranking/v2/prompt.yaml" ]]; then
+  echo "WSB prompt asset not found: $assets_dir/prompts/wsb-ranking/v2" >&2
   exit 5
 fi
 if [[ ! -d "$data_repo/.git" ]]; then

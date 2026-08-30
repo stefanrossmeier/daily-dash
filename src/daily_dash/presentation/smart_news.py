@@ -3,12 +3,16 @@ from __future__ import annotations
 from html import escape
 from zoneinfo import ZoneInfo
 
+from daily_dash.config.models import NewsProfile
 from daily_dash.contracts.common import ArtifactFormat
 from daily_dash.contracts.report import ReportArtifact
 from daily_dash.contracts.smart_news import SmartNewsRunDocument
 
 
-def render_smart_news_report(document: SmartNewsRunDocument) -> ReportArtifact:
+def render_smart_news_report(
+    document: SmartNewsRunDocument,
+    profile: NewsProfile,
+) -> ReportArtifact:
     if not document.articles:
         content = (
             "📰 DailyDash Smart News: Keine relevanten neuen Headlines im Betrachtungszeitraum."
@@ -25,7 +29,7 @@ def render_smart_news_report(document: SmartNewsRunDocument) -> ReportArtifact:
             for index, article in enumerate(document.articles[:8], start=1):
                 lines.append(f"{index}) {escape(article.title)} ({escape(article.source)})")
         else:
-            for theme in document.themes:
+            for theme in document.themes[: profile.presentation.max_items]:
                 lines.append("")
                 lines.append(f"🔥 <b>{escape(theme.title)}</b>")
                 if theme.llm_message:

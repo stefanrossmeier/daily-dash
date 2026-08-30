@@ -8,6 +8,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
+from daily_dash.config.loader import load_x_watchlist_profile
 from daily_dash.config.paths import default_config_dir
 from daily_dash.config.settings import TelegramSettings
 from daily_dash.contracts.common import DeliveryStatus
@@ -59,7 +60,8 @@ def _run(args: argparse.Namespace) -> None:
 
 def _deliver(args: argparse.Namespace) -> None:
     document = JsonXWatchlistRunStore.read(args.artifact)
-    report = render_x_watchlist_report(document)
+    profile = load_x_watchlist_profile(args.config_dir / "profiles/x-watchlist.yaml")
+    report = render_x_watchlist_report(document, profile)
     try:
         settings = TelegramSettings(
             telegram_token=os.environ.get("DAILY_DASH_TELEGRAM_TOKEN", ""),
@@ -97,6 +99,7 @@ def build_parser() -> argparse.ArgumentParser:
     run_parser.set_defaults(handler=_run)
     deliver_parser = subparsers.add_parser("deliver")
     deliver_parser.add_argument("--artifact", type=Path, required=True)
+    deliver_parser.add_argument("--config-dir", type=Path, default=default_config_dir())
     deliver_parser.set_defaults(handler=_deliver)
     return parser
 

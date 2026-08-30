@@ -5,8 +5,9 @@ from pydantic import HttpUrl
 from daily_dash.contracts.common import SourceKind
 from daily_dash.contracts.smart_news import SmartNewsModelTheme
 from daily_dash.contracts.source import SourceItem
+from daily_dash.llm.smart_news import build_theme_input
+from daily_dash.policies import load_smart_news_policy
 from daily_dash.processing.smart_news import (
-    build_llm_input_for_themes,
     materialize_smart_themes,
     select_macro_themes,
     select_smart_articles,
@@ -56,7 +57,7 @@ def test_llm_input_keeps_source_title_and_summary_like_legacy_smart_news() -> No
         )
     ]
 
-    block = build_llm_input_for_themes(articles)
+    block = build_theme_input(articles)
 
     assert "1) [FT World] Oil falls on ceasefire hopes" in block
     assert "Summary: Crude prices declined" in block
@@ -99,7 +100,8 @@ def test_legacy_macro_filter_keeps_broad_theme_and_drops_narrow_corporate_theme(
         ),
     ]
 
-    selected = select_macro_themes(articles, themes, max_themes=5)
+    policy = load_smart_news_policy("news-smart-macro", "v1").policy
+    selected = select_macro_themes(articles, themes, max_themes=5, policy=policy)
 
     assert [theme.title for theme in selected] == [themes[0].title]
 

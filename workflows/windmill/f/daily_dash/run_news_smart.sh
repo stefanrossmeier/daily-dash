@@ -25,14 +25,18 @@ if [[ ! -f "$config_dir/profiles/news-smart.yaml" ]]; then
   exit 4
 fi
 
-if [[ ! -f "$assets_dir/prompts/news-smart/v1/prompt.yaml" ]]; then
-  echo "Smart News prompt asset not found: $assets_dir/prompts/news-smart/v1" >&2
+if [[ ! -f "$assets_dir/prompts/news-smart/v2/prompt.yaml" ]]; then
+  echo "Smart News prompt asset not found: $assets_dir/prompts/news-smart/v2" >&2
   exit 5
+fi
+if [[ ! -f "$assets_dir/policies/news-smart-macro/v1/policy.yaml" ]]; then
+  echo "Smart News policy asset not found: $assets_dir/policies/news-smart-macro/v1" >&2
+  exit 6
 fi
 
 if [[ ! -d "$data_repo/.git" ]]; then
   echo "DailyDash data repository not found: $data_repo" >&2
-  exit 6
+  exit 7
 fi
 
 "$python_bin" -m daily_dash.commands.news_smart run \

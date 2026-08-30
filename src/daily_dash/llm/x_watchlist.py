@@ -98,11 +98,9 @@ class GatewayXWatchlistClassifier:
             }
             for slot, post in zip(slots, posts, strict=True)
         ]
-        user = (
-            f"{prompt.profile_text}\n\n"
-            "Evaluate every supplied X post exactly once. Do not use popularity or engagement; "
-            "those signals are intentionally not supplied.\n\n"
-            f"Posts:\n{json.dumps(payload, ensure_ascii=False, indent=2)}"
+        user = prompt.render_task(
+            profile_text=prompt.profile_text,
+            posts_json=json.dumps(payload, ensure_ascii=False, indent=2),
         )
         response = self._client.chat_structured(
             alias=profile.ranking.model_alias,
@@ -132,6 +130,7 @@ class GatewayXWatchlistClassifier:
             prompt_profile=prompt.profile,
             system_sha256=prompt.system_sha256,
             profile_sha256=prompt.profile_sha256,
+            task_sha256=prompt.task_sha256,
             combined_sha256=prompt.combined_sha256,
             model_alias=response.alias,
             provider=response.provider,

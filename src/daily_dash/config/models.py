@@ -106,8 +106,8 @@ class KeywordConfig(BaseModel):
     exclude: list[str] = Field(default_factory=list)
 
 
-class PromptRefConfig(BaseModel):
-    """Reference to a versioned prompt asset."""
+class VersionedAssetRefConfig(BaseModel):
+    """Reference to a versioned non-code asset."""
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -124,6 +124,10 @@ class PromptRefConfig(BaseModel):
     )
 
 
+class PromptRefConfig(VersionedAssetRefConfig):
+    """Reference to a versioned prompt asset."""
+
+
 class RankingConfig(BaseModel):
     """Deterministic candidate cap and semantic ranking configuration."""
 
@@ -138,6 +142,7 @@ class RankingConfig(BaseModel):
     prompt: PromptRefConfig = Field(
         default_factory=PromptRefConfig,
     )
+    selection_mode: Literal["model-selected", "top-market-policy"] = "model-selected"
 
     min_score: float = Field(default=0.5, ge=0.0, le=1.0)
 
@@ -171,6 +176,7 @@ class NewsProfile(BaseModel):
     keywords: KeywordConfig
     ranking: RankingConfig
     presentation: PresentationConfig
+    processing_policy: VersionedAssetRefConfig | None = None
 
     @model_validator(mode="after")
     def validate_pipeline_limits(self) -> Self:
@@ -200,7 +206,7 @@ class WsbRankingConfig(BaseModel):
     llm_enabled: bool = True
     model_alias: str = Field(default="rank-cheap", min_length=1)
     prompt: PromptRefConfig = Field(
-        default_factory=lambda: PromptRefConfig(id="wsb-ranking", version="v1")
+        default_factory=lambda: PromptRefConfig(id="wsb-ranking", version="v2")
     )
     semantic_weight: float = Field(default=0.85, ge=0.0, le=1.0)
     activity_weight: float = Field(default=0.15, ge=0.0, le=1.0)
@@ -265,7 +271,7 @@ class XWatchlistRetrievalConfig(BaseModel):
 
     model_alias: str = Field(default="x-retrieve", min_length=1)
     prompt: PromptRefConfig = Field(
-        default_factory=lambda: PromptRefConfig(id="x-watchlist-retrieval", version="v3")
+        default_factory=lambda: PromptRefConfig(id="x-watchlist-retrieval", version="v4")
     )
     max_items: int = Field(default=80, ge=1, le=200)
     require_citation_evidence: bool = True
@@ -281,7 +287,7 @@ class XWatchlistRankingConfig(BaseModel):
     llm_enabled: bool = True
     model_alias: str = Field(default="rank-cheap", min_length=1)
     prompt: PromptRefConfig = Field(
-        default_factory=lambda: PromptRefConfig(id="x-watchlist-ranking", version="v3")
+        default_factory=lambda: PromptRefConfig(id="x-watchlist-ranking", version="v4")
     )
     min_semantic_score: float = Field(default=0.35, ge=0.0, le=1.0)
     min_relevance: int = Field(default=35, ge=0, le=100)
@@ -376,7 +382,7 @@ class PolymarketRankingConfig(BaseModel):
     llm_enabled: bool = True
     model_alias: str = Field(default="rank-cheap", min_length=1)
     prompt: PromptRefConfig = Field(
-        default_factory=lambda: PromptRefConfig(id="polymarket-ranking", version="v5")
+        default_factory=lambda: PromptRefConfig(id="polymarket-ranking", version="v6")
     )
     min_ranking_score: int = Field(default=50, ge=0, le=100)
     min_relevance: int = Field(default=55, ge=0, le=100)

@@ -22,11 +22,11 @@ if [[ ! -f "$config_dir/profiles/x-watchlist.yaml" ]]; then
   echo "X Watchlist profile not found: $config_dir/profiles/x-watchlist.yaml" >&2
   exit 4
 fi
-if [[ ! -f "$assets_dir/prompts/x-watchlist-retrieval/v3/prompt.yaml" ]]; then
+if [[ ! -f "$assets_dir/prompts/x-watchlist-retrieval/v4/prompt.yaml" ]]; then
   echo "X Watchlist retrieval prompt not found" >&2
   exit 5
 fi
-if [[ ! -f "$assets_dir/prompts/x-watchlist-ranking/v3/prompt.yaml" ]]; then
+if [[ ! -f "$assets_dir/prompts/x-watchlist-ranking/v4/prompt.yaml" ]]; then
   echo "X Watchlist ranking prompt not found" >&2
   exit 6
 fi

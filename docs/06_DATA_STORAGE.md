@@ -91,7 +91,8 @@ public-ai-github/
 Run Markets with persistence using:
 
 ~~~bash
-uv run daily-dash markets   --data-repo ../daily-dash-data
+uv run python -m daily_dash.commands.markets run \
+  --data-repo ../daily-dash-data
 ~~~
 
 The path is runtime configuration and must not be hard-coded into DailyDash.

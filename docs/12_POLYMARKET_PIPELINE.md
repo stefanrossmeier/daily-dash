@@ -85,7 +85,7 @@ recent trade count
 The versioned prompt is:
 
 ```text
-assets/prompts/polymarket-ranking/v5/
+assets/prompts/polymarket-ranking/v6/
 ├── prompt.yaml
 ├── system.md
 └── profiles/
@@ -144,6 +144,15 @@ max |1d move| >= 10 percentage points
 ```
 
 Up to three hot events are displayed. They can be sports or entertainment: the section explicitly means “Hot on Polymarket”, not “financial signal”.
+
+## Telegram presentation
+
+Telegram keeps the two product lanes but does not expose DailyDash ranking internals.
+Market Signals show the event link plus Polymarket-native probability and 24-hour
+volume when available. Hot events show the event link plus native activity context
+(volume, recent trades, comments and one-hour price move). LLM selection scores,
+impact/breadth/prediction scores, rationales and the deterministic `activity_score`
+remain in the artifact only. Empty sections use plain user-facing messages.
 
 ## Compact immutable artifact
 

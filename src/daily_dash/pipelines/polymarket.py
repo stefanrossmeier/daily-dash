@@ -90,7 +90,7 @@ def run_polymarket_pipeline(
     evaluations = score_polymarket_evaluations(candidates, model_evaluations, profile.ranking)
     selected_ids = select_polymarket_signal_ids(
         evaluations,
-        limit=profile.presentation.max_signal_items,
+        limit=profile.ranking.top_k,
         max_items_per_topic=profile.ranking.max_items_per_topic,
         max_items_per_theme=profile.ranking.max_items_per_theme,
     )
@@ -106,7 +106,7 @@ def run_polymarket_pipeline(
     hot = select_polymarket_hot_events(
         hot_candidates,
         profile.hot,
-        limit=profile.presentation.max_hot_items,
+        limit=profile.hot.max_items,
     )
     candidate_audit = [
         PolymarketCandidateAudit(

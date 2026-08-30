@@ -114,27 +114,27 @@ Run the complete repository quality gate:
 ./scripts/check.sh
 ~~~
 
-Run Markets locally:
+Run and persist Markets locally:
 
 ~~~bash
-uv run daily-dash markets
+uv run python -m daily_dash.commands.markets run \
+  --data-repo ../daily-dash-data
 ~~~
 
-Send the Markets report through Telegram:
+The command prints the persisted artifact path. Deliver that persisted artifact through Telegram with:
 
 ~~~bash
-uv run daily-dash markets --delivery telegram
+uv run python -m daily_dash.commands.markets deliver \
+  --artifact ../daily-dash-data/<persisted-market-artifact>.json
 ~~~
+
+The former `uv run daily-dash markets` shortcut was removed because it could render or deliver without requiring the persistence boundary. The canonical runtime now mirrors Windmill's `run -> persist -> deliver` contract.
 
 ## First verified live run
 
 The first successful live-data execution of the new pipeline was performed on **August 26, 2026 at 23:38 local time**.
 
-Command:
-
-~~~bash
-uv run daily-dash markets
-~~~
+The first historical live run used the former `daily-dash markets` convenience command. That shortcut has since been retired in favor of the persisted runtime command shown above.
 
 Output:
 

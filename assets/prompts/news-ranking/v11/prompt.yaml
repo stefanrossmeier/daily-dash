@@ -1,0 +1,11 @@
+id: news-ranking
+version: v11
+system: system.md
+task: task.md
+contract:
+  include_market_breadth: true
+  response_schema_version: v11
+profiles:
+  news-top: profiles/top.md
+  news-alternative: profiles/alternative.md
+  news-german: profiles/german.md

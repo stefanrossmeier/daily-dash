@@ -17,13 +17,13 @@ from daily_dash.contracts.news import (
 )
 from daily_dash.contracts.source import CandidateBatch
 from daily_dash.llm.gateway import ModelGatewayClient
+from daily_dash.llm.news import GatewayNewsRanker
 from daily_dash.processing.news import (
     apply_top_market_policy,
     deduplicate_news_items,
     select_distinct_events,
     source_neutral_candidate_cap,
 )
-from daily_dash.ranking.news import GatewayNewsRanker, uses_profile_selection_contract
 from daily_dash.retrieval.rss import retrieve_source_set
 from daily_dash.scheduling import resolve_schedule_window
 from daily_dash.storage.news import JsonNewsRunStore
@@ -95,8 +95,7 @@ def run_news_pipeline(
 
     run_id = uuid4().hex
     client = ModelGatewayClient(gateway_url)
-    uses_modern_selection = uses_profile_selection_contract(profile.ranking.prompt.version)
-    uses_top_market_policy = profile.profile_id == "news-top" and uses_modern_selection
+    uses_top_market_policy = profile.ranking.selection_mode == "top-market-policy"
 
     batch = CandidateBatch(
         run_id=run_id,
@@ -113,9 +112,9 @@ def run_news_pipeline(
 
     selected_ids, duplicate_suppressions = select_distinct_events(
         ranking,
-        limit=profile.presentation.max_items,
+        limit=profile.ranking.top_k,
         eligible_only=uses_top_market_policy,
-        selected_only=(uses_modern_selection and not uses_top_market_policy),
+        selected_only=not uses_top_market_policy,
     )
     model_summary = _model_summary([trace])
     document = NewsRunDocument(

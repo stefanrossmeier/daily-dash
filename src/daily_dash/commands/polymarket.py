@@ -57,7 +57,8 @@ def _check_api(args: argparse.Namespace) -> None:
 
 def _deliver(args: argparse.Namespace) -> None:
     document = JsonPolymarketRunStore.read(args.artifact)
-    report = render_polymarket_report(document)
+    profile = load_polymarket_profile(args.config_dir / "profiles/polymarket.yaml")
+    report = render_polymarket_report(document, profile)
     try:
         settings = TelegramSettings(
             telegram_token=os.environ.get("DAILY_DASH_TELEGRAM_TOKEN", ""),
@@ -96,6 +97,7 @@ def build_parser() -> argparse.ArgumentParser:
     check_parser.set_defaults(handler=_check_api)
     deliver_parser = subparsers.add_parser("deliver")
     deliver_parser.add_argument("--artifact", type=Path, required=True)
+    deliver_parser.add_argument("--config-dir", type=Path, default=default_config_dir())
     deliver_parser.set_defaults(handler=_deliver)
     return parser
 

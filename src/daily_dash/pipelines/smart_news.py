@@ -12,12 +12,14 @@ from daily_dash.config.loader import (
 from daily_dash.contracts.news import NewsRankingTrace
 from daily_dash.contracts.smart_news import (
     SmartNewsModelTheme,
+    SmartNewsPolicyTrace,
     SmartNewsRetrievalWindow,
     SmartNewsRunDocument,
     SmartNewsTheme,
 )
 from daily_dash.llm.gateway import ModelGatewayClient
 from daily_dash.llm.smart_news import GatewaySmartNewsAnalyzer
+from daily_dash.policies import load_smart_news_policy
 from daily_dash.processing.smart_news import (
     materialize_smart_themes,
     select_macro_themes,
@@ -125,6 +127,12 @@ def run_smart_news_pipeline(
         retrieved,
         limit=profile.ranking.candidate_limit,
     )
+    if profile.processing_policy is None:
+        raise ValueError("Smart News requires a versioned processing_policy")
+    policy_asset = load_smart_news_policy(
+        profile.processing_policy.id,
+        profile.processing_policy.version,
+    )
     run_id = uuid4().hex
     model_themes: list[SmartNewsModelTheme]
     trace: NewsRankingTrace | None
@@ -138,7 +146,8 @@ def run_smart_news_pipeline(
         selected_model_themes = select_macro_themes(
             articles,
             model_themes,
-            max_themes=profile.presentation.max_items,
+            max_themes=profile.ranking.top_k,
+            policy=policy_asset.policy,
         )
         themes = materialize_smart_themes(articles, selected_model_themes)
     else:
@@ -159,6 +168,11 @@ def run_smart_news_pipeline(
         themes=themes,
         theme_count=len(themes),
         model_trace=trace,
+        policy_trace=SmartNewsPolicyTrace(
+            policy_id=policy_asset.policy.id,
+            policy_version=policy_asset.policy.version,
+            sha256=policy_asset.sha256,
+        ),
     )
     output_path = JsonSmartNewsRunStore(data_repo).write(document)
     return document, output_path

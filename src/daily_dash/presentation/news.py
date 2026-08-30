@@ -17,7 +17,15 @@ def render_news_report(
     candidates = {item.id: item for item in document.candidates}
     lines = [f"<b>{escape(profile.presentation.title)}</b>"]
 
-    for position, item_id in enumerate(document.selected_ids, start=1):
+    if not document.selected_ids:
+        if profile.presentation.language == "de":
+            lines.append("Im Berichtszeitraum wurden keine relevanten neuen Artikel gefunden.")
+        else:
+            lines.append("No relevant new articles were found in this report window.")
+
+    for position, item_id in enumerate(
+        document.selected_ids[: profile.presentation.max_items], start=1
+    ):
         item = candidates.get(item_id)
         if item is None:
             raise ValueError(f"selected news item is missing from candidates: {item_id}")
@@ -32,11 +40,6 @@ def render_news_report(
             headline = f'<a href="{original_url}">{title}</a>'
 
         lines.append(f"{position}. {headline} — <i>{source}</i>")
-
-    if document.duplicate_suppressions:
-        count = len(document.duplicate_suppressions)
-        noun = "duplicate article" if count == 1 else "duplicate articles"
-        lines.append(f"<i>{count} {noun} suppressed by event identity.</i>")
 
     return ReportArtifact(
         run_id=document.run_id,

@@ -115,11 +115,11 @@ def retrieve_x_watchlist_posts(
     )
     from_date, to_date = _search_dates(window_start, window_end, profile.presentation.timezone)
     handles_text = ", ".join(f"@{handle}" for handle in source_set.handles)
-    user = (
-        f"{prompt.profile_text}\n\n"
-        f"Allowed X handles: {handles_text}\n"
-        f"Broad X search envelope: {from_date.isoformat()} through {to_date.isoformat()}.\n"
-        "Search all allowed handles as needed and return the JSON object described above."
+    user = prompt.render_task(
+        profile_text=prompt.profile_text,
+        handles_text=handles_text,
+        from_date=from_date.isoformat(),
+        to_date=to_date.isoformat(),
     )
 
     response = ModelGatewayClient(gateway_url, timeout_seconds=240.0).x_search_structured(

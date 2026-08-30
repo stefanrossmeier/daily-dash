@@ -390,3 +390,33 @@ def test_load_x_watchlist_prompts() -> None:
     assert "same underlying event" in ranking.system
     assert "Missing a potentially useful topic is worse" in ranking.profile_text
     assert "at most one post per topic" in ranking.profile_text
+
+
+def test_active_prompt_versions_have_versioned_task_templates() -> None:
+    cases = [
+        ("news-ranking", "v11", "news-top"),
+        ("news-smart", "v2", "news-smart"),
+        ("wsb-ranking", "v2", "wsb"),
+        ("polymarket-ranking", "v6", "polymarket"),
+        ("x-watchlist-ranking", "v4", "x-watchlist"),
+        ("x-watchlist-retrieval", "v4", "x-watchlist"),
+    ]
+    for prompt_id, version, profile in cases:
+        prompt = load_prompt_asset(prompt_id, version, profile, assets_dir=_ASSETS_DIR)
+        assert prompt.task_template
+        assert prompt.task_sha256 is not None
+        assert len(prompt.task_sha256) == 64
+        assert len(prompt.combined_sha256) == 64
+
+
+def test_news_v11_contract_is_manifest_driven() -> None:
+    prompt = load_prompt_asset("news-ranking", "v11", "news-top", assets_dir=_ASSETS_DIR)
+    assert prompt.contract_bool("include_market_breadth") is True
+    assert prompt.contract_str("response_schema_version") == "v11"
+    rendered = prompt.render_task(
+        candidate_count=1,
+        slots_json='["C001"]',
+        candidates_json='[{"slot":"C001","headline":"Fed decision"}]',
+    )
+    assert "Evaluate every candidate slot exactly once" in rendered
+    assert "Fed decision" in rendered

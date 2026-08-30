@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import html
+import re
+
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 from daily_dash.config.models import NewsProfile
@@ -7,8 +10,31 @@ from daily_dash.contracts.news import NewsModelUsage, NewsRankingTrace
 from daily_dash.contracts.smart_news import SmartNewsModelTheme
 from daily_dash.contracts.source import SourceItem
 from daily_dash.llm.gateway import StructuredChatClient
-from daily_dash.processing.smart_news import build_llm_input_for_themes
 from daily_dash.prompts import load_prompt_asset
+
+_TAG_RE = re.compile(r"<[^>]+>")
+_SPACE_RE = re.compile(r"\s+")
+
+
+def _clean_input_text(value: object, max_len: int | None = None) -> str:
+    text = html.unescape(str(value or ""))
+    text = _TAG_RE.sub(" ", text)
+    text = _SPACE_RE.sub(" ", text).strip()
+    if max_len and len(text) > max_len:
+        return text[: max_len - 1].rstrip() + "..."
+    return text
+
+
+def build_theme_input(articles: list[SourceItem]) -> str:
+    lines: list[str] = []
+    for index, article in enumerate(articles, start=1):
+        source = _clean_input_text(article.source, max_len=80)
+        title = _clean_input_text(article.title, max_len=220)
+        summary = _clean_input_text(article.text, max_len=320)
+        lines.append(f"{index}) [{source}] {title}")
+        if summary and summary.casefold() != title.casefold():
+            lines.append(f"   Summary: {summary}")
+    return "\n".join(lines)
 
 
 class _SmartNewsResponse(BaseModel):
@@ -63,16 +89,19 @@ class GatewaySmartNewsAnalyzer:
         if not articles:
             raise ValueError("Smart News analysis requires at least one article")
 
-        max_themes = profile.presentation.max_items
+        max_themes = profile.ranking.top_k
         prompt = load_prompt_asset(
             profile.ranking.prompt.id,
             profile.ranking.prompt.version,
             profile.profile_id,
         )
 
-        system = prompt.system.replace("{max_themes}", str(max_themes))
-        headlines_block = build_llm_input_for_themes(articles)
-        user = f"Here are the news items:\n\n{headlines_block}\n\n{prompt.profile_text}"
+        system = prompt.render_system(max_themes=max_themes)
+        headlines_block = build_theme_input(articles)
+        user = prompt.render_task(
+            headlines_block=headlines_block,
+            profile_text=prompt.profile_text,
+        )
 
         response = self._client.chat_structured(
             alias=profile.ranking.model_alias,
@@ -98,6 +127,7 @@ class GatewaySmartNewsAnalyzer:
             prompt_profile=prompt.profile,
             system_sha256=prompt.system_sha256,
             profile_sha256=prompt.profile_sha256,
+            task_sha256=prompt.task_sha256,
             combined_sha256=prompt.combined_sha256,
             model_alias=response.alias,
             provider=response.provider,

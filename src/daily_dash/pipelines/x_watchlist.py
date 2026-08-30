@@ -91,7 +91,7 @@ def run_x_watchlist_pipeline(
     evaluations = score_x_watchlist_evaluations(model_evaluations, profile.ranking)
     selected_ids = select_x_watchlist_ids(
         evaluations,
-        limit=profile.presentation.max_items,
+        limit=profile.ranking.top_k,
         max_items_per_topic=profile.ranking.max_items_per_topic,
     )
     document = XWatchlistRunDocument(

@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
-from zoneinfo import ZoneInfo
 
 from daily_dash.config import YieldProfile, YieldSourceSet
 from daily_dash.contracts import YieldSnapshotDocument
@@ -22,7 +21,7 @@ def run_yield_pipeline(
     now: datetime | None = None,
 ) -> tuple[YieldSnapshotDocument, Path]:
     effective_run_id = run_id or str(uuid4())
-    effective_now = now or datetime.now(ZoneInfo(profile.presentation.timezone))
+    effective_now = now or datetime.now(UTC)
     raw = retriever.retrieve(source_set, run_id=effective_run_id, retrieved_at=effective_now)
 
     available = [series for series in raw.series if series.observations and series.error is None]

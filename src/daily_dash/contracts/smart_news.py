@@ -52,6 +52,16 @@ class SmartNewsTheme(BaseModel):
     supporting_headlines: list[SmartNewsSupportingHeadline]
 
 
+class SmartNewsPolicyTrace(BaseModel):
+    """Versioned deterministic editorial policy applied after theme clustering."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    policy_id: str = Field(min_length=1)
+    policy_version: str = Field(min_length=1)
+    sha256: str = Field(min_length=64, max_length=64)
+
+
 class SmartNewsRunDocument(BaseModel):
     """Immutable Smart News run artifact persisted before delivery."""
 
@@ -75,3 +85,4 @@ class SmartNewsRunDocument(BaseModel):
     themes: list[SmartNewsTheme] = Field(default_factory=list)
     theme_count: int = Field(ge=0)
     model_trace: NewsRankingTrace | None = None
+    policy_trace: SmartNewsPolicyTrace | None = None

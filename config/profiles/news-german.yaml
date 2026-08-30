@@ -19,7 +19,7 @@ ranking:
   model_alias: rank-cheap
   prompt:
     id: news-ranking
-    version: v10
+    version: v11
   min_score: 0.50
 
 presentation:

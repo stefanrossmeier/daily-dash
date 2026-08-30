@@ -93,7 +93,7 @@ def run_wsb_pipeline(
     evaluations = score_wsb_evaluations(candidates, model_evaluations, profile.ranking)
     selected_ids = select_wsb_ids(
         evaluations,
-        limit=profile.presentation.max_items,
+        limit=profile.ranking.top_k,
         extreme_activity_max_items=profile.ranking.extreme_activity_max_items,
     )
     document = WsbRunDocument(

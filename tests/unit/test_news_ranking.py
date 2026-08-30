@@ -7,7 +7,7 @@ from daily_dash.config.loader import load_news_profile
 from daily_dash.contracts.common import SourceKind
 from daily_dash.contracts.source import CandidateBatch, SourceItem
 from daily_dash.llm.gateway import GatewayResponse, GatewayUsage
-from daily_dash.ranking.news import GatewayNewsRanker, _ranking_schema
+from daily_dash.llm.news import GatewayNewsRanker, _ranking_schema
 
 _REPO_ROOT = Path(__file__).parents[2]
 
@@ -46,7 +46,7 @@ class FakeGateway:
         del purpose, profile, system, response_schema
         self.calls += 1
         self.user = user
-        assert response_schema_name == "daily_dash_news_ranking_v10"
+        assert response_schema_name == "daily_dash_news_ranking_v11"
         return GatewayResponse(
             alias=alias,
             provider="openrouter",
@@ -115,7 +115,7 @@ def test_ranker_preserves_raw_llm_rank_score_order_before_top_policy() -> None:
     # GatewayNewsRanker preserves the raw LLM ordering. The Top pipeline
     # applies its deterministic market policy after this ranking step.
     assert content.ranking == ["two", "one"]
-    assert trace.prompt_version == "v10"
+    assert trace.prompt_version == "v11"
     assert gateway.calls == 1
     assert trace.attempts == 1
 
@@ -144,14 +144,14 @@ def test_model_input_excludes_original_article_urls() -> None:
     assert '"headline": "Emergency rate cut"' in gateway.user
 
 
-def test_all_news_profiles_use_v10_with_profile_neutral_selection_instruction() -> None:
+def test_all_news_profiles_use_v11_with_profile_neutral_selection_instruction() -> None:
     for profile_id in ("news-top", "news-alternative", "news-german"):
         profile = load_news_profile(_REPO_ROOT / "config" / "profiles" / f"{profile_id}.yaml")
         gateway = FakeGateway()
 
         _, trace = GatewayNewsRanker(gateway).rank(
             CandidateBatch(
-                run_id=f"{profile_id}-v10-test",
+                run_id=f"{profile_id}-v11-test",
                 profile=profile_id,
                 items=[
                     _candidate("one", "Emergency rate cut"),
@@ -161,7 +161,7 @@ def test_all_news_profiles_use_v10_with_profile_neutral_selection_instruction() 
             profile,
         )
 
-        assert trace.prompt_version == "v10"
+        assert trace.prompt_version == "v11"
         assert gateway.calls == 1
         assert "this news profile" in gateway.user
         assert "Top-News consideration" not in gateway.user
@@ -185,7 +185,7 @@ def test_v6_schema_requires_rank_score_event_key_and_market_breadth() -> None:
 
 
 def test_v6_schema_requires_duplicate_relation() -> None:
-    from daily_dash.ranking.news import (
+    from daily_dash.llm.news import (
         _evaluation_schema,
     )
 
@@ -196,7 +196,7 @@ def test_v6_schema_requires_duplicate_relation() -> None:
 
 
 def test_v5_schema_remains_reproducible_without_market_breadth() -> None:
-    from daily_dash.ranking.news import _evaluation_schema
+    from daily_dash.llm.news import _evaluation_schema
 
     schema = _evaluation_schema()
 

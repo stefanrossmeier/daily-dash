@@ -7,9 +7,9 @@ _REPO_ROOT = Path(__file__).parents[2]
 
 def test_news_profiles_reference_versioned_prompt() -> None:
     expected_versions = {
-        "news-top": "v10",
-        "news-alternative": "v10",
-        "news-german": "v10",
+        "news-top": "v11",
+        "news-alternative": "v11",
+        "news-german": "v11",
     }
 
     for profile_id, expected_version in expected_versions.items():

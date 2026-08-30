@@ -39,8 +39,6 @@ X_SEARCH_RESPONSE_SCHEMA: dict[str, object] = {
                     "post_text",
                     "post_url",
                     "linked_urls",
-                    "significance",
-                    "short_summary",
                 ],
                 "properties": {
                     "author_handle": {"type": "string"},
@@ -51,8 +49,6 @@ X_SEARCH_RESPONSE_SCHEMA: dict[str, object] = {
                         "type": "array",
                         "items": {"type": "string"},
                     },
-                    "significance": {"type": "string"},
-                    "short_summary": {"type": "string"},
                 },
             },
         }
@@ -73,15 +69,13 @@ def build_input(
     from_date: date,
     to_date: date,
 ) -> str:
-    return (
-        f"{prompt.system}\n\n"
-        f"{prompt.profile_text}\n\n"
-        "Retrieval request:\n"
-        f"- allowed X handle: {handle}\n"
-        f"- from_date: {from_date.isoformat()}\n"
-        f"- to_date: {to_date.isoformat()}\n\n"
-        "Search X now and return the JSON object described above."
+    task = prompt.render_task(
+        profile_text=prompt.profile_text,
+        handles_text=f"@{handle}",
+        from_date=from_date.isoformat(),
+        to_date=to_date.isoformat(),
     )
+    return f"{prompt.system}\n\n{task}"
 
 
 def build_gateway_request(
@@ -172,8 +166,8 @@ def run_live(
 ) -> Path:
     prompt = load_prompt_asset(
         "x-watchlist-retrieval",
-        "v1",
-        "spike",
+        "v4",
+        "x-watchlist",
         assets_dir=assets_dir,
     )
     gateway_request = build_gateway_request(
@@ -239,8 +233,8 @@ def main() -> None:
     assets_dir = Path(os.getenv("DAILY_DASH_ASSETS_DIR", "assets"))
     prompt = load_prompt_asset(
         "x-watchlist-retrieval",
-        "v1",
-        "spike",
+        "v4",
+        "x-watchlist",
         assets_dir=assets_dir,
     )
     gateway_request = build_gateway_request(

@@ -51,7 +51,7 @@ def test_wsb_runner_executes_without_positional_args(tmp_path: Path) -> None:
     config_dir = tmp_path / "config"
     (config_dir / "profiles").mkdir(parents=True)
     (config_dir / "profiles/wsb.yaml").write_text("profile")
-    assets_dir = tmp_path / "assets/prompts/wsb-ranking/v1"
+    assets_dir = tmp_path / "assets/prompts/wsb-ranking/v2"
     assets_dir.mkdir(parents=True)
     (assets_dir / "prompt.yaml").write_text("prompt")
     data_repo = tmp_path / "data"

@@ -84,10 +84,10 @@ expected.
 
 The current prompt lives under:
 
-    assets/prompts/news-ranking/v9/
+    assets/prompts/news-ranking/v11/
 
 Older versions remain checked in for reproducibility. Profiles reference the prompt by ID and version. Every run records prompt ID,
-version, profile, and SHA-256 hashes for the system, profile, and combined
+version, profile, and SHA-256 hashes for the system, profile, versioned task template, and combined
 prompt text.
 
 ## Model gateway
@@ -446,6 +446,12 @@ artifact.
 
 Original publisher URLs remain excluded from the model request and response.
 Telegram presentation resolves URLs from the original persisted `SourceItem`.
+
+The Telegram report is intentionally presentation-only: ranking scores, rationales,
+and duplicate-suppression diagnostics remain in the immutable artifact and are not
+shown to the reader. When a News profile selects no items, the report still sends a
+short empty-state message explaining that no relevant new articles were found in the
+report window. German News uses the equivalent German message.
 
 ### Initial live v5 validation
 

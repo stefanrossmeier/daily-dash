@@ -61,7 +61,7 @@ def test_smart_news_uses_versioned_prompt_asset_and_gpt54_alias() -> None:
 
     assert themes[0].headline_indices == [1]
     assert trace.prompt_id == "news-smart"
-    assert trace.prompt_version == "v1"
+    assert trace.prompt_version == "v2"
     assert trace.resolved_model == "openai/gpt-5.4-nano"
     assert trace.usage.cost_usd == 0.001
 

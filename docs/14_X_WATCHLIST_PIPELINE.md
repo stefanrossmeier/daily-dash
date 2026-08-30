@@ -31,7 +31,7 @@ Persistence completes before Telegram delivery.
 
 ## Retrieval
 
-The source set is checked in at `config/sources/x-watchlist.yaml`. The production retrieval prompt is versioned at `assets/prompts/x-watchlist-retrieval/v3/`.
+The source set is checked in at `config/sources/x-watchlist.yaml`. The production retrieval prompt is versioned at `assets/prompts/x-watchlist-retrieval/v4/`.
 
 The application sends all six handles in one gateway request. The gateway resolves alias `x-retrieve` to the configured Grok model and injects native X search plus the handle/date restrictions. Application code cannot access the OpenRouter root key.
 
@@ -54,7 +54,7 @@ Retrieval does not use likes, repost counts, views, follower counts, or other en
 
 ## Ranking
 
-Ranking is separate from Grok retrieval. The current profile uses the existing `rank-cheap` gateway alias and the versioned `x-watchlist-ranking/v3` prompt.
+Ranking is separate from Grok retrieval. The current profile uses the existing `rank-cheap` gateway alias and the versioned `x-watchlist-ranking/v4` prompt.
 
 Every candidate receives four 0-100 semantic judgments:
 

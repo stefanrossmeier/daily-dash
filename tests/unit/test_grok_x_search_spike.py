@@ -21,8 +21,8 @@ ASSETS = Path("assets")
 def _prompt():
     return load_prompt_asset(
         "x-watchlist-retrieval",
-        "v1",
-        "spike",
+        "v4",
+        "x-watchlist",
         assets_dir=ASSETS,
     )
 
@@ -41,7 +41,7 @@ def test_build_gateway_request_contains_only_gateway_x_search_contract() -> None
     assert payload["from_date"] == "2026-08-28"
     assert payload["to_date"] == "2026-08-29"
     assert payload["response_schema"] == X_SEARCH_RESPONSE_SCHEMA
-    assert "allowed X handle: NickTimiraos" in str(payload["input"])
+    assert "Allowed X handles: @NickTimiraos" in str(payload["input"])
     assert "Prioritize recall" in str(payload["input"])
     assert "model" not in payload
     assert "plugins" not in payload

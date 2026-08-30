@@ -1,0 +1,6 @@
+id: wsb-ranking
+version: v2
+system: system.md
+task: task.md
+profiles:
+  wsb: profiles/wsb.md

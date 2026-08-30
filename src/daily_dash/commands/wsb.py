@@ -8,7 +8,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from daily_dash.config.loader import load_wsb_source_set
+from daily_dash.config.loader import load_wsb_profile, load_wsb_source_set
 from daily_dash.config.paths import default_config_dir
 from daily_dash.config.settings import TelegramSettings
 from daily_dash.contracts.common import DeliveryStatus
@@ -66,7 +66,8 @@ def _check_reddit(args: argparse.Namespace) -> None:
 
 def _deliver(args: argparse.Namespace) -> None:
     document = JsonWsbRunStore.read(args.artifact)
-    report = render_wsb_report(document)
+    profile = load_wsb_profile(args.config_dir / "profiles/wsb.yaml")
+    report = render_wsb_report(document, profile)
     try:
         settings = TelegramSettings(
             telegram_token=os.environ.get("DAILY_DASH_TELEGRAM_TOKEN", ""),
@@ -107,6 +108,7 @@ def build_parser() -> argparse.ArgumentParser:
     check_parser.set_defaults(handler=_check_reddit)
     deliver_parser = subparsers.add_parser("deliver")
     deliver_parser.add_argument("--artifact", type=Path, required=True)
+    deliver_parser.add_argument("--config-dir", type=Path, default=default_config_dir())
     deliver_parser.set_defaults(handler=_deliver)
     return parser
 

@@ -1,0 +1,6 @@
+id: polymarket-ranking
+version: v6
+system: system.md
+task: task.md
+profiles:
+  polymarket: profiles/polymarket.md

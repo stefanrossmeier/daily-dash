@@ -49,7 +49,15 @@ max extreme-only items = 1
 
 Because these are absolute floors rather than a percentile/rank, no hot-topic item is produced when nothing is genuinely exceptional. A thread that is both market-relevant and extremely hot counts as a market-signal item and does not consume the extreme-only allowance.
 
-The ranking prompt is a versioned asset at `assets/prompts/wsb-ranking/v1/`.
+The ranking prompt is a versioned asset at `assets/prompts/wsb-ranking/v2/`.
+
+## Telegram presentation
+
+The persisted artifact keeps semantic scores, eligibility flags and rationales for
+auditability. Telegram does not expose those DailyDash-internal fields. The delivered
+report contains only each selected Reddit thread title/link plus Reddit-native comment
+and upvote counts. If nothing qualifies, the report sends a plain empty-state message
+rather than exposing threshold or classifier terminology.
 
 ## Reddit Data API prerequisite
 

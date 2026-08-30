@@ -1,0 +1,135 @@
+id: news-smart-macro
+version: v1
+
+macro_priority_terms:
+  - ai
+  - airline
+  - airlines
+  - antitrust
+  - banking
+  - banks
+  - bond
+  - bonds
+  - budget
+  - ceasefire
+  - central bank
+  - china
+  - commodity
+  - competition
+  - conflict
+  - credit
+  - crude
+  - currency
+  - currencies
+  - cyber
+  - data center
+  - diplomacy
+  - dollar
+  - ecb
+  - economic
+  - economy
+  - electricity
+  - energy
+  - equities
+  - equity
+  - eu
+  - europe
+  - european union
+  - fed
+  - fiscal
+  - fx
+  - gas
+  - gdp
+  - geopolitics
+  - government
+  - growth
+  - hormuz
+  - inflation
+  - iran
+  - israel
+  - lebanon
+  - liquidity
+  - market
+  - markets
+  - middle east
+  - monetary
+  - nuclear
+  - oil
+  - pboc
+  - peace
+  - policy
+  - power
+  - rates
+  - rate cut
+  - rate cuts
+  - regulation
+  - regulatory
+  - regulator
+  - regulators
+  - recession
+  - risk sentiment
+  - sanction
+  - sanctions
+  - semiconductor
+  - shipping
+  - solar
+  - supply
+  - supply chain
+  - tariff
+  - tech
+  - technology
+  - trade
+  - transport
+  - treasuries
+  - treasury
+  - truce
+  - utilities
+  - volatility
+  - war
+  - wind
+  - yield
+  - yields
+
+narrow_corporate_terms:
+  - acquisition
+  - app
+  - bankruptcy
+  - bankruptcy exit
+  - buyback
+  - buyout
+  - dividend
+  - earnings
+  - feature
+  - fundraising
+  - guidance
+  - ipo
+  - liquidation
+  - m a
+  - merger
+  - product
+  - rollout
+  - shareholder
+  - stake
+  - takeover
+  - transaction
+
+scoring:
+  macro_hit_weight: 3
+  title_macro_hit_weight: 2
+  support_count_cap: 4
+  source_count_cap: 3
+  narrow_hit_penalty: 2
+  title_narrow_hit_penalty: 2
+
+eligibility:
+  minimum_score: 8
+  no_support_min_macro_hits: 5
+  no_support_min_title_macro_hits: 1
+  one_support_min_macro_hits: 3
+  one_support_min_title_macro_hits: 1
+  one_support_title_narrow_override_macro_hits: 4
+  two_support_min_macro_hits: 3
+  title_narrow_min_macro_hits: 3
+  narrow_cluster_min_macro_hits: 4
+  narrow_cluster_min_narrow_hits: 2
+  narrow_cluster_max_support_count: 2

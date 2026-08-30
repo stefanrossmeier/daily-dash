@@ -1,5 +1,7 @@
 from datetime import UTC, datetime
+from pathlib import Path
 
+from daily_dash.config.loader import load_wsb_profile
 from daily_dash.contracts.wsb import (
     WsbEvaluation,
     WsbPost,
@@ -8,6 +10,12 @@ from daily_dash.contracts.wsb import (
 )
 from daily_dash.presentation.wsb import render_wsb_report
 from daily_dash.storage.wsb import JsonWsbRunStore
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+def _profile():
+    return load_wsb_profile(ROOT / "config/profiles/wsb.yaml")
 
 
 def _document() -> WsbRunDocument:
@@ -56,12 +64,28 @@ def test_wsb_artifact_round_trip_and_report(tmp_path) -> None:
     document = _document()
     path = JsonWsbRunStore(tmp_path).write(document)
     restored = JsonWsbRunStore.read(path)
-    report = render_wsb_report(restored)
+    report = render_wsb_report(restored, _profile())
 
     assert path.parent == tmp_path / "wsb/snapshots"
     assert restored.selected_ids == ["macro"]
-    assert "Signals & Hot Topics" in report.content
+    assert "<b>WSB</b>" in report.content
     assert "Rates shock &amp; broad repricing" in report.content
-    assert "Broad market" in report.content
-    assert "Signal 0.77" in report.content
     assert "123 💬" in report.content
+    assert "456 ⬆️" in report.content
+    assert "Broad market" not in report.content
+    assert "Signal 0.77" not in report.content
+    assert "Impact" not in report.content
+    assert "Breadth" not in report.content
+    assert "WSB-Signal" not in report.content
+    assert "Rates transmit through" not in report.content
+
+
+def test_wsb_empty_report_has_plain_user_facing_message() -> None:
+    document = _document().model_copy(update={"selected_ids": []})
+    report = render_wsb_report(document, _profile())
+
+    assert (
+        "No relevant or exceptionally active WSB threads were found in this report window."
+        in report.content
+    )
+    assert "threshold" not in report.content.lower()

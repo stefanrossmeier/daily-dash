@@ -3,6 +3,7 @@ from __future__ import annotations
 from html import escape
 from zoneinfo import ZoneInfo
 
+from daily_dash.config.models import XWatchlistProfile
 from daily_dash.contracts.common import ArtifactFormat
 from daily_dash.contracts.report import ReportArtifact
 from daily_dash.contracts.x_watchlist import XWatchlistRunDocument
@@ -10,16 +11,19 @@ from daily_dash.contracts.x_watchlist import XWatchlistRunDocument
 _TITLE = "X Watchlist"
 
 
-def render_x_watchlist_report(document: XWatchlistRunDocument) -> ReportArtifact:
+def render_x_watchlist_report(
+    document: XWatchlistRunDocument,
+    profile: XWatchlistProfile,
+) -> ReportArtifact:
     zone = ZoneInfo(document.timezone)
     local = document.retrieved_at.astimezone(zone)
     post_by_id = {post.id: post for post in document.candidates}
     lines = [f"𝕏 <b>{escape(_TITLE)}</b> · {local:%Y-%m-%d %H:%M}"]
 
     if not document.selected_ids:
-        lines.extend(["", "No selected X posts in this window."])
+        lines.extend(["", "No relevant X posts were found in this report window."])
     else:
-        for post_id in document.selected_ids:
+        for post_id in document.selected_ids[: profile.presentation.max_items]:
             post = post_by_id[post_id]
             published = post.publication_time.astimezone(zone)
             lines.extend(

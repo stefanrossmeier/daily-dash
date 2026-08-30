@@ -28,7 +28,7 @@ ranking:
   model_alias: rank-cheap
   prompt:
     id: polymarket-ranking
-    version: v5
+    version: v6
   min_ranking_score: 50
   min_relevance: 55
   min_market_impact: 35

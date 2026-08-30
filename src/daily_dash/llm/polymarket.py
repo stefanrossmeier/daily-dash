@@ -116,13 +116,9 @@ class GatewayPolymarketClassifier:
             }
             for slot, event in zip(slots, events, strict=True)
         ]
-        user = (
-            f"{prompt.profile_text}\n\n"
-            "Evaluate and rank every Polymarket EVENT exactly once. Child market questions are "
-            "provided only to explain the event's possible outcomes. Prices, probabilities, "
-            "volume, liquidity, comments, trade counts and price changes are intentionally "
-            "withheld; rank only semantic financial-market intelligence value.\n\n"
-            f"Events:\n{json.dumps(payload, ensure_ascii=False, separators=(',', ':'))}"
+        user = prompt.render_task(
+            profile_text=prompt.profile_text,
+            events_json=json.dumps(payload, ensure_ascii=False, separators=(",", ":")),
         )
         response = self._client.chat_structured(
             alias=profile.ranking.model_alias,
@@ -153,6 +149,7 @@ class GatewayPolymarketClassifier:
             prompt_profile=prompt.profile,
             system_sha256=prompt.system_sha256,
             profile_sha256=prompt.profile_sha256,
+            task_sha256=prompt.task_sha256,
             combined_sha256=prompt.combined_sha256,
             model_alias=response.alias,
             provider=response.provider,

@@ -30,7 +30,7 @@ therefore use the same production gateway as the other model-backed News workflo
 The migrated prompt is not embedded in Python. It is a versioned asset:
 
 ```text
-assets/prompts/news-smart/v1/
+assets/prompts/news-smart/v2/
 ├── prompt.yaml
 ├── system.md
 └── profiles/news-smart.md
@@ -102,3 +102,7 @@ The artifact includes source diagnostics, all retrieved normalized source items,
 150-item-or-smaller model input set, raw structured model themes, final filtered
 Smart News themes with original supporting headline URLs, the retrieval window and
 model/prompt/usage provenance.
+
+## Deterministic policy asset
+
+The macro-theme filter is versioned separately from Python at `assets/policies/news-smart-macro/v1/policy.yaml`. It contains the macro/narrow-corporate term sets, scoring weights, and eligibility thresholds. The run artifact records its id/version/hash.

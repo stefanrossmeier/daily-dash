@@ -22,8 +22,8 @@ if [[ ! -f "$config_dir/profiles/polymarket.yaml" ]]; then
   echo "Polymarket profile not found: $config_dir/profiles/polymarket.yaml" >&2
   exit 4
 fi
-if [[ ! -f "$assets_dir/prompts/polymarket-ranking/v4/prompt.yaml" ]]; then
-  echo "Polymarket prompt asset not found: $assets_dir/prompts/polymarket-ranking/v4" >&2
+if [[ ! -f "$assets_dir/prompts/polymarket-ranking/v6/prompt.yaml" ]]; then
+  echo "Polymarket prompt asset not found: $assets_dir/prompts/polymarket-ranking/v6" >&2
   exit 5
 fi
 if [[ ! -d "$data_repo/.git" ]]; then

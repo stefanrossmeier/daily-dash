@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import hashlib
-import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -9,11 +8,14 @@ from typing import cast
 
 import yaml
 
+from daily_dash.config.paths import default_assets_dir
+
 _SAFE_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+_TEMPLATE_TOKEN = re.compile(r"\{\{([A-Za-z_][A-Za-z0-9_]*)\}\}")
 
 
 class PromptAssetError(ValueError):
-    """Raised when a versioned prompt asset cannot be loaded."""
+    """Raised when a versioned prompt asset cannot be loaded or rendered."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -24,22 +26,39 @@ class PromptAsset:
 
     system: str
     profile_text: str
+    task_template: str | None
+    contract: dict[str, object]
 
     system_sha256: str
     profile_sha256: str
+    task_sha256: str | None
     combined_sha256: str
 
+    def render_system(self, **values: object) -> str:
+        return _render_template(self.system, values)
 
-def default_assets_dir() -> Path:
-    configured = os.getenv("DAILY_DASH_ASSETS_DIR")
-    if configured:
-        return Path(configured)
+    def render_task(self, **values: object) -> str:
+        if self.task_template is None:
+            raise PromptAssetError(
+                f"prompt {self.prompt_id}/{self.version} has no versioned task template"
+            )
+        return _render_template(self.task_template, values)
 
-    home = os.getenv("DAILY_DASH_HOME")
-    if home:
-        return Path(home) / "assets"
+    def contract_bool(self, key: str) -> bool:
+        value = self.contract.get(key)
+        if not isinstance(value, bool):
+            raise PromptAssetError(
+                f"prompt {self.prompt_id}/{self.version} contract {key!r} must be boolean"
+            )
+        return value
 
-    return Path("assets")
+    def contract_str(self, key: str) -> str:
+        value = self.contract.get(key)
+        if not isinstance(value, str) or not value:
+            raise PromptAssetError(
+                f"prompt {self.prompt_id}/{self.version} contract {key!r} must be a string"
+            )
+        return value
 
 
 def _validate_name(value: str, field: str) -> None:
@@ -82,6 +101,18 @@ def _load_manifest(path: Path) -> dict[str, object]:
     return cast(dict[str, object], raw)
 
 
+def _render_template(template: str, values: dict[str, object]) -> str:
+    required = set(_TEMPLATE_TOKEN.findall(template))
+    missing = sorted(required - values.keys())
+    if missing:
+        raise PromptAssetError(f"missing prompt template values: {', '.join(missing)}")
+
+    def replace(match: re.Match[str]) -> str:
+        return str(values[match.group(1)])
+
+    return _TEMPLATE_TOKEN.sub(replace, template).strip()
+
+
 def load_prompt_asset(
     prompt_id: str,
     version: str,
@@ -120,13 +151,36 @@ def load_prompt_asset(
     if not isinstance(profile_value, str):
         raise PromptAssetError(f"prompt profile not found in manifest: {profile}")
 
+    task_value = manifest.get("task")
+    if task_value is not None and not isinstance(task_value, str):
+        raise PromptAssetError("prompt manifest task must be a path when present")
+
+    contract_value = manifest.get("contract", {})
+    if not isinstance(contract_value, dict) or not all(
+        isinstance(key, str) for key in contract_value
+    ):
+        raise PromptAssetError("prompt manifest contract must be a string-keyed mapping")
+    contract = cast(dict[str, object], contract_value)
+
     system_path = _resolve_asset_file(prompt_root, system_value)
     profile_path = _resolve_asset_file(prompt_root, profile_value)
+    task_path = _resolve_asset_file(prompt_root, task_value) if task_value else None
 
     system = system_path.read_text(encoding="utf-8").strip()
     profile_text = profile_path.read_text(encoding="utf-8").strip()
+    task_template = task_path.read_text(encoding="utf-8").strip() if task_path else None
 
-    combined = f"prompt-id: {prompt_id}\nprompt-version: {version}\n\n{system}\n\n{profile_text}\n"
+    combined_parts = [
+        f"prompt-id: {prompt_id}",
+        f"prompt-version: {version}",
+        "",
+        system,
+        "",
+        profile_text,
+    ]
+    if task_template is not None:
+        combined_parts.extend(["", task_template])
+    combined = "\n".join(combined_parts) + "\n"
 
     return PromptAsset(
         prompt_id=prompt_id,
@@ -134,7 +188,10 @@ def load_prompt_asset(
         profile=profile,
         system=system,
         profile_text=profile_text,
+        task_template=task_template,
+        contract=contract,
         system_sha256=_sha256(system),
         profile_sha256=_sha256(profile_text),
+        task_sha256=_sha256(task_template) if task_template is not None else None,
         combined_sha256=_sha256(combined),
     )

@@ -1,7 +1,9 @@
 from datetime import UTC, datetime
+from pathlib import Path
 
 from pydantic import HttpUrl
 
+from daily_dash.config.loader import load_news_profile
 from daily_dash.contracts.common import SourceKind
 from daily_dash.contracts.smart_news import (
     SmartNewsRetrievalWindow,
@@ -11,6 +13,12 @@ from daily_dash.contracts.smart_news import (
 from daily_dash.contracts.source import SourceItem
 from daily_dash.presentation.smart_news import render_smart_news_report
 from daily_dash.storage.smart_news import JsonSmartNewsRunStore
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+def _profile():
+    return load_news_profile(ROOT / "config/profiles/news-smart.yaml")
 
 
 def _document() -> SmartNewsRunDocument:
@@ -61,10 +69,29 @@ def test_smart_news_store_round_trips(tmp_path) -> None:
 
 
 def test_smart_news_presentation_is_theme_only() -> None:
-    report = render_smart_news_report(_document())
+    report = render_smart_news_report(_document(), _profile())
 
     assert "DailyDash Smart News Themes" in report.content
     assert "Oil and ceasefire talks dominate markets" in report.content
     assert "Oil prices fell as ceasefire talks advanced." in report.content
     assert "supporting" not in report.content.lower()
     assert report.metadata["parse_mode"] == "HTML"
+
+
+def test_smart_news_empty_report_has_explicit_message() -> None:
+    document = _document().model_copy(
+        update={"articles": [], "article_count": 0, "themes": [], "theme_count": 0}
+    )
+
+    report = render_smart_news_report(document, _profile())
+
+    assert "Keine relevanten neuen Headlines im Betrachtungszeitraum" in report.content
+
+
+def test_smart_news_without_themes_falls_back_to_headlines() -> None:
+    document = _document().model_copy(update={"themes": [], "theme_count": 0})
+
+    report = render_smart_news_report(document, _profile())
+
+    assert "Keine klaren Themen erkannt" in report.content
+    assert "Oil falls as ceasefire talks advance" in report.content

@@ -93,7 +93,7 @@ def test_classifier_ranks_event_once_and_hides_activity_prices_and_comments() ->
     assert evaluations[0].ranking_score == 93
     assert evaluations[0].topic_key == "fed-september-2026-rate-decision"
     assert evaluations[0].theme == "monetary-policy"
-    assert trace.prompt_version == "v5"
+    assert trace.prompt_version == "v6"
     user = str(client.request["user"] if client.request else "")
     assert "Fed decision in September" in user
     assert "Will there be no change?" in user

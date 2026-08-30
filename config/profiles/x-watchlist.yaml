@@ -6,7 +6,7 @@ retrieval:
   model_alias: x-retrieve
   prompt:
     id: x-watchlist-retrieval
-    version: v3
+    version: v4
   max_items: 80
   require_citation_evidence: true
 ranking:
@@ -16,7 +16,7 @@ ranking:
   model_alias: rank-cheap
   prompt:
     id: x-watchlist-ranking
-    version: v3
+    version: v4
   min_semantic_score: 0.35
   min_relevance: 35
   min_market_impact: 15

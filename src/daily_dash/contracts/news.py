@@ -119,6 +119,7 @@ class NewsRankingTrace(BaseModel):
     prompt_profile: str
     system_sha256: str
     profile_sha256: str
+    task_sha256: str | None = None
     combined_sha256: str
 
     model_alias: str
