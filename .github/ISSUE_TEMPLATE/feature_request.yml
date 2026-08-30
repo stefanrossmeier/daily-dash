@@ -1,0 +1,38 @@
+name: Feature request
+description: Propose a focused DailyDash improvement
+title: "feat: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / motivation
+      description: What concrete operator or engineering problem should this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the desired behavior and user-facing result.
+    validations:
+      required: true
+  - type: textarea
+    id: architecture
+    attributes:
+      label: Architecture / data-source impact
+      description: Which retrieval, processing, LLM, persistence, presentation, delivery, or Windmill boundaries are affected? Include source/API considerations.
+  - type: textarea
+    id: cost
+    attributes:
+      label: Model/cost implications
+      description: If an LLM is proposed, explain why deterministic processing is insufficient and how model cost/retries should be bounded.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I reviewed the architecture and contribution guidance.
+          required: true
+        - label: I have not included credentials or private generated data.
+          required: true
