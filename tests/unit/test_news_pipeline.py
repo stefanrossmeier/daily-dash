@@ -165,3 +165,86 @@ def test_pipeline_caps_at_150_uses_one_ranking_stage_and_writes_output(
     assert document.model_summary.calls == 1
     assert document.model_summary.retries == 0
     assert artifact.exists()
+
+
+def test_pipeline_backfills_sparse_model_selection_to_configured_minimum(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    now = datetime(2026, 8, 30, 8, 0, tzinfo=UTC)
+    items = [
+        SourceItem(
+            id=f"item-{index:02d}",
+            source="Fixture",
+            source_kind=SourceKind.RSS,
+            title=f"Headline {index:02d}",
+            text="fixture",
+            url=f"https://example.test/{index}",
+            published_at=now - timedelta(minutes=index),
+            retrieved_at=now,
+            metadata={"source_id": "fixture"},
+        )
+        for index in range(12)
+    ]
+    diagnostics = [
+        NewsSourceDiagnostic(
+            source_id="fixture",
+            source_name="Fixture",
+            url="https://example.test/feed",
+            ok=True,
+            item_count=len(items),
+        )
+    ]
+
+    class SparseRanker:
+        def __init__(self, client: object) -> None:
+            del client
+
+        def rank(self, batch: Any, profile: Any) -> tuple[NewsRankingContent, NewsRankingTrace]:
+            del profile
+            evaluations = [
+                NewsRankingEvaluation(
+                    id=item.id,
+                    event_key=f"event-{item.id}",
+                    rank_score=100 - index,
+                    tier=4,
+                    priority=100 - index,
+                    relevance=80,
+                    market_impact=70,
+                    market_breadth=70,
+                    surprise=60,
+                    quality=80,
+                    novelty=70,
+                    selected=index < 3,
+                    rationale="Fixture.",
+                )
+                for index, item in enumerate(batch.items)
+            ]
+            return (
+                NewsRankingContent(
+                    evaluations=evaluations,
+                    ranking=[item.id for item in evaluations],
+                ),
+                _trace(cost=0.001),
+            )
+
+    monkeypatch.setattr(
+        news_pipeline,
+        "retrieve_source_set",
+        lambda *args, **kwargs: (items, diagnostics),
+    )
+    monkeypatch.setattr(news_pipeline, "GatewayNewsRanker", SparseRanker)
+
+    document, _ = news_pipeline.run_news_pipeline(
+        profile_id="news-alternative",
+        config_dir=Path(__file__).parents[2] / "config",
+        data_repo=tmp_path / "data",
+        retrieved_at=now,
+        window_start=now - timedelta(hours=18),
+        window_end=now,
+    )
+
+    assert document.selected_ids == [f"item-{index:02d}" for index in range(10)]
+    assert document.backfill_ids == [f"item-{index:02d}" for index in range(3, 10)]
+    assert document.model_summary is not None
+    assert document.model_summary.calls == 1

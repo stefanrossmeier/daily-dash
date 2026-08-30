@@ -449,9 +449,20 @@ Telegram presentation resolves URLs from the original persisted `SourceItem`.
 
 The Telegram report is intentionally presentation-only: ranking scores, rationales,
 and duplicate-suppression diagnostics remain in the immutable artifact and are not
-shown to the reader. When a News profile selects no items, the report still sends a
-short empty-state message explaining that no relevant new articles were found in the
-report window. German News uses the equivalent German message.
+shown to the reader.
+
+Top, Alternative and German News use a deterministic post-ranking backfill floor of
+10 items. The normal paid ranking/classification and event-level selection runs first.
+If that primary selection contains fewer than 10 articles, DailyDash fills the remaining
+positions from the next-best candidates in the already-computed ranking, while still
+preventing a second article from an event represented by the primary or backfill set.
+Backfill never triggers another model request and never increases the configured
+`ranking.top_k` ceiling. The immutable artifact records the added IDs separately as
+`backfill_ids`, and Telegram inserts a `Backfill:` separator before those headlines.
+
+If fewer than 10 distinct ranked candidates exist, the report publishes all available
+distinct items rather than inventing content. A genuinely empty News report uses the
+same English empty-state message for every profile, including German News.
 
 ### Initial live v5 validation
 

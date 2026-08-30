@@ -198,6 +198,7 @@ class NewsRunDocument(BaseModel):
     ranking_trace: NewsRankingTrace
     model_summary: NewsModelSummary | None = None
     selected_ids: list[str]
+    backfill_ids: list[str] = Field(default_factory=list)
     duplicate_suppressions: list[NewsDuplicateSuppression] = Field(
         default_factory=list,
     )

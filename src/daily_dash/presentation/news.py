@@ -18,14 +18,18 @@ def render_news_report(
     lines = [f"<b>{escape(profile.presentation.title)}</b>"]
 
     if not document.selected_ids:
-        if profile.presentation.language == "de":
-            lines.append("Im Berichtszeitraum wurden keine relevanten neuen Artikel gefunden.")
-        else:
-            lines.append("No relevant new articles were found in this report window.")
+        lines.append("No relevant new articles were found in this report window.")
+
+    backfill_ids = set(document.backfill_ids)
+    backfill_started = False
 
     for position, item_id in enumerate(
         document.selected_ids[: profile.presentation.max_items], start=1
     ):
+        if item_id in backfill_ids and not backfill_started:
+            lines.append("<i>Backfill:</i>")
+            backfill_started = True
+
         item = candidates.get(item_id)
         if item is None:
             raise ValueError(f"selected news item is missing from candidates: {item_id}")
@@ -50,5 +54,6 @@ def render_news_report(
         metadata={
             "parse_mode": "HTML",
             "link_provenance": "source_item_url",
+            "backfill_count": len(document.backfill_ids),
         },
     )

@@ -22,6 +22,7 @@ ranking:
     version: v11
   selection_mode: top-market-policy
   min_score: 0.50
+  backfill_min_items: 10
 
 presentation:
   title: Top News

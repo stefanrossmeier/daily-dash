@@ -145,11 +145,14 @@ class RankingConfig(BaseModel):
     selection_mode: Literal["model-selected", "top-market-policy"] = "model-selected"
 
     min_score: float = Field(default=0.5, ge=0.0, le=1.0)
+    backfill_min_items: int = Field(default=0, ge=0, le=100)
 
     @model_validator(mode="after")
     def validate_limits(self) -> Self:
         if self.top_k > self.candidate_limit:
             raise ValueError("top_k must not exceed candidate_limit")
+        if self.backfill_min_items > self.top_k:
+            raise ValueError("backfill_min_items must not exceed top_k")
         return self
 
 

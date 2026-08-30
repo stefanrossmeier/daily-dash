@@ -10,6 +10,7 @@ from daily_dash.config.loader import (
     load_schedule_registry,
 )
 from daily_dash.contracts.news import (
+    NewsDuplicateSuppression,
     NewsModelSummary,
     NewsModelUsage,
     NewsRankingTrace,
@@ -20,6 +21,7 @@ from daily_dash.llm.gateway import ModelGatewayClient
 from daily_dash.llm.news import GatewayNewsRanker
 from daily_dash.processing.news import (
     apply_top_market_policy,
+    backfill_distinct_events,
     deduplicate_news_items,
     select_distinct_events,
     source_neutral_candidate_cap,
@@ -116,6 +118,23 @@ def run_news_pipeline(
         eligible_only=uses_top_market_policy,
         selected_only=not uses_top_market_policy,
     )
+
+    backfill_ids, backfill_suppressions = backfill_distinct_events(
+        ranking,
+        selected_ids=selected_ids,
+        target_count=profile.ranking.backfill_min_items,
+    )
+    selected_ids = [*selected_ids, *backfill_ids]
+
+    suppression_keys: set[tuple[str, str]] = set()
+    merged_suppressions: list[NewsDuplicateSuppression] = []
+    for suppression in [*duplicate_suppressions, *backfill_suppressions]:
+        key = (suppression.suppressed_id, suppression.kept_id)
+        if key in suppression_keys:
+            continue
+        suppression_keys.add(key)
+        merged_suppressions.append(suppression)
+
     model_summary = _model_summary([trace])
     document = NewsRunDocument(
         run_id=run_id,
@@ -135,7 +154,8 @@ def run_news_pipeline(
         ranking_trace=trace,
         model_summary=model_summary,
         selected_ids=selected_ids,
-        duplicate_suppressions=duplicate_suppressions,
+        backfill_ids=backfill_ids,
+        duplicate_suppressions=merged_suppressions,
     )
     output_path = JsonNewsRunStore(data_repo).write(document)
     return document, output_path

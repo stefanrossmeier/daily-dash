@@ -21,6 +21,7 @@ ranking:
     id: news-ranking
     version: v11
   min_score: 0.50
+  backfill_min_items: 10
 
 presentation:
   title: German News

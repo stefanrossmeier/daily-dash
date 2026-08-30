@@ -129,12 +129,13 @@ def test_alternative_news_empty_report_explains_the_window() -> None:
     assert "No relevant new articles were found in this report window." in artifact.content
 
 
-def test_german_news_empty_report_explains_the_window_in_german() -> None:
+def test_german_news_empty_report_uses_english_empty_state() -> None:
     profile = load_news_profile(_REPO_ROOT / "config" / "profiles" / "news-german.yaml")
     artifact = render_news_report(_empty_news_document("news-german"), profile)
 
     assert "German News" in artifact.content
-    assert "Im Berichtszeitraum wurden keine relevanten neuen Artikel gefunden." in artifact.content
+    assert "No relevant new articles were found in this report window." in artifact.content
+    assert "Im Berichtszeitraum" not in artifact.content
 
 
 def test_news_report_can_render_selected_item_without_url() -> None:
@@ -186,3 +187,58 @@ def test_news_report_rejects_selected_id_missing_from_candidates() -> None:
 
     with pytest.raises(ValueError, match="selected news item is missing"):
         render_news_report(document, profile)
+
+
+def test_news_report_marks_where_backfill_headlines_begin() -> None:
+    now = datetime(2026, 8, 30, 10, 0, tzinfo=UTC)
+    items = [
+        SourceItem(
+            id=item_id,
+            source="Wire",
+            source_kind=SourceKind.RSS,
+            title=title,
+            text="",
+            url=f"https://example.test/{item_id}",
+            published_at=now,
+            retrieved_at=now,
+        )
+        for item_id, title in [("primary", "Primary headline"), ("fallback", "Fallback headline")]
+    ]
+    evaluations = [
+        NewsRankingEvaluation(
+            id=item.id,
+            event_key=item.id,
+            rank_score=90 if item.id == "primary" else 80,
+            tier=4,
+            priority=80,
+            relevance=80,
+            market_impact=70,
+            surprise=60,
+            quality=80,
+            novelty=70,
+            selected=item.id == "primary",
+            rationale="Fixture.",
+        )
+        for item in items
+    ]
+    document = _empty_news_document("news-top").model_copy(
+        update={
+            "retrieved_count": 2,
+            "deduplicated_count": 2,
+            "candidate_count": 2,
+            "candidates": items,
+            "ranking": NewsRankingContent(
+                evaluations=evaluations,
+                ranking=["primary", "fallback"],
+            ),
+            "selected_ids": ["primary", "fallback"],
+            "backfill_ids": ["fallback"],
+        }
+    )
+    profile = load_news_profile(_REPO_ROOT / "config" / "profiles" / "news-top.yaml")
+
+    artifact = render_news_report(document, profile)
+
+    assert artifact.content.index("Primary headline") < artifact.content.index("<i>Backfill:</i>")
+    assert artifact.content.index("<i>Backfill:</i>") < artifact.content.index("Fallback headline")
+    assert artifact.metadata["backfill_count"] == 1

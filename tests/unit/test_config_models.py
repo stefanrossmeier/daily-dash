@@ -25,6 +25,7 @@ def test_news_profile_validates() -> None:
                 "llm_enabled": True,
                 "model_alias": "rank-cheap",
                 "min_score": 0.5,
+                "backfill_min_items": 5,
             },
             "presentation": {
                 "title": "Top News",
@@ -36,6 +37,7 @@ def test_news_profile_validates() -> None:
 
     assert profile.profile_id == "news-top"
     assert profile.ranking.model_alias == "rank-cheap"
+    assert profile.ranking.backfill_min_items == 5
 
 
 def test_news_profile_rejects_unknown_fields() -> None:
@@ -70,6 +72,29 @@ def test_news_profile_rejects_top_k_above_candidate_limit() -> None:
                 "ranking": {
                     "candidate_limit": 10,
                     "top_k": 20,
+                },
+                "presentation": {
+                    "title": "Top News",
+                    "max_items": 10,
+                },
+            }
+        )
+
+
+def test_news_profile_rejects_backfill_above_top_k() -> None:
+    with pytest.raises(ValidationError, match="backfill_min_items"):
+        NewsProfile.model_validate(
+            {
+                "schema_version": 1,
+                "profile_id": "news-top",
+                "pipeline": "news",
+                "source_set": "news-top",
+                "retrieval": {},
+                "keywords": {},
+                "ranking": {
+                    "candidate_limit": 20,
+                    "top_k": 10,
+                    "backfill_min_items": 11,
                 },
                 "presentation": {
                     "title": "Top News",

@@ -181,6 +181,69 @@ def normalize_event_key(value: str) -> str:
     return normalized.strip("-")
 
 
+def _event_groups(
+    ranking: NewsRankingContent,
+) -> tuple[dict[str, NewsRankingEvaluation], dict[str, str]]:
+    evaluations = {item.id: item for item in ranking.evaluations}
+    parent = {item_id: item_id for item_id in evaluations}
+
+    def find(item_id: str) -> str:
+        while parent[item_id] != item_id:
+            parent[item_id] = parent[parent[item_id]]
+            item_id = parent[item_id]
+        return item_id
+
+    def union(left: str, right: str) -> None:
+        left_root = find(left)
+        right_root = find(right)
+        if left_root != right_root:
+            parent[right_root] = left_root
+
+    for evaluation in ranking.evaluations:
+        duplicate_id = evaluation.duplicate_of_id
+        if duplicate_id is None:
+            continue
+        if duplicate_id not in evaluations:
+            raise ValueError(f"unknown duplicate target: {duplicate_id}")
+        union(evaluation.id, duplicate_id)
+
+    event_owner: dict[str, str] = {}
+    for evaluation in ranking.evaluations:
+        event_key = normalize_event_key(evaluation.event_key)
+        if not event_key or event_key == "unclassified":
+            continue
+        existing = event_owner.get(event_key)
+        if existing is None:
+            event_owner[event_key] = evaluation.id
+        else:
+            union(evaluation.id, existing)
+
+    return evaluations, {item_id: find(item_id) for item_id in evaluations}
+
+
+def _duplicate_suppression(
+    *,
+    evaluations: dict[str, NewsRankingEvaluation],
+    suppressed_id: str,
+    kept_id: str,
+) -> NewsDuplicateSuppression:
+    from daily_dash.contracts.news import NewsDuplicateSuppression
+
+    kept = evaluations[kept_id]
+    suppressed = evaluations[suppressed_id]
+    event_key = normalize_event_key(kept.event_key)
+    if not event_key or event_key == "unclassified":
+        event_key = normalize_event_key(suppressed.event_key)
+    if not event_key:
+        event_key = "llm-duplicate-group"
+
+    return NewsDuplicateSuppression(
+        suppressed_id=suppressed_id,
+        kept_id=kept_id,
+        event_key=event_key,
+    )
+
+
 def select_distinct_events(
     ranking: NewsRankingContent,
     *,
@@ -196,66 +259,9 @@ def select_distinct_events(
     if limit < 1:
         raise ValueError("selection limit must be positive")
 
-    from daily_dash.contracts.news import (
-        NewsDuplicateSuppression,
-    )
-
-    evaluations = {item.id: item for item in ranking.evaluations}
-
-    parent = {item_id: item_id for item_id in evaluations}
-
-    def find(item_id: str) -> str:
-        while parent[item_id] != item_id:
-            parent[item_id] = parent[parent[item_id]]
-            item_id = parent[item_id]
-
-        return item_id
-
-    def union(left: str, right: str) -> None:
-        left_root = find(left)
-        right_root = find(right)
-
-        if left_root != right_root:
-            parent[right_root] = left_root
-
-    # Explicit LLM duplicate relationships are authoritative.
-    for evaluation in ranking.evaluations:
-        duplicate_id = evaluation.duplicate_of_id
-
-        if duplicate_id is None:
-            continue
-
-        if duplicate_id not in evaluations:
-            raise ValueError(f"unknown duplicate target: {duplicate_id}")
-
-        union(
-            evaluation.id,
-            duplicate_id,
-        )
-
-    # Exact event-key matches remain an additional
-    # LLM-provided same-event signal.
-    event_owner: dict[str, str] = {}
-
-    for evaluation in ranking.evaluations:
-        event_key = normalize_event_key(evaluation.event_key)
-
-        if not event_key or event_key == "unclassified":
-            continue
-
-        existing = event_owner.get(event_key)
-
-        if existing is None:
-            event_owner[event_key] = evaluation.id
-        else:
-            union(
-                evaluation.id,
-                existing,
-            )
-
+    evaluations, groups = _event_groups(ranking)
     selected: list[str] = []
     suppressions: list[NewsDuplicateSuppression] = []
-
     kept_by_group: dict[str, str] = {}
 
     # ranking.ranking is already ordered by the active ranking policy.
@@ -264,37 +270,78 @@ def select_distinct_events(
 
         if eligible_only and not evaluation.selection_eligible:
             continue
-
         if selected_only and not evaluation.selected:
             continue
 
-        group = find(item_id)
+        group = groups[item_id]
         kept_id = kept_by_group.get(group)
-
         if kept_id is not None:
-            kept = evaluations[kept_id]
-            suppressed = evaluations[item_id]
-
-            event_key = normalize_event_key(kept.event_key)
-
-            if not event_key or event_key == "unclassified":
-                event_key = normalize_event_key(suppressed.event_key)
-
-            if not event_key:
-                event_key = "llm-duplicate-group"
-
             suppressions.append(
-                NewsDuplicateSuppression(
+                _duplicate_suppression(
+                    evaluations=evaluations,
                     suppressed_id=item_id,
                     kept_id=kept_id,
-                    event_key=event_key,
                 )
             )
             continue
 
         kept_by_group[group] = item_id
-
         if len(selected) < limit:
             selected.append(item_id)
 
     return selected, suppressions
+
+
+def backfill_distinct_events(
+    ranking: NewsRankingContent,
+    *,
+    selected_ids: list[str],
+    target_count: int,
+) -> tuple[list[str], list[NewsDuplicateSuppression]]:
+    """Fill a sparse final selection from the next-best ranked distinct events.
+
+    This runs only after the normal ranking/classification selection has completed.
+    It ignores eligibility/selected flags for backfill candidates, but preserves the
+    model's final ranking order and never adds a second article from an event already
+    represented by the primary selection.
+    """
+
+    if target_count < 0:
+        raise ValueError("backfill target must not be negative")
+    if len(selected_ids) >= target_count:
+        return [], []
+    if len(selected_ids) != len(set(selected_ids)):
+        raise ValueError("selected news ids must be unique")
+
+    evaluations, groups = _event_groups(ranking)
+    unknown = [item_id for item_id in selected_ids if item_id not in evaluations]
+    if unknown:
+        raise ValueError(f"unknown selected news id: {unknown[0]}")
+
+    selected_set = set(selected_ids)
+    kept_by_group = {groups[item_id]: item_id for item_id in selected_ids}
+    additions: list[str] = []
+    suppressions: list[NewsDuplicateSuppression] = []
+
+    for item_id in ranking.ranking:
+        if len(selected_ids) + len(additions) >= target_count:
+            break
+        if item_id in selected_set:
+            continue
+
+        group = groups[item_id]
+        kept_id = kept_by_group.get(group)
+        if kept_id is not None:
+            suppressions.append(
+                _duplicate_suppression(
+                    evaluations=evaluations,
+                    suppressed_id=item_id,
+                    kept_id=kept_id,
+                )
+            )
+            continue
+
+        additions.append(item_id)
+        kept_by_group[group] = item_id
+
+    return additions, suppressions

@@ -51,11 +51,13 @@ def test_news_store_uses_flat_profile_directory(tmp_path: Path) -> None:
             latency_ms=1,
         ),
         selected_ids=["one"],
+        backfill_ids=["one"],
     )
 
     output = JsonNewsRunStore(tmp_path).write(document)
     assert output == (tmp_path / "news" / "top" / "20260827T100000Z_abcdefgh.json")
     assert output.is_file()
+    assert JsonNewsRunStore.read(output).backfill_ids == ["one"]
 
 
 def test_news_store_reads_persisted_document(tmp_path: Path) -> None:

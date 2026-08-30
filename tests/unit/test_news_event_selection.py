@@ -3,6 +3,7 @@ from daily_dash.contracts.news import (
     NewsRankingEvaluation,
 )
 from daily_dash.processing.news import (
+    backfill_distinct_events,
     normalize_event_key,
     select_distinct_events,
 )
@@ -198,3 +199,73 @@ def test_selected_only_skips_candidates_rejected_by_model() -> None:
 
     assert selected == ["accepted"]
     assert suppressions == []
+
+
+def test_backfill_uses_next_best_ranked_distinct_events_after_primary_selection() -> None:
+    rejected_same_event = _evaluation("rejected-same", "shared-event", 99).model_copy(
+        update={"selected": False}
+    )
+    selected_same_event = _evaluation("selected-same", "shared-event", 90)
+    next_event = _evaluation("next-event", "next-event", 85).model_copy(update={"selected": False})
+    third_event = _evaluation("third-event", "third-event", 80).model_copy(
+        update={"selected": False}
+    )
+    ranking = NewsRankingContent(
+        evaluations=[rejected_same_event, selected_same_event, next_event, third_event],
+        ranking=["rejected-same", "selected-same", "next-event", "third-event"],
+    )
+
+    primary, _ = select_distinct_events(ranking, limit=4, selected_only=True)
+    backfill, suppressions = backfill_distinct_events(
+        ranking,
+        selected_ids=primary,
+        target_count=3,
+    )
+
+    assert primary == ["selected-same"]
+    assert backfill == ["next-event", "third-event"]
+    assert [(item.suppressed_id, item.kept_id) for item in suppressions] == [
+        ("rejected-same", "selected-same")
+    ]
+
+
+def test_backfill_does_nothing_when_primary_selection_already_meets_target() -> None:
+    ranking = NewsRankingContent(
+        evaluations=[
+            _evaluation("one", "event-one", 90),
+            _evaluation("two", "event-two", 80),
+        ],
+        ranking=["one", "two"],
+    )
+
+    backfill, suppressions = backfill_distinct_events(
+        ranking,
+        selected_ids=["one", "two"],
+        target_count=2,
+    )
+
+    assert backfill == []
+    assert suppressions == []
+
+
+def test_backfill_can_use_top_market_candidates_below_normal_eligibility_threshold() -> None:
+    primary = _evaluation("primary", "primary-event", 90).model_copy(
+        update={"selection_eligible": True}
+    )
+    fallback = _evaluation("fallback", "fallback-event", 85).model_copy(
+        update={"selection_eligible": False}
+    )
+    ranking = NewsRankingContent(
+        evaluations=[primary, fallback],
+        ranking=["primary", "fallback"],
+    )
+
+    selected, _ = select_distinct_events(ranking, limit=2, eligible_only=True)
+    backfill, _ = backfill_distinct_events(
+        ranking,
+        selected_ids=selected,
+        target_count=2,
+    )
+
+    assert selected == ["primary"]
+    assert backfill == ["fallback"]
