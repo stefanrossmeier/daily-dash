@@ -7,7 +7,6 @@ class TelegramSettings(BaseSettings):
 
     model_config = SettingsConfigDict(
         env_prefix="DAILY_DASH_",
-        env_file=".env",
         extra="ignore",
     )
 

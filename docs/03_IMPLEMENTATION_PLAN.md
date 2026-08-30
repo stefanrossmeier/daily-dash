@@ -118,7 +118,7 @@ Add a CI check that fails if common secret patterns or files are committed. Use 
 
 Use Pydantic settings for non-secret application settings and YAML profiles for business configuration.
 
-Do **not** add a Python helper that silently loads a repo-local `.env` in production. Local development may use `.env`, but production secrets come from the orchestrator/gateway environment.
+Do **not** load application credentials from a repo-local `.env`. Local operational secrets belong in the generated Windmill runtime `secrets/` directory and are uploaded to Windmill; tests, CI, or external secret managers may inject explicit environment variables.
 
 **Exit criterion:** `uv run pytest` works in the empty skeleton.
 

@@ -185,16 +185,18 @@ Tests should verify calculations, contracts, fallback behavior, rendering rules,
 
 No credentials belong in market configuration.
 
-For local Telegram delivery the application expects:
+Telegram credentials are delivery-boundary secrets. For the local Windmill deployment,
+the canonical local inputs are one-value files under:
 
 ~~~text
-DAILY_DASH_TELEGRAM_TOKEN
-DAILY_DASH_TELEGRAM_CHAT_ID
+../daily-dash-windmill-local/secrets/telegram_token
+../daily-dash-windmill-local/secrets/telegram_chat_id
 ~~~
 
-Local values may be stored in the Git-ignored `.env` file.
-
-Production secrets will later be injected through the orchestration and secret-management layer.
+`configure-windmill-workspace.sh` uploads those values to the Windmill secrets
+`f/daily_dash/telegram_token` and `f/daily_dash/telegram_chat_id`. The repository-root
+`.env` is not a credential source. Explicit `DAILY_DASH_TELEGRAM_*` environment
+variables remain supported for tests, CI, or external secret-manager injection.
 
 ## Architectural significance
 

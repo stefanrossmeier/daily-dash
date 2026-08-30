@@ -143,7 +143,10 @@ To use an existing OpenRouter key file instead, bootstrap with:
 
 The other files are local provisioning inputs. Helper scripts read them and upload the
 corresponding values to Windmill without writing credentials into the repository or
-root `.env`.
+root `.env`. The repository-root `daily-dash/.env` is not used as an application-secret
+source and may be absent or empty. The generated runtime
+`daily-dash-windmill-local/.env` is different: Docker Compose requires it for non-secret
+runtime paths/settings and it must not be emptied.
 
 For WSB Reddit OAuth configuration, use the dedicated interactive helper instead of
 editing the files manually:
