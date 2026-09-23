@@ -31,7 +31,7 @@ Persistence completes before Telegram delivery.
 
 ## Retrieval
 
-The source set is checked in at `config/sources/x-watchlist.yaml`. The production retrieval prompt is versioned at `assets/prompts/x-watchlist-retrieval/v4/`.
+The source set is checked in at `config/sources/x-watchlist.yaml`. The production retrieval prompt is versioned at `assets/prompts/x-watchlist-retrieval/v5/`.
 
 The application sends all six handles in one gateway request. The gateway resolves alias `x-retrieve` to the configured Grok model and injects native X search plus the handle/date restrictions. Application code cannot access the OpenRouter root key.
 
@@ -46,7 +46,7 @@ Returned posts are also rejected when:
 - the author is outside the configured watchlist;
 - the status URL is not a canonical `x.com/<handle>/status/<id>` URL;
 - the URL handle disagrees with the returned author;
-- the timestamp cannot be parsed;
+- the timestamp cannot be parsed and cannot be recovered from the X Snowflake status ID;
 - citation evidence does not contain the same X status ID;
 - the status ID is duplicated.
 

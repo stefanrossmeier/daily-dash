@@ -21,7 +21,7 @@ ASSETS = Path("assets")
 def _prompt():
     return load_prompt_asset(
         "x-watchlist-retrieval",
-        "v4",
+        "v5",
         "x-watchlist",
         assets_dir=ASSETS,
     )

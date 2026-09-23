@@ -274,7 +274,7 @@ class XWatchlistRetrievalConfig(BaseModel):
 
     model_alias: str = Field(default="x-retrieve", min_length=1)
     prompt: PromptRefConfig = Field(
-        default_factory=lambda: PromptRefConfig(id="x-watchlist-retrieval", version="v4")
+        default_factory=lambda: PromptRefConfig(id="x-watchlist-retrieval", version="v5")
     )
     max_items: int = Field(default=80, ge=1, le=200)
     require_citation_evidence: bool = True

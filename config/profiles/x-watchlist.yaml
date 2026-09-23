@@ -6,7 +6,7 @@ retrieval:
   model_alias: x-retrieve
   prompt:
     id: x-watchlist-retrieval
-    version: v4
+    version: v5
   max_items: 80
   require_citation_evidence: true
 ranking:

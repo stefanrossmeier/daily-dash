@@ -3,7 +3,7 @@ from pathlib import Path
 
 from daily_dash.config.loader import load_x_watchlist_profile, load_x_watchlist_source_set
 from daily_dash.llm.gateway import GatewayResponse, GatewayUsage
-from daily_dash.retrieval.x_watchlist import retrieve_x_watchlist_posts
+from daily_dash.retrieval.x_watchlist import _timestamp_from_status_id, retrieve_x_watchlist_posts
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -120,3 +120,9 @@ def test_overnight_window_uses_only_covering_local_dates(monkeypatch) -> None:
     )
     assert seen["from_date"] == "2026-08-28"
     assert seen["to_date"] == "2026-08-29"
+
+
+def test_x_snowflake_timestamp_is_used_when_model_timestamp_is_unparseable() -> None:
+    assert _timestamp_from_status_id("2100283665842323753") == datetime(
+        2026, 9, 16, 18, 0, 21, tzinfo=UTC
+    )

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from email.utils import parsedate_to_datetime
 from zoneinfo import ZoneInfo
 
@@ -17,6 +17,7 @@ from daily_dash.prompts import load_prompt_asset
 
 _X_URL_RE = re.compile(r"^https?://(?:www\.)?x\.com/([^/]+)/status/(\d+)(?:[/?#].*)?$", re.I)
 _STATUS_ID_RE = re.compile(r"/status/(\d+)(?:[/?#]|$)", re.I)
+_X_SNOWFLAKE_EPOCH_MS = 1288834974657
 
 
 def _response_schema(max_items: int) -> dict[str, object]:
@@ -66,6 +67,14 @@ def _parse_timestamp(value: object) -> datetime | None:
     if parsed.tzinfo is None:
         return None
     return parsed
+
+
+def _timestamp_from_status_id(status_id: str) -> datetime | None:
+    try:
+        timestamp_ms = (int(status_id) >> 22) + _X_SNOWFLAKE_EPOCH_MS
+        return datetime.fromtimestamp(timestamp_ms / 1000, tz=UTC)
+    except (OSError, OverflowError, ValueError):
+        return None
 
 
 def _search_dates(window_start: datetime, window_end: datetime, timezone: str) -> tuple[date, date]:
@@ -168,6 +177,8 @@ def retrieve_x_watchlist_posts(
             continue
 
         published = _parse_timestamp(raw.get("publication_time"))
+        if published is None:
+            published = _timestamp_from_status_id(status_id)
         if published is None:
             invalid_timestamp += 1
             continue

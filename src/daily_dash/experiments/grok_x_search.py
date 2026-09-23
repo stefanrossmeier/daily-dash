@@ -166,7 +166,7 @@ def run_live(
 ) -> Path:
     prompt = load_prompt_asset(
         "x-watchlist-retrieval",
-        "v4",
+        "v5",
         "x-watchlist",
         assets_dir=assets_dir,
     )
@@ -233,7 +233,7 @@ def main() -> None:
     assets_dir = Path(os.getenv("DAILY_DASH_ASSETS_DIR", "assets"))
     prompt = load_prompt_asset(
         "x-watchlist-retrieval",
-        "v4",
+        "v5",
         "x-watchlist",
         assets_dir=assets_dir,
     )
