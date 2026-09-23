@@ -468,12 +468,19 @@ async def x_search(request: XSearchRequest) -> ChatResponse:
         payload: dict[str, Any] = {
             "model": model,
             "input": request.input,
-            "plugins": [{"id": "web", "engine": "native"}],
-            "x_search_filter": {
-                "allowed_x_handles": request.allowed_x_handles,
-                "from_date": request.from_date.isoformat(),
-                "to_date": request.to_date.isoformat(),
-            },
+            "tools": [
+                {
+                    "type": "openrouter:web_search",
+                    "parameters": {
+                        "engine": "native",
+                        "x_search": {
+                            "allowed_x_handles": request.allowed_x_handles,
+                            "from_date": request.from_date.isoformat(),
+                            "to_date": request.to_date.isoformat(),
+                        },
+                    },
+                }
+            ],
             "reasoning": {"enabled": False},
             "text": {
                 "format": {

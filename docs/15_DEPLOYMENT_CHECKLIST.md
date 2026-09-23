@@ -68,7 +68,7 @@ only flow edits in the Windmill UI.
 Futures      05:00, 07:15, 12:30, 23:00 Monday-Friday
 WSB          20:35 daily
 Polymarket   20:45 daily
-X Watchlist  08:20 and 20:20 daily
+X Watchlist  19:20 daily
 ```
 
 News/Markets/Yields schedules are also generated from the same registry.

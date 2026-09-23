@@ -80,7 +80,7 @@ The canonical bootstrap provisions placeholders for `openrouter_api_key`, `data_
 - News Top runs at 00:00, 06:00, 12:00, and 18:00 daily; German and Alternative News have their own daily multi-slot cadences.
 - Markets, futures, and yields run on weekdays; Weekend Markets runs Saturdays/Sundays.
 - Smart News runs three times daily using its rolling 18-hour input window.
-- WSB runs daily at 20:35, Polymarket daily at 20:45, and X Watchlist daily at 08:20 and 20:20.
+- WSB runs daily at 20:35, Polymarket daily at 20:45, and X Watchlist daily at 19:20.
 
 Pipelines derive auditable windows from this registry. Explicit timezone-aware bounds are available on several module CLI run commands for replay/testing. Regenerate schedules with `scripts/render-windmill-schedules.py`; use `scripts/sync-windmill-workspace.sh` to generate, test, and push the workspace representation.
 

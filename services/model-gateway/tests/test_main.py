@@ -228,15 +228,24 @@ class ModelGatewayDeadlineTests(unittest.TestCase):
 
             payload = post.await_args.kwargs["payload"]
             self.assertEqual(payload["model"], "x-ai/grok-4.3")
-            self.assertEqual(payload["plugins"], [{"id": "web", "engine": "native"}])
             self.assertEqual(
-                payload["x_search_filter"],
-                {
-                    "allowed_x_handles": ["NickTimiraos"],
-                    "from_date": "2026-08-28",
-                    "to_date": "2026-08-29",
-                },
+                payload["tools"],
+                [
+                    {
+                        "type": "openrouter:web_search",
+                        "parameters": {
+                            "engine": "native",
+                            "x_search": {
+                                "allowed_x_handles": ["NickTimiraos"],
+                                "from_date": "2026-08-28",
+                                "to_date": "2026-08-29",
+                            },
+                        },
+                    }
+                ],
             )
+            self.assertNotIn("plugins", payload)
+            self.assertNotIn("x_search_filter", payload)
             self.assertEqual(payload["reasoning"], {"enabled": False})
             self.assertEqual(payload["provider"], {"require_parameters": True})
             self.assertEqual(

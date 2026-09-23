@@ -1,5 +1,5 @@
-summary: DailyDash x-watchlist 20:20
-schedule: 0 20 20 * * *
+summary: DailyDash x-watchlist 19:20
+schedule: 0 20 19 * * *
 timezone: Europe/Berlin
 enabled: true
 script_path: f/daily_dash/x_watchlist

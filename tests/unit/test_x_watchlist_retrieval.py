@@ -124,5 +124,5 @@ def test_overnight_window_uses_only_covering_local_dates(monkeypatch) -> None:
 
 def test_x_snowflake_timestamp_is_used_when_model_timestamp_is_unparseable() -> None:
     assert _timestamp_from_status_id("2100283665842323753") == datetime(
-        2026, 9, 16, 18, 0, 21, tzinfo=UTC
+        2026, 9, 16, 18, 0, 21, 977000, tzinfo=UTC
     )

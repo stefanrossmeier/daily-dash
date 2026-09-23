@@ -32,9 +32,8 @@ Only aliases configured with `allow_x_search: true` may call the gateway's `/v1/
 The gateway currently translates the constrained request into OpenRouter's Responses API shape using:
 
 - `x-ai/grok-4.3` through the `x-retrieve` alias;
-- the `web` plugin with `engine: native`;
-- top-level `x_search_filter.allowed_x_handles`;
-- `from_date` and `to_date` filters;
+- the `openrouter:web_search` server tool with `engine: native`;
+- explicit `x_search.allowed_x_handles`, `from_date`, and `to_date` filters;
 - reasoning disabled;
 - one account at a time.
 

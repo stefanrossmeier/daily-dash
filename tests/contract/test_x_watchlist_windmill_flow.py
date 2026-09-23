@@ -5,6 +5,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[2]
 FLOW = ROOT / "workflows/windmill/f/daily_dash/x_watchlist__flow/flow.yaml"
 RUN = ROOT / "workflows/windmill/f/daily_dash/run_x_watchlist.sh"
+SCHEDULE = ROOT / "workflows/windmill/f/daily_dash/x_watchlist_1920.schedule.yaml"
 
 
 def test_x_watchlist_flow_is_run_persist_deliver() -> None:
@@ -29,3 +30,10 @@ def test_x_watchlist_run_script_has_no_openrouter_or_x_secret_access() -> None:
     assert "cookie" not in script.lower()
     assert "playwright" not in script.lower()
     assert "DAILY_DASH_MODEL_GATEWAY_URL" in script
+
+
+def test_x_watchlist_schedule_runs_daily_at_1920_berlin_time() -> None:
+    schedule = yaml.safe_load(SCHEDULE.read_text(encoding="utf-8"))
+    assert schedule["schedule"] == "0 20 19 * * *"
+    assert schedule["timezone"] == "Europe/Berlin"
+    assert schedule["script_path"] == "f/daily_dash/x_watchlist"

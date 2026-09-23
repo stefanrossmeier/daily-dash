@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The X Watchlist is a twice-daily market/macro digest built from a fixed curated source set:
+The X Watchlist is a daily market/macro digest built from a fixed curated source set:
 
 - `KobeissiLetter`
 - `AndreasSteno`
@@ -33,7 +33,7 @@ Persistence completes before Telegram delivery.
 
 The source set is checked in at `config/sources/x-watchlist.yaml`. The production retrieval prompt is versioned at `assets/prompts/x-watchlist-retrieval/v5/`.
 
-The application sends all six handles in one gateway request. The gateway resolves alias `x-retrieve` to the configured Grok model and injects native X search plus the handle/date restrictions. Application code cannot access the OpenRouter root key.
+The application sends all six handles in one gateway request. The gateway resolves alias `x-retrieve` to the configured Grok model and invokes OpenRouter's explicit native web-search server tool with X search and the handle/date restrictions. Application code cannot access the OpenRouter root key.
 
 The X API/search date filter is deliberately treated as a coarse retrieval envelope. Only the local calendar dates that cover the exact scheduled interval are sent upstream; the retrieval prompt asks Grok to start with those bounded searches rather than first repeating unbounded account searches. The application parses every returned timestamp and accepts only posts in the exact half-open scheduled interval:
 
@@ -84,8 +84,7 @@ The model gateway deliberately strips opaque provider reasoning/encrypted blobs 
 `config/schedules.yaml` is authoritative:
 
 ```text
-08:20 Europe/Berlin
-20:20 Europe/Berlin
+19:20 Europe/Berlin
 ```
 
 every day. Windmill schedule files are generated from that registry.
