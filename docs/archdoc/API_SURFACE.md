@@ -2,7 +2,7 @@
 
 > Generated with `ai-craftkit` skill: `archdoc`  
 Source Repository: https://github.com/stefanrossmeier/daily-dash
-Source Revision: [226b348e18689007b84c347fa35fd56366757a31](https://github.com/stefanrossmeier/daily-dash/commit/226b348e18689007b84c347fa35fd56366757a31)
+Source Revision: [e15492736b09553e7f7caa9711480824294a7279](https://github.com/stefanrossmeier/daily-dash/commit/e15492736b09553e7f7caa9711480824294a7279)
 > Prompt: `Inspect the repo, create the full documentation in the directory /docs/archdoc`
 
 Last Reviewed Scope: delta (yields report: France series via CNBC provider)
