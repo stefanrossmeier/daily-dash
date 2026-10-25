@@ -224,7 +224,8 @@ def main(argv: list[str] | None = None) -> int:
     if not paths.feature_dir.is_dir():
         print(f"ERROR: Feature directory not found: {paths.feature_dir}", file=sys.stderr)
         print(
-            f"Run {format_speckit_command('specify', paths.repo_root)} first to create the feature structure.",
+            f"Run {format_speckit_command('specify', paths.repo_root)} first "
+            f"to create the feature structure.",
             file=sys.stderr,
         )
         return 1
@@ -232,7 +233,8 @@ def main(argv: list[str] | None = None) -> int:
     if not paths.impl_plan.is_file():
         print(f"ERROR: plan.md not found in {paths.feature_dir}", file=sys.stderr)
         print(
-            f"Run {format_speckit_command('plan', paths.repo_root)} first to create the implementation plan.",
+            f"Run {format_speckit_command('plan', paths.repo_root)} first "
+            f"to create the implementation plan.",
             file=sys.stderr,
         )
         return 1
@@ -250,7 +252,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.require_spec and not paths.feature_spec.is_file():
         print(f"ERROR: spec.md not found in {paths.feature_dir}", file=sys.stderr)
         print(
-            f"Run {format_speckit_command('specify', paths.repo_root)} first to create the feature specification.",
+            f"Run {format_speckit_command('specify', paths.repo_root)} first "
+            f"to create the feature specification.",
             file=sys.stderr,
         )
         return 1
@@ -258,7 +261,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.require_tasks and not paths.tasks.is_file():
         print(f"ERROR: tasks.md not found in {paths.feature_dir}", file=sys.stderr)
         print(
-            f"Run {format_speckit_command('tasks', paths.repo_root)} first to create the task list.",
+            f"Run {format_speckit_command('tasks', paths.repo_root)} first "
+            f"to create the task list.",
             file=sys.stderr,
         )
         return 1
@@ -267,9 +271,7 @@ def main(argv: list[str] | None = None) -> int:
     template_content = None
     if args.template_name:
         try:
-            template_content = resolve_template_content(
-                args.template_name, paths.repo_root
-            )
+            template_content = resolve_template_content(args.template_name, paths.repo_root)
         except TemplateResolutionError as exc:
             print(f"ERROR: {exc}", file=sys.stderr)
             return 1
@@ -288,9 +290,7 @@ def main(argv: list[str] | None = None) -> int:
         }
         if args.template_name:
             payload["TEMPLATE_CONTENT"] = template_content
-        sys.stdout.write(
-            _json_line(payload)
-        )
+        sys.stdout.write(_json_line(payload))
     else:
         _print_text_results(paths, args.include_tasks)
     return 0
