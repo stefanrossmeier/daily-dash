@@ -30,6 +30,8 @@ def test_yield_report_highlights_current_euro_financial_stress_proxy() -> None:
                 ("eur-aaa-2y", "Euro AAA 2Y"),
                 ("eur-aaa-10y", "Euro AAA 10Y"),
                 ("eur-all-10y", "Euro all-ratings 10Y"),
+                ("fr-2y", "France 2Y"),
+                ("fr-10y", "France 10Y"),
             )
         ],
         spreads=[
@@ -41,6 +43,8 @@ def test_yield_report_highlights_current_euro_financial_stress_proxy() -> None:
                 ("us-10y-3m", "US 10Y − 3M"),
                 ("us-10y-2y", "US 10Y − 2Y"),
                 ("de-10y-2y", "Germany 10Y − 2Y"),
+                ("fr-de-2y", "France 2Y − Germany 2Y"),
+                ("fr-de-10y", "France 10Y − Germany 10Y"),
                 ("eur-aaa-10y-3m", "Euro AAA 10Y − 3M"),
                 ("eur-aaa-10y-2y", "Euro AAA 10Y − 2Y"),
             )
@@ -153,8 +157,11 @@ def test_new_spreads_render_in_cross_market_block() -> None:
     assert "US 10Y − Germany 10Y" in cross_block
     assert "France 2Y − Germany 2Y" in cross_block
     assert "France 10Y − Germany 10Y" in cross_block
-    # Neutral signal marker (no France threshold policy).
-    assert cross_block.count("⚪") == 2
+    # Neutral signal marker on the new France spread rows (no France
+    # threshold policy); US rows in this fixture are also neutral, so the
+    # count alone is not a discriminating assertion.
+    assert "⚪ France 2Y − Germany 2Y" in cross_block
+    assert "⚪ France 10Y − Germany 10Y" in cross_block
 
 
 def test_pre_existing_report_lines_unchanged() -> None:

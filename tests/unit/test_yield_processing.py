@@ -126,9 +126,11 @@ def test_france_minus_germany_spreads_are_france_higher_positive() -> None:
 def test_france_germany_spread_uses_shared_dates_only() -> None:
     # French latest (08-31) has no German counterpart on that date:
     # the spread must use the newest shared date (08-28), never subtract
-    # across different dates.
+    # across different dates. fr-2y also carries an 08-27 observation so a
+    # previous shared date exists for the bp change.
     raw = _fr_de_snapshot(
         **{
+            "fr-2y": [("2026-08-31", 3.20), ("2026-08-28", 3.10), ("2026-08-27", 3.10)],
             "de-2y": [("2026-08-28", 2.00), ("2026-08-27", 2.05)],
             "de-10y": [("2026-08-28", 2.60), ("2026-08-27", 2.55)],
         }
