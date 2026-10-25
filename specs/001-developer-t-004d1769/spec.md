@@ -93,9 +93,13 @@ content for every pre-existing line.
 ### Functional Requirements
 
 - **FR-001**: The yields source set MUST add France 2Y and France 10Y series
-  using an existing provider that publishes French government bond yields
-  (the ECB yield-curve dataset already used for Euro AAA series; series keys
-  are configuration in `config/sources/yields.yaml`).
+  (`provider: tradingview`, symbols `TVC:FR02Y` / `TVC:FR10Y`) using the
+  existing tvDatafeed client already used by the futures pipeline; when
+  TradingView fails or is stale, the retriever falls back to Stooq daily
+  bond-history pages (`10yfry.b` / `2yfry.b`); series keys are configuration
+  in `config/sources/yields.yaml`. ECB YC (no FR series), Bundesbank BBSIS
+  (German-only) and FRED (monthly French rates only) are verified NOT to
+  publish daily French government bond yields.
 - **FR-002**: The Levels section MUST include a France group with France 2Y
   and France 10Y using the existing level format (yield `%.2f%`, change
   `±N bp`, ISO observation date) and existing missing-data `—` convention.
@@ -138,9 +142,10 @@ content for every pre-existing line.
 
 ## Assumptions
 
-- The ECB yield-curve dataset (`provider: ecb`, dataset `YC`) publishes
-  daily French government bond (OAT) yields under French-country keys; exact
-  keys are verified during implementation and live-checked once.
+- Data sources are live-verified (see plan.md, "Data Source Decision"):
+  TradingView `TVC:FR02Y` / `TVC:FR10Y` (primary, existing tvDatafeed
+  dependency) and Stooq `2yfry.b` / `10yfry.b` daily-history pages
+  (verified fallback). No new dependencies.
 - France spread thresholds for color indicators are out of scope; `neutral`
   is used.
 - Windmill flow wiring needs no change: the yields flow is source-set driven.
