@@ -1,7 +1,8 @@
 # DailyDash API Surface
 
 > Generated with `ai-craftkit` skill: `archdoc`  
-> Source: `https://github.com/stefanrossmeier/daily-dash.git` at commit `e080781f788934b050123bffa686df5ae4faf125`  
+Source Repository: https://github.com/stefanrossmeier/daily-dash
+Source Revision: 2050fba7728a5b2d570e3b3b0c235f7aea40f169
 > Prompt: `Inspect the repo, create the full documentation in the directory /docs/archdoc`
 
 Last Reviewed Scope: full review
@@ -71,7 +72,7 @@ DailyDash sends JSON to a configurable base URL. Default resolution is explicit 
 | `POST /v1/x-search` | `alias`, `purpose`, `profile`, `input`, `allowed_x_handles`, `from_date`, `to_date`, response-schema fields. | Same validated gateway response shape. |
 | `GET /health` | No known request fields. | Used by `local-windmill.sh health`; response body is not asserted by inspected application code. |
 
-`/v1/chat` is used for structured ranking/theme classification. `/v1/x-search` is a retrieval-specific interface and requires an alias configured to allow X search. Non-success HTTP responses become `RuntimeError` with response text; successful JSON is validated by `GatewayResponse` with forbidden unknown fields.
+`/v1/chat` is used for structured ranking/theme classification. `/v1/x-search` is a retrieval-specific interface and requires an alias configured to allow X search; the gateway forwards it to OpenRouter as a `tools` payload (`type: openrouter:web_search`, `engine: native`, with `x_search.allowed_x_handles`/`from_date`/`to_date` parameters) rather than the legacy `plugins`/`x_search_filter` top-level fields. Non-success HTTP responses become `RuntimeError` with response text; successful JSON is validated by `GatewayResponse` with forbidden unknown fields.
 
 ## Windmill Contracts
 

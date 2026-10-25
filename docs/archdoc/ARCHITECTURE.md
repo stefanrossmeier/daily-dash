@@ -1,7 +1,8 @@
 # DailyDash Architecture
 
 > Generated with `ai-craftkit` skill: `archdoc`  
-> Source: `https://github.com/stefanrossmeier/daily-dash.git` at commit `e080781f788934b050123bffa686df5ae4faf125`  
+Source Repository: https://github.com/stefanrossmeier/daily-dash
+Source Revision: 2050fba7728a5b2d570e3b3b0c235f7aea40f169
 > Prompt: `Inspect the repo, create the full documentation in the directory /docs/archdoc`
 
 Last Reviewed Scope: full review
@@ -105,7 +106,7 @@ Artifact stores name files using UTC timestamp plus a short run-id suffix and re
 
 ## Security And Trust Boundaries
 
-External feeds, HTML, API data, model responses, and provider metadata are untrusted inputs. Pydantic contracts enforce structured inputs/outputs at configuration and model boundaries. The X Watchlist applies additional allowed-handle, canonical-URL, exact-window, duplicate, and optional citation-evidence checks before ranking.
+External feeds, HTML, API data, model responses, and provider metadata are untrusted inputs. Pydantic contracts enforce structured inputs/outputs at configuration and model boundaries. The X Watchlist applies additional allowed-handle, canonical-URL, exact-window, duplicate, and optional citation-evidence checks before ranking; when a response lacks a parseable publication timestamp, the retrieval layer falls back to deriving one from the X/Twitter status id snowflake (see `src/daily_dash/retrieval/x_watchlist.py`), rather than dropping or guessing the date.
 
 The persistence script is a particularly important boundary: it validates relative output paths, requires a Git repository/remote/branch, uses a temporary deploy-key file with pinned GitHub host key, rejects pre-staged data, detects remote divergence, and serializes writers through a Git-directory lock.
 
