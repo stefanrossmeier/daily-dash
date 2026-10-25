@@ -23,14 +23,18 @@ wiring, storage, and Windmill flows are series-count agnostic.
 ## Proposed Changes
 
 1. `config/sources/yields.yaml`: add series `fr-2y` ("France 2Y") and
-   `fr-10y` ("France 10Y") with `provider: tradingview`, keys `FR02Y` /
-   `FR10Y` (exchange `TVC`). `observation_limit: 12` is reused.
-2. `retrieval/yields.py`: add a `tradingview` provider branch reusing the
-   installed tvDatafeed client (same dependency as
-   `retrieval/futures/tradingview.py`), fetching daily bars and converting
-   closes to `YieldObservation`; on failure/stale data fall back to the
-   Stooq daily-history page for `10yfry.b` / `2yfry.b` (HTML table parse;
-   close column). Existing fail-softly error convention applies to both.
+   `fr-10y` ("France 10Y") with `provider: cnbc`, keys `FR2Y` / `FR10Y`.
+   `observation_limit: 12` is reused (CNBC supplies at most two observations
+   per quote: latest + previous day close).
+2. `retrieval/yields.py`: add a `cnbc` provider branch using the existing
+   `httpx` client against
+   `https://quote.cnbc.com/quote-html-webservice/restQuote/symbolType/symbol?symbols=<key>&requestMethod=itv&noform=1&partnerId=2&fund=1&output=json`
+   (plain JSON, no authentication). Parse `last` (e.g. `"5.0223%"`),
+   `previous_day_closing`, and `last_time` into two `YieldObservation`s:
+   latest dated by the business-day-normalized `last_time` date, previous
+   dated the previous business day (documented normalization; CNBC's quote
+   cache can carry weekend timestamps). Strip `%` before float conversion.
+   Existing fail-softly error convention applies. No new dependency.
 3. `processing/yields.py`: extend `level_specs` with
    `("fr-2y", "France 2Y")`, `("fr-10y", "France 10Y")`; add spreads
    `fr-de-2y` ("France 2Y − Germany 2Y", left `fr-2y`, right `de-2y`) and
@@ -56,30 +60,62 @@ All candidate sources were verified live before this plan:
   French series.
 - **FRED**: only monthly OECD French long-term / 3-month rates
   (`IRLTLT01FRM156N`, `IR3TIB01FRM156N`); no daily 2Y/10Y French yields.
-- **Stooq**: CSV export endpoints `/q/d/l/` and `/q/l/` return the PoW
-  challenge and `Access denied` from this host (curl and browser); the
-  daily-history HTML page IS accessible and verified:
-  `10yfry.b` (France 10Y) 5,358 daily rows, latest 23 Oct 2026 close 5.017;
-  `2yfry.b` (France 2Y) 8,427 rows, latest close 3.795. Weekday-only.
-- **TradingView (chosen primary)**: `TVC:FR02Y` / `TVC:FR10Y` symbol pages
-  exist, and the public scanner API returns live values
-  (`FR02Y` 3.7942, `FR10Y` 5.0188, update 23 Oct 2026) consistent with the
-  Stooq closes. tvDatafeed is already a production dependency (futures
-  pipeline) and supplies daily history depth.
+- **Stooq** (owner-suggested): the two bond symbols exist and are correct —
+  browser-verified `10yfry.B` "France 10-Year Government Bond Yield" close
+  5.017 (2026-10-23, 5,358 daily rows since 2005) and `2yfry.B` "France
+  2-Year Government Bond Yield" close 3.795 (8,427 rows). However,
+  programmatic access is NOT viable for the cron pipeline, verified live
+  three ways: (1) the quote CSV `/q/l/` endpoint returns HTTP 404 ("page
+  does not exist"); (2) the history CSV `/q/d/l/` returns `Access denied`
+  for anonymous clients even after solving the site's SHA-256
+  proof-of-work challenge and holding the issued `auth` cookie; (3) the
+  HTML pages are gated behind that PoW plus a Google Funding-Choices
+  JavaScript consent flow — a plain-Python fetch after PoW returns only
+  consent scripts, no quote data. Rejected as the pipeline source.
+- **TradingView tvDatafeed** (`tradingview-datafeed==2.1.1`, already a
+  production dependency): symbols `TVC:FR02Y` / `TVC:FR10Y` exist (symbol
+  search API confirms "France 2/10 Year Government Bonds Yield"), but an
+  anonymous `TvDatafeed().get_hist("TVC", ...)` call live-tested from this
+  host times out on the WebSocket connection ("Connection timed out → no
+  data") for both symbols. No TV credentials are configured in this
+  repository, so the existing futures access path cannot be relied on.
+  The TradingView scanner API does not cover these bond symbols
+  (`totalCount: 0`). Rejected as primary.
+- **CNBC quote API (chosen primary)**:
+  `https://quote.cnbc.com/quote-html-webservice/restQuote/symbolType/symbol?symbols=<key>&requestMethod=itv&noform=1&partnerId=2&fund=1&output=json`
+  works from plain HTTP with no authentication. Verified live for both
+  symbols: `FR2Y` = "France 2 Year Bond", last `3.8038%`,
+  `previous_day_closing` present, `last_time` timestamp; `FR10Y` =
+  "France 10 Year Bond", last `5.0223%`, `previous_day_closing` `5.0214%`,
+  `last_time` — values consistent with the Stooq closes verified above
+  (CNBC quotes are intraday snapshot yields, a few bp from Stooq's 17:58
+  close; internally consistent per source). Provides exactly the two
+  observations the report needs (latest + previous close). Also listed on
+  cnbc.com/france-government-bonds/ (FR1Y…FR30Y all exist).
+- **Rejected second-tier candidates** (live-tested): MarketWatch bond pages
+  (HTTP 401), Investing.com API (HTTP 403), WSJ market-data page
+  (JavaScript-rendered, no server-side table), Yahoo Finance (no French
+  government bond yield symbols exist), Banque de France Webstat (no OAT
+  dataset), ECB (euro-area aggregates only).
 
-**Fallback order**: TradingView `TVC:FR02Y`/`TVC:FR10Y` → Stooq daily-history
-HTML page `2yfry.b`/`10yfry.b` → fail-softly `—` with recorded data issue
-(existing convention). If both sources miss a day, France shows stale/`—`
-per existing missing-and-stale-data conventions; spreads drop to the latest
-shared date or `—`. German data stays on Bundesbank BBSIS; spread dates
-align via shared-date intersection (existing policy, FR-004).
+**Fallback order**: CNBC quote API (with the retriever's existing
+fail-softly retry/error convention) → `—` with recorded data issue (existing
+convention). After live-testing all candidates above, no second
+unauthenticated source passes verification, so the "backup source" is the
+documented graceful-degradation path: France levels and the two spreads show
+`—` and the data-issues list records the failure, exactly like existing
+series outages; the rest of the report is unaffected. German data stays on
+Bundesbank BBSIS; spread dates align via shared-date intersection (existing
+policy, FR-004), with CNBC observation dates business-day-normalized as
+specified in FR-001 so weekday data aligns with the German series.
 
 ## Test Plan
 
 Focused unit tests (offline fixtures):
-- retrieval: TradingView daily bars → `YieldObservation` parsing; Stooq
-  HTML-table fallback parsing (including invalid/skipped closes); fallback
-  order (TradingView failure → Stooq data used; both fail → error series).
+- retrieval: CNBC JSON parsing — `last`/`previous_day_closing` percent-string
+  conversion, `last_time` date extraction, weekend timestamp normalization to
+  the previous business day, missing/invalid fields → fail-softly error
+  series.
 - processing: France levels from fixture snapshot; fr−de spreads signed
   correctly; date alignment uses shared dates only (different-date case
   produces spread on the shared date / `—` when no overlap); missing French
@@ -88,17 +124,19 @@ Focused unit tests (offline fixtures):
   formatting; pre-existing lines unchanged.
 - config: `tests/contract/test_config_tree.py` covers the config tree
   (existing tests must still pass with the two new series; the yield-series
-  provider literal gains `tradingview`).
+  provider literal gains `cnbc`).
 
 ## Verification
 
-Run: `pytest tests/unit/test_yield_processing.py tests/unit/test_yield_presentation.py tests/contract/test_config_tree.py tests/contract/test_yields_windmill_flow.py` plus the full test suite. Optional single live check of the
-two TradingView symbols before delivery.
+Run: `pytest tests/unit/test_yield_processing.py tests/unit/test_yield_presentation.py tests/contract/test_config_tree.py tests/contract/test_yields_windmill_flow.py` plus the full test suite. One live check of the
+CNBC quote API for `FR2Y` and `FR10Y` before delivery (HTTP 200, both
+symbols return `last`, `previous_day_closing`, `last_time`).
 
 ## Risk / Rollback
 
 Additive config + one new retrieval branch + deterministic lists; rollback is
 reverting the four files. No artifact schema change, no delivery change.
-Third-party risk: Stooq may throttle or deny access (verified from this
-host) and tvDatafeed is an unofficial client — hence the two-source fallback
-order and fail-softly behavior.
+Third-party risk: CNBC is a quote-cache API without a stability guarantee and
+no verified second unauthenticated source exists — hence fail-softly
+behavior with `—` placeholders and recorded data issues keeps the report
+functional if CNBC misses a day.

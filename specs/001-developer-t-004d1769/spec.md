@@ -80,6 +80,9 @@ content for every pre-existing line.
 
 - French series returns an error or is empty → level shows `—`, spread shows
   `—`, a data issue is recorded; the report still delivers.
+- CNBC `last_time` falls on a weekend or non-trading day → the observation
+  date is normalized to the previous business day (documented normalization;
+  CNBC's quote cache can carry weekend timestamps).
 - French and German latest observations fall on different dates → spread uses
   the latest shared date only; if no shared date exists, spread is `—` with
   no date (existing alignment policy).
@@ -93,13 +96,17 @@ content for every pre-existing line.
 ### Functional Requirements
 
 - **FR-001**: The yields source set MUST add France 2Y and France 10Y series
-  (`provider: tradingview`, symbols `TVC:FR02Y` / `TVC:FR10Y`) using the
-  existing tvDatafeed client already used by the futures pipeline; when
-  TradingView fails or is stale, the retriever falls back to Stooq daily
-  bond-history pages (`10yfry.b` / `2yfry.b`); series keys are configuration
-  in `config/sources/yields.yaml`. ECB YC (no FR series), Bundesbank BBSIS
-  (German-only) and FRED (monthly French rates only) are verified NOT to
-  publish daily French government bond yields.
+  (`provider: cnbc`, symbols `FR2Y` / `FR10Y`) fetched from CNBC's public
+  quote API (`quote.cnbc.com/quote-html-webservice/restQuote`, no
+  authentication); the retriever derives the latest observation from `last`
+  dated by `last_time` and the previous observation from
+  `previous_day_closing` dated the previous business day. Non-trading-day
+  timestamps are normalized to the previous business day. Series keys are
+  configuration in `config/sources/yields.yaml`. Stooq (programmatic access
+  blocked: PoW + consent JS; CSV endpoints retired), TradingView
+  tvDatafeed (anonymous connection times out live), ECB YC (no FR series),
+  Bundesbank BBSIS (German-only) and FRED (monthly French rates only) are
+  verified NOT to be usable daily French government bond sources.
 - **FR-002**: The Levels section MUST include a France group with France 2Y
   and France 10Y using the existing level format (yield `%.2f%`, change
   `±N bp`, ISO observation date) and existing missing-data `—` convention.
@@ -143,11 +150,15 @@ content for every pre-existing line.
 ## Assumptions
 
 - Data sources are live-verified (see plan.md, "Data Source Decision"):
-  TradingView `TVC:FR02Y` / `TVC:FR10Y` (primary, existing tvDatafeed
-  dependency) and Stooq `2yfry.b` / `10yfry.b` daily-history pages
-  (verified fallback). No new dependencies.
+  CNBC public quote API symbols `FR2Y` / `FR10Y` (primary, no auth, plain
+  JSON; verified 2026-10-25 with `last`, `previous_day_closing`,
+  `last_time`). Stooq and TradingView are rejected with recorded live
+  evidence. No new dependencies.
 - France spread thresholds for color indicators are out of scope; `neutral`
   is used.
+- CNBC quote-level yields may differ slightly from Stooq/official closes
+  (different snapshot times); levels and changes are internally consistent
+  per source. This is documented, not an open question.
 - Windmill flow wiring needs no change: the yields flow is source-set driven.
 - No new dependencies.
 
