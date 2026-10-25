@@ -56,6 +56,7 @@ def render_yield_report(report: YieldReportData, profile: YieldProfile) -> Repor
     for group, ids in (
         ("US", ("us-3m", "us-2y", "us-10y")),
         ("Germany", ("de-2y", "de-10y")),
+        ("France", ("fr-2y", "fr-10y")),
         ("Euro AAA", ("eur-aaa-3m", "eur-aaa-2y", "eur-aaa-10y")),
         ("Euro all-ratings", ("eur-all-10y",)),
     ):
@@ -63,7 +64,8 @@ def render_yield_report(report: YieldReportData, profile: YieldProfile) -> Repor
         lines.extend(_level_line(levels[series_id]) for series_id in ids)
     lines.extend(["```", "", "*Cross-market spreads*", "```"])
     lines.extend(
-        _spread_line(spreads[spread_id]) for spread_id in ("us-eur-3m", "us-de-2y", "us-de-10y")
+        _spread_line(spreads[spread_id])
+        for spread_id in ("us-eur-3m", "us-de-2y", "us-de-10y", "fr-de-2y", "fr-de-10y")
     )
     lines.extend(["```", "", "*Term spreads*", "```"])
     lines.extend(

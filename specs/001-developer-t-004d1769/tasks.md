@@ -21,17 +21,17 @@
 
 ## Stage: Developer (developer agent owns these)
 
-- T003 Add `fr-2y` and `fr-10y` series to `config/sources/yields.yaml` with
+- [x] T003 Add `fr-2y` and `fr-10y` series to `config/sources/yields.yaml` with
       `provider: cnbc`, keys `FR2Y`/`FR10Y`; extend the yield-series provider
       literal in `src/daily_dash/config/models.py`; add the `cnbc` branch to
       `src/daily_dash/retrieval/yields.py` (plain-JSON quote API at
       `quote.cnbc.com/quote-html-webservice/restQuote`, no auth, httpx;
       business-day date normalization; fail-softly errors). Verify the
       endpoint with one live check. (P1)
-- [ ] T004 Extend `processing/yields.py`: add France levels to `level_specs`
+- [x] T004 Extend `processing/yields.py`: add France levels to `level_specs`
       and `fr-de-2y`/`fr-de-10y` spreads (France − Germany, neutral signal).
       (P1)
-- [ ] T005 Extend `presentation/yields.py`: France group in Levels and the
+- [x] T005 Extend `presentation/yields.py`: France group in Levels and the
       two spread rows in Cross-market spreads. (P1)
 - [ ] T006 Make T001/T002 tests pass; run the full test suite offline.
 - [ ] T007 Commit; verify existing report content preserved (golden fixture
@@ -47,6 +47,19 @@
       change — record the assessment either way). (P2)
 
 ## Notes
+
+- Implementation status (developer run 2026-10-25): T003–T005 implemented and
+  committed; T006 blocked on three defective test-stage tests (fixtures /
+  expectations contradict the spec — see rework findings sent to the test
+  stage): `test_france_germany_spread_uses_shared_dates_only` expects a +5 bp
+  change computed by cross-date subtraction although fr-2y has no 08-27
+  observation; `test_yield_report_highlights_current_euro_financial_stress_proxy`
+  fixture lacks the fr-2y/fr-10y levels the presentation now renders (KeyError);
+  `test_new_spreads_render_in_cross_market_block` asserts exactly 2 ⚪ in the
+  cross-market block although its own fixture marks all five cross-market
+  spreads neutral. One live CNBC check passed (HTTP 200 with browser-like
+  UA + Referer headers; plain httpx UA → 403 Akamai, so the retriever sends
+  those headers).
 
 - All tests offline; no network in CI-safe tests except the one-time CNBC
   endpoint verification during T003/T008.

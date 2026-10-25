@@ -31,6 +31,16 @@ series:
     dataset: BBSIS
     key: D.I.ZST.ZI.EUR.S1311.B.A604.R10XX.R.A.A._Z._Z.A
 
+  - id: fr-2y
+    name: France 2Y
+    provider: cnbc
+    key: FR2Y
+
+  - id: fr-10y
+    name: France 10Y
+    provider: cnbc
+    key: FR10Y
+
   - id: eur-aaa-3m
     name: Euro AAA 3M
     provider: ecb

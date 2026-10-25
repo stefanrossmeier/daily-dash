@@ -2,10 +2,7 @@ import pytest
 
 from daily_dash.retrieval.yields import _csv_observations, _fred_observations
 
-try:  # Added by the developer in T003; import fails until then.
-    from daily_dash.retrieval.yields import _cnbc_observations
-except ImportError:  # pragma: no cover - pre-implementation state
-    _cnbc_observations = None
+from daily_dash.retrieval.yields import _cnbc_observations
 
 
 def test_fred_csv_parser_skips_missing_values_and_returns_latest_first() -> None:

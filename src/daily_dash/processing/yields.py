@@ -90,12 +90,14 @@ def _spread(
         return YieldSpread(spread_id=spread_id, name=name)
 
     latest_left, latest_right = pairs[0]
-    value = latest_left.value_pct - latest_right.value_pct
+    # Kill float representation noise (e.g. 0.8499999999999996); display
+    # precision stays governed by the presentation layer.
+    value = round(latest_left.value_pct - latest_right.value_pct, 10)
     change_bp = None
     if len(pairs) > 1:
         previous_left, previous_right = pairs[1]
-        previous_value = previous_left.value_pct - previous_right.value_pct
-        change_bp = (value - previous_value) * 100.0
+        previous_value = round(previous_left.value_pct - previous_right.value_pct, 10)
+        change_bp = round((value - previous_value) * 100.0, 10)
 
     signal: Literal["green", "orange", "red", "neutral"]
     if signal_kind == "inversion":
@@ -157,14 +159,25 @@ def _curve_regime(
     )
 
 
-def _issues(raw: RawYieldSnapshot, required_ids: Iterable[str]) -> list[str]:
+def _issues(
+    raw: RawYieldSnapshot,
+    required_ids: Iterable[str],
+    names: dict[str, str] | None = None,
+) -> list[str]:
+    label = (names or {}).get
     required = set(required_ids)
+    present: dict[str, RawYieldSeries] = {series.series_id: series for series in raw.series}
     issues: list[str] = []
     for series in raw.series:
         if series.error:
             issues.append(f"{series.name}: {series.error}")
         elif series.series_id in required and not series.observations:
             issues.append(f"{series.name}: no observations")
+    for series_id in required:
+        if series_id not in present:
+            # Required series missing from the snapshot entirely (e.g. the
+            # configured source set changed): record a data issue.
+            issues.append(f"{label(series_id, series_id)}: series missing from snapshot")
     return issues
 
 
@@ -176,6 +189,8 @@ def process_yield_snapshot(raw: RawYieldSnapshot, profile: YieldProfile) -> Yiel
         ("us-10y", "US 10Y"),
         ("de-2y", "Germany 2Y"),
         ("de-10y", "Germany 10Y"),
+        ("fr-2y", "France 2Y"),
+        ("fr-10y", "France 10Y"),
         ("eur-aaa-3m", "Euro AAA 3M"),
         ("eur-aaa-2y", "Euro AAA 2Y"),
         ("eur-aaa-10y", "Euro AAA 10Y"),
@@ -213,6 +228,20 @@ def process_yield_snapshot(raw: RawYieldSnapshot, profile: YieldProfile) -> Yiel
             signal_kind="level",
             green_hi=0.8,
             orange_hi=1.3,
+        ),
+        _spread(
+            series,
+            spread_id="fr-de-2y",
+            name="France 2Y − Germany 2Y",
+            left_id="fr-2y",
+            right_id="de-2y",
+        ),
+        _spread(
+            series,
+            spread_id="fr-de-10y",
+            name="France 10Y − Germany 10Y",
+            left_id="fr-10y",
+            right_id="de-10y",
         ),
         _spread(
             series,
@@ -273,5 +302,5 @@ def process_yield_snapshot(raw: RawYieldSnapshot, profile: YieldProfile) -> Yiel
             series,
             lookback_points=profile.presentation.curve_lookback_points,
         ),
-        issues=_issues(raw, (series_id for series_id, _ in level_specs)),
+        issues=_issues(raw, (series_id for series_id, _ in level_specs), dict(level_specs)),
     )
