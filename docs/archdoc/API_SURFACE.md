@@ -1,12 +1,13 @@
 # DailyDash API Surface
 
 > Generated with `ai-craftkit` skill: `archdoc`  
-> Source: `https://github.com/stefanrossmeier/daily-dash.git` at commit `e080781f788934b050123bffa686df5ae4faf125`  
+Source Repository: https://github.com/stefanrossmeier/daily-dash
+Source Revision: [e15492736b09553e7f7caa9711480824294a7279](https://github.com/stefanrossmeier/daily-dash/commit/e15492736b09553e7f7caa9711480824294a7279)
 > Prompt: `Inspect the repo, create the full documentation in the directory /docs/archdoc`
 
-Last Reviewed Scope: full review
+Last Reviewed Scope: delta (yields report: France series via CNBC provider)
 Doc Status: DRAFT
-Last API Surface Update: 2026-08-30T00:00:00Z
+Last API Surface Update: 2026-10-25T14:32:57Z
 Updated By: agent
 Source Basis: code scan, workflow schemas, configuration, contract tests
 
@@ -71,7 +72,7 @@ DailyDash sends JSON to a configurable base URL. Default resolution is explicit 
 | `POST /v1/x-search` | `alias`, `purpose`, `profile`, `input`, `allowed_x_handles`, `from_date`, `to_date`, response-schema fields. | Same validated gateway response shape. |
 | `GET /health` | No known request fields. | Used by `local-windmill.sh health`; response body is not asserted by inspected application code. |
 
-`/v1/chat` is used for structured ranking/theme classification. `/v1/x-search` is a retrieval-specific interface and requires an alias configured to allow X search. Non-success HTTP responses become `RuntimeError` with response text; successful JSON is validated by `GatewayResponse` with forbidden unknown fields.
+`/v1/chat` is used for structured ranking/theme classification. `/v1/x-search` is a retrieval-specific interface and requires an alias configured to allow X search; the gateway forwards it to OpenRouter as a `tools` payload (`type: openrouter:web_search`, `engine: native`, with `x_search.allowed_x_handles`/`from_date`/`to_date` parameters) rather than the legacy `plugins`/`x_search_filter` top-level fields. Non-success HTTP responses become `RuntimeError` with response text; successful JSON is validated by `GatewayResponse` with forbidden unknown fields.
 
 ## Windmill Contracts
 
@@ -111,6 +112,7 @@ Filenames are `<UTC timestamp>_<first 8 run-id characters>.json`; writers raise 
 - Telegram token/chat id, data-repo deploy key, and Reddit OAuth settings are injected through Windmill/local secret-file provisioning.
 - WSB requires approved Reddit OAuth credentials; its command performs a client-credentials exchange with Reddit.
 - Futures is anonymous `tvDatafeed` access and does not use a TradingView credential.
+- Yields France series (`fr-2y`, `fr-10y` in `config/sources/yields.yaml`) use the anonymous CNBC quote API (`https://quote.cnbc.com/quote-html-webservice/...`); no credential, but requests require a browser-like `User-Agent` plus a `cnbc.com` `Referer` (the default httpx agent is rejected with 403 by Akamai). Weekend/intraday quote timestamps are normalized to the previous business day so spreads align with the official daily series; cross-date subtraction never occurs (`processing/yields.py` uses only shared observation dates).
 - X Watchlist does not require an X credential in DailyDash; Grok X Search is accessed via the configured model gateway.
 - Telegram delivery posts to `https://api.telegram.org/bot<TOKEN>/sendMessage`, supplies `chat_id`, `text`, and parse mode, and reports failure without raising from the transport adapter.
 

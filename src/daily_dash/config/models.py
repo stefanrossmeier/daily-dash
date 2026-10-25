@@ -767,7 +767,7 @@ class YieldSeriesConfig(BaseModel):
 
     id: str = Field(min_length=1, pattern=IDENTIFIER_PATTERN)
     name: str = Field(min_length=1)
-    provider: Literal["fred", "bundesbank", "ecb"]
+    provider: Literal["fred", "bundesbank", "ecb", "cnbc"]
     dataset: str | None = None
     key: str | None = None
     enabled: bool = True
@@ -776,6 +776,8 @@ class YieldSeriesConfig(BaseModel):
     def validate_provider_fields(self) -> Self:
         if self.provider == "fred" and not self.key:
             raise ValueError("FRED yield series require key")
+        if self.provider == "cnbc" and not self.key:
+            raise ValueError("CNBC yield series require key")
         if self.provider in {"bundesbank", "ecb"} and (not self.dataset or not self.key):
             raise ValueError(f"{self.provider} yield series require dataset and key")
         return self

@@ -1,12 +1,13 @@
 # DailyDash Repository Map
 
 > Generated with `ai-craftkit` skill: `archdoc`  
-> Source: `https://github.com/stefanrossmeier/daily-dash.git` at commit `e080781f788934b050123bffa686df5ae4faf125`  
+Source Repository: https://github.com/stefanrossmeier/daily-dash
+Source Revision: [e15492736b09553e7f7caa9711480824294a7279](https://github.com/stefanrossmeier/daily-dash/commit/e15492736b09553e7f7caa9711480824294a7279)
 > Prompt: `Inspect the repo, create the full documentation in the directory /docs/archdoc`
 
-Last Reviewed Scope: full review
+Last Reviewed Scope: delta (yields report: France series via CNBC provider)
 Doc Status: DRAFT
-Last Repo Map Update: 2026-08-30T00:00:00Z
+Last Repo Map Update: 2026-10-25T14:32:57Z
 Updated By: agent
 Source Basis: README scan, code scan, tests scan, deployment files
 
@@ -34,7 +35,7 @@ DailyDash is a self-hosted personal market-intelligence system. It retrieves mar
 | [services/model-gateway](../../services/model-gateway) | Isolated HTTP gateway for provider/model access. |
 | [scripts](../../scripts) | Validation, bootstrap, sync, live-check, and operator helpers. |
 | [tests](../../tests) | Unit, contract, replay, ranking-evaluation, and fixture tests. |
-| [docs](..) | Existing design/implementation records plus this generated `archdoc` set. |
+| [docs](..) | Existing design/implementation records, `docs/adr/` ADRs (layered pipeline boundaries, Windmill workspace-as-code, immutable artifacts, gateway/versioned assets), the `VPS_DEPLOYMENT.md` runbook, plus this generated `archdoc` set. |
 
 ## Important Files
 
@@ -123,7 +124,7 @@ Detailed invocation contracts are in [API_SURFACE.md](API_SURFACE.md).
 |---|---|
 | Windmill persistence | Concurrent Git writes and remote divergence can block delivery; inspect `persist_data_repo.sh` and workflow variable wiring. |
 | Secrets | Gateway, Telegram, Reddit, and deploy-key credentials must remain outside Git/logs/artifacts; inspect `deploy/local-windmill` and workspace provisioning scripts. |
-| External data adapters | RSS, TradingView/tvDatafeed, IG, Reddit, and public Polymarket APIs can change independently; begin with adapter-specific unit/contract tests. |
+| External data adapters | RSS, TradingView/tvDatafeed, IG, Reddit, public Polymarket, and CNBC quote APIs can change independently; begin with adapter-specific unit/contract tests. |
 | Model contracts | Prompt/schema changes affect persisted traces and selection; inspect versioned prompt assets, gateway tests, and response Pydantic models. |
 | Schedules | Incorrect time zones or generated schedule drift changes retrieval windows; validate configuration and run schedule contract tests. |
 

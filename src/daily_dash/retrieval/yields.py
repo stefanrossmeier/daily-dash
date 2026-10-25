@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import csv
 import io
-from datetime import date, datetime
-from typing import Protocol
+from datetime import date, datetime, timedelta
+from typing import Any, Protocol
 
 import httpx
 
@@ -46,6 +46,73 @@ def _parse_float(value: str) -> float | None:
         return float(text)
     except ValueError:
         return None
+
+
+CNBC_BASE = "https://quote.cnbc.com/quote-html-webservice/restQuote/symbolType/symbol"
+# Akamai on quote.cnbc.com rejects the default httpx user agent (403); a
+# browser-like agent plus the cnbc.com referer are required (verified live).
+CNBC_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+    ),
+    "Referer": "https://www.cnbc.com/",
+    "Accept": "application/json",
+}
+
+
+def _previous_business_day(day: date) -> date:
+    candidate = day - timedelta(days=1)
+    while candidate.weekday() >= 5:  # Saturday=5, Sunday=6
+        candidate -= timedelta(days=1)
+    return candidate
+
+
+def _cnbc_timestamp_date(value: str) -> date | None:
+    text = value.strip()
+    for fmt in (
+        "%Y-%m-%dT%H:%M:%S.%f%z",
+        "%Y-%m-%dT%H:%M:%S%z",
+        "%Y-%m-%dT%H:%M:%S",
+    ):
+        try:
+            return datetime.strptime(text, fmt).date()
+        except ValueError:
+            continue
+    return None
+
+
+def _cnbc_observations(payload: dict[str, Any], *, limit: int) -> list[YieldObservation]:
+    quotes = payload.get("FormattedQuoteResult", {}).get("FormattedQuote") or []
+    if not quotes:
+        return []
+    quote = quotes[0]
+
+    observed_on = _cnbc_timestamp_date(str(quote.get("last_time") or ""))
+    if observed_on is None:
+        return []
+    # CNBC's quote cache can carry weekend/intraday timestamps; a weekend
+    # stamp is normalized back to the most recent business day so it can
+    # align with the official daily series (specs/001-developer-t-004d1769).
+    if observed_on.weekday() >= 5:  # Saturday=5, Sunday=6
+        observed_on = _previous_business_day(observed_on)
+
+    latest_text = str(quote.get("last") or "").strip().rstrip("%").strip()
+    latest_value = _parse_float(latest_text) if latest_text else None
+    if latest_value is None:
+        return []
+    observations = [YieldObservation(observed_on=observed_on, value_pct=latest_value)]
+
+    previous_text = str(quote.get("previous_day_closing") or "").strip().rstrip("%").strip()
+    previous_value = _parse_float(previous_text) if previous_text else None
+    if previous_value is not None:
+        observations.append(
+            YieldObservation(
+                observed_on=_previous_business_day(observed_on),
+                value_pct=previous_value,
+            )
+        )
+    return observations[:limit]
 
 
 def _sniff_rows(text: str) -> list[dict[str, str]]:
@@ -145,6 +212,21 @@ class OfficialYieldRetriever:
                     )
                     response.raise_for_status()
                     observations = _csv_observations(response.text, limit=limit)
+                elif config.provider == "cnbc":
+                    response = client.get(
+                        CNBC_BASE,
+                        params={
+                            "symbols": config.key,
+                            "requestMethod": "itv",
+                            "noform": "1",
+                            "partnerId": "2",
+                            "fund": "1",
+                            "output": "json",
+                        },
+                        headers=CNBC_HEADERS,
+                    )
+                    response.raise_for_status()
+                    observations = _cnbc_observations(response.json(), limit=limit)
                 else:  # pragma: no cover - enforced by Pydantic
                     raise ValueError(f"unsupported yield provider: {config.provider}")
 
