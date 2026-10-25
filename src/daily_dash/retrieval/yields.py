@@ -3,7 +3,7 @@ from __future__ import annotations
 import csv
 import io
 from datetime import date, datetime, timedelta
-from typing import Protocol
+from typing import Any, Protocol
 
 import httpx
 
@@ -82,7 +82,7 @@ def _cnbc_timestamp_date(value: str) -> date | None:
     return None
 
 
-def _cnbc_observations(payload: dict, *, limit: int) -> list[YieldObservation]:
+def _cnbc_observations(payload: dict[str, Any], *, limit: int) -> list[YieldObservation]:
     quotes = payload.get("FormattedQuoteResult", {}).get("FormattedQuote") or []
     if not quotes:
         return []
