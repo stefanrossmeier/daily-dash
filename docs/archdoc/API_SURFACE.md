@@ -2,12 +2,12 @@
 
 > Generated with `ai-craftkit` skill: `archdoc`  
 Source Repository: https://github.com/stefanrossmeier/daily-dash
-Source Revision: edf077cca4f15afc00940b318bfbd82b3ebbecce
+Source Revision: [226b348e18689007b84c347fa35fd56366757a31](https://github.com/stefanrossmeier/daily-dash/commit/226b348e18689007b84c347fa35fd56366757a31)
 > Prompt: `Inspect the repo, create the full documentation in the directory /docs/archdoc`
 
-Last Reviewed Scope: full review
+Last Reviewed Scope: delta (yields report: France series via CNBC provider)
 Doc Status: DRAFT
-Last API Surface Update: 2026-08-30T00:00:00Z
+Last API Surface Update: 2026-10-25T14:32:57Z
 Updated By: agent
 Source Basis: code scan, workflow schemas, configuration, contract tests
 
@@ -112,6 +112,7 @@ Filenames are `<UTC timestamp>_<first 8 run-id characters>.json`; writers raise 
 - Telegram token/chat id, data-repo deploy key, and Reddit OAuth settings are injected through Windmill/local secret-file provisioning.
 - WSB requires approved Reddit OAuth credentials; its command performs a client-credentials exchange with Reddit.
 - Futures is anonymous `tvDatafeed` access and does not use a TradingView credential.
+- Yields France series (`fr-2y`, `fr-10y` in `config/sources/yields.yaml`) use the anonymous CNBC quote API (`https://quote.cnbc.com/quote-html-webservice/...`); no credential, but requests require a browser-like `User-Agent` plus a `cnbc.com` `Referer` (the default httpx agent is rejected with 403 by Akamai). Weekend/intraday quote timestamps are normalized to the previous business day so spreads align with the official daily series; cross-date subtraction never occurs (`processing/yields.py` uses only shared observation dates).
 - X Watchlist does not require an X credential in DailyDash; Grok X Search is accessed via the configured model gateway.
 - Telegram delivery posts to `https://api.telegram.org/bot<TOKEN>/sendMessage`, supplies `chat_id`, `text`, and parse mode, and reports failure without raising from the transport adapter.
 

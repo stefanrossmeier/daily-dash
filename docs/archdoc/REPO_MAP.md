@@ -2,12 +2,12 @@
 
 > Generated with `ai-craftkit` skill: `archdoc`  
 Source Repository: https://github.com/stefanrossmeier/daily-dash
-Source Revision: edf077cca4f15afc00940b318bfbd82b3ebbecce
+Source Revision: [226b348e18689007b84c347fa35fd56366757a31](https://github.com/stefanrossmeier/daily-dash/commit/226b348e18689007b84c347fa35fd56366757a31)
 > Prompt: `Inspect the repo, create the full documentation in the directory /docs/archdoc`
 
-Last Reviewed Scope: full review
+Last Reviewed Scope: delta (yields report: France series via CNBC provider)
 Doc Status: DRAFT
-Last Repo Map Update: 2026-08-30T00:00:00Z
+Last Repo Map Update: 2026-10-25T14:32:57Z
 Updated By: agent
 Source Basis: README scan, code scan, tests scan, deployment files
 
@@ -124,7 +124,7 @@ Detailed invocation contracts are in [API_SURFACE.md](API_SURFACE.md).
 |---|---|
 | Windmill persistence | Concurrent Git writes and remote divergence can block delivery; inspect `persist_data_repo.sh` and workflow variable wiring. |
 | Secrets | Gateway, Telegram, Reddit, and deploy-key credentials must remain outside Git/logs/artifacts; inspect `deploy/local-windmill` and workspace provisioning scripts. |
-| External data adapters | RSS, TradingView/tvDatafeed, IG, Reddit, and public Polymarket APIs can change independently; begin with adapter-specific unit/contract tests. |
+| External data adapters | RSS, TradingView/tvDatafeed, IG, Reddit, public Polymarket, and CNBC quote APIs can change independently; begin with adapter-specific unit/contract tests. |
 | Model contracts | Prompt/schema changes affect persisted traces and selection; inspect versioned prompt assets, gateway tests, and response Pydantic models. |
 | Schedules | Incorrect time zones or generated schedule drift changes retrieval windows; validate configuration and run schedule contract tests. |
 

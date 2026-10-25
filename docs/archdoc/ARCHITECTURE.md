@@ -2,12 +2,12 @@
 
 > Generated with `ai-craftkit` skill: `archdoc`  
 Source Repository: https://github.com/stefanrossmeier/daily-dash
-Source Revision: edf077cca4f15afc00940b318bfbd82b3ebbecce
+Source Revision: [226b348e18689007b84c347fa35fd56366757a31](https://github.com/stefanrossmeier/daily-dash/commit/226b348e18689007b84c347fa35fd56366757a31)
 > Prompt: `Inspect the repo, create the full documentation in the directory /docs/archdoc`
 
-Last Reviewed Scope: full review
+Last Reviewed Scope: delta (yields report: France series via CNBC provider)
 Doc Status: DRAFT
-Last Architecture Update: 2026-08-30T00:00:00Z
+Last Architecture Update: 2026-10-25T14:32:57Z
 Updated By: agent
 Source Basis: code scan, contract tests, configuration, deployment files
 
@@ -69,7 +69,7 @@ The pipeline is intentionally separated from reader presentation. A command load
 | Markets | Yahoo Finance via `yfinance` | Last/previous-close and all-time-high calculations. | `JsonFileMarketSnapshotStore` |
 | Futures | TradingView via compatible `tvDatafeed` | Quote status/change calculations. | `JsonFileFuturesSnapshotStore` |
 | Weekend Markets | IG public pages | Bid/ask/change parsing and issue collection. | `JsonFileWeekendMarketSnapshotStore` |
-| Yields | FRED, Bundesbank, ECB CSV endpoints | Levels, aligned spreads, curve regime. | `JsonFileYieldSnapshotStore` |
+| Yields | FRED, Bundesbank, ECB CSV endpoints, CNBC quote API (`src/daily_dash/retrieval/yields.py`) | Levels (incl. France 2Y/10Y), aligned spreads (incl. France−Germany), curve regime. | `JsonFileYieldSnapshotStore` |
 | WSB | Reddit OAuth | Model relevance plus deterministic activity eligibility. | `JsonWsbRunStore` |
 | Polymarket | Public Gamma/Data APIs | Model signal eligibility plus deterministic hot-event lane. | `JsonPolymarketRunStore` |
 | X Watchlist | Gateway-backed Grok native X search | Citation/handle/time-window validation, then model ranking. | `JsonXWatchlistRunStore` |

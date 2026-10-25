@@ -2,12 +2,12 @@
 
 > Generated with `ai-craftkit` skill: `archdoc`  
 Source Repository: https://github.com/stefanrossmeier/daily-dash
-Source Revision: edf077cca4f15afc00940b318bfbd82b3ebbecce
+Source Revision: [226b348e18689007b84c347fa35fd56366757a31](https://github.com/stefanrossmeier/daily-dash/commit/226b348e18689007b84c347fa35fd56366757a31)
 > Prompt: `Inspect the repo, create the full documentation in the directory /docs/archdoc`
 
-Last Reviewed Scope: full review
+Last Reviewed Scope: delta (yields report: France series via CNBC provider)
 Doc Status: DRAFT
-Last Operations Update: 2026-08-30T00:00:00Z
+Last Operations Update: 2026-10-25T14:32:57Z
 Updated By: agent
 Source Basis: README scan, scripts, Compose files, workflow definitions, code scan
 
@@ -128,6 +128,7 @@ For a manual production-style check, use `wmill.sh flow run f/daily_dash/news_to
 | Telegram delivery fails | Missing Telegram secret, API/network failure, or malformed formatting. | Retain the already persisted artifact; repair credentials/format then rerun the artifact-based delivery step. |
 | Windmill definitions drift | UI-only edits or unrendered schedules/flows. | Update source definitions, run sync script, and avoid treating UI state as source of truth. |
 | Futures data is partial/unavailable | Unofficial anonymous TradingView protocol changes or stale bars. | Inspect adapter diagnostics; do not silently replace the instrument/source. |
+| France yield series (`fr-2y`/`fr-10y`) missing or stale | Unofficial CNBC quote API changed, returned a weekend timestamp, or blocked the request (403 without browser-like `User-Agent`/`Referer`). | Check the recorded snapshot issues; missing required series are reported rather than silently dropped; spreads use only aligned observation dates. |
 
 ## Persistence And Recovery Rules
 
