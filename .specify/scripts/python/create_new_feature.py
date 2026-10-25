@@ -43,17 +43,13 @@ _STOP_WORDS = frozenset(
 
 _MAX_BRANCH_LENGTH = 244
 _MAX_FEATURE_NUMBER = 2**63 - 1
-_ASCII_LOWER = str.maketrans(
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz"
-)
+_ASCII_LOWER = str.maketrans("ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz")
 
 
 def _int64_from_digits(value: str) -> int | None:
     normalized = value.lstrip("0") or "0"
     maximum = str(_MAX_FEATURE_NUMBER)
-    if len(normalized) > len(maximum) or (
-        len(normalized) == len(maximum) and normalized > maximum
-    ):
+    if len(normalized) > len(maximum) or (len(normalized) == len(maximum) and normalized > maximum):
         return None
     return int(normalized, 10)
 
@@ -215,9 +211,7 @@ def _get_highest_from_specs(specs_dir: Path) -> int:
             continue
         name = entry.name
         # Match sequential prefixes (>=3 digits), but skip timestamp dirs.
-        if re.match(r"^[0-9]{3,}-", name) and not re.match(
-            r"^[0-9]{8}-[0-9]{6}-", name
-        ):
+        if re.match(r"^[0-9]{3,}-", name) and not re.match(r"^[0-9]{8}-[0-9]{6}-", name):
             number = _int64_from_digits(re.match(r"^[0-9]+", name).group())
             if number is not None:
                 highest = max(highest, number)
@@ -231,9 +225,11 @@ def _fit_branch_name(feature_num: str, branch_suffix: str) -> str:
         return branch_name
 
     max_suffix_length = _MAX_BRANCH_LENGTH - (len(feature_num) + 1)
-    truncated_suffix = branch_suffix.encode("utf-8")[:max_suffix_length].decode(
-        "utf-8", errors="ignore"
-    ).rstrip("-")
+    truncated_suffix = (
+        branch_suffix.encode("utf-8")[:max_suffix_length]
+        .decode("utf-8", errors="ignore")
+        .rstrip("-")
+    )
     return f"{feature_num}-{truncated_suffix}"
 
 
@@ -301,8 +297,7 @@ def main(argv: list[str] | None = None) -> int:
             # characters that int() would otherwise tolerate.
             if not re.fullmatch(r"[0-9]+", branch_number):
                 print(
-                    "Error: --number must be an unsigned integer, "
-                    f"got '{branch_number}'",
+                    f"Error: --number must be an unsigned integer, got '{branch_number}'",
                     file=sys.stderr,
                 )
                 return 1
@@ -379,8 +374,7 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
         print(
-            f"[specify] Truncated to: {branch_name} "
-            f"({len(branch_name.encode('utf-8'))} bytes)",
+            f"[specify] Truncated to: {branch_name} ({len(branch_name.encode('utf-8'))} bytes)",
             file=sys.stderr,
         )
 
@@ -408,9 +402,7 @@ def main(argv: list[str] | None = None) -> int:
         needs_spec = not spec_file.is_file()
         if needs_spec:
             try:
-                template_content = resolve_template_content(
-                    "spec-template", repo_root
-                )
+                template_content = resolve_template_content("spec-template", repo_root)
             except TemplateResolutionError as exc:
                 print(f"Error: {exc}", file=sys.stderr)
                 return 1

@@ -41,7 +41,7 @@ def resolve_specify_init_dir() -> Path:
             f"ERROR: SPECIFY_INIT_DIR does not point to an existing directory: {raw}",
             file=sys.stderr,
         )
-        raise SystemExit(1)
+        raise SystemExit(1) from None
     if not init_root.is_dir():
         print(
             f"ERROR: SPECIFY_INIT_DIR does not point to an existing directory: {raw}",
@@ -134,9 +134,7 @@ class FeaturePaths:
     contracts_dir: Path
 
 
-def get_feature_paths(
-    *, no_persist: bool = False, script_file: Path | None = None
-) -> FeaturePaths:
+def get_feature_paths(*, no_persist: bool = False, script_file: Path | None = None) -> FeaturePaths:
     repo_root = get_repo_root(script_file)
     current_branch = get_current_branch()
 
@@ -194,10 +192,7 @@ _SAFE_COMPONENT_PATTERN = re.compile(r"[a-z0-9-]+")
 
 
 def _is_safe_component(value: object) -> bool:
-    return (
-        isinstance(value, str)
-        and _SAFE_COMPONENT_PATTERN.fullmatch(value) is not None
-    )
+    return isinstance(value, str) and _SAFE_COMPONENT_PATTERN.fullmatch(value) is not None
 
 
 def _normalize_priority(value: object) -> int:
@@ -238,9 +233,7 @@ def _sorted_preset_ids(presets_dir: Path) -> list[str]:
             pass
     try:
         return sorted(
-            p.name
-            for p in presets_dir.iterdir()
-            if p.is_dir() and _is_safe_component(p.name)
+            p.name for p in presets_dir.iterdir() if p.is_dir() and _is_safe_component(p.name)
         )
     except OSError:
         return []
@@ -268,13 +261,10 @@ def _sorted_extension_ids(extensions_dir: Path) -> list[str]:
         raw_extensions = data.get("extensions", {})
         if not isinstance(raw_extensions, dict):
             raise TemplateResolutionError(
-                f"Invalid extension registry {registry}: "
-                "'extensions' must be a mapping"
+                f"Invalid extension registry {registry}: 'extensions' must be a mapping"
             )
         extensions = raw_extensions
-        registered_ids = {
-            ext_id for ext_id in extensions if isinstance(ext_id, str)
-        }
+        registered_ids = {ext_id for ext_id in extensions if isinstance(ext_id, str)}
 
     ranked: list[tuple[int, str]] = []
     for ext_id, metadata in extensions.items():
@@ -289,20 +279,14 @@ def _sorted_extension_ids(extensions_dir: Path) -> list[str]:
         ranked.extend(
             (10, path.name)
             for path in extensions_dir.iterdir()
-            if (
-                path.is_dir()
-                and _is_safe_component(path.name)
-                and path.name not in registered_ids
-            )
+            if (path.is_dir() and _is_safe_component(path.name) and path.name not in registered_ids)
         )
     except OSError:
         pass
     return [ext_id for _, ext_id in sorted(ranked)]
 
 
-def _conventional_template(
-    base_dir: Path, template_name: str
-) -> Path | None:
+def _conventional_template(base_dir: Path, template_name: str) -> Path | None:
     for candidate in (
         base_dir / "templates" / f"{template_name}.md",
         base_dir / f"{template_name}.md",
@@ -333,9 +317,7 @@ def resolve_template(template_name: str, repo_root: Path) -> Path | None:
     presets_dir = repo_root / ".specify" / "presets"
     if presets_dir.is_dir():
         for preset_id in _sorted_preset_ids(presets_dir):
-            candidate = _conventional_template(
-                presets_dir / preset_id, template_name
-            )
+            candidate = _conventional_template(presets_dir / preset_id, template_name)
             if candidate is not None:
                 return candidate
 
@@ -382,9 +364,7 @@ def _validate_manifest_template_entry(entry: object) -> None:
     if strategy not in _VALID_TEMPLATE_STRATEGIES:
         raise ValueError(f"invalid manifest template strategy '{strategy}'")
     if entry["type"] == "script" and strategy not in _VALID_SCRIPT_STRATEGIES:
-        raise ValueError(
-            f"invalid manifest script strategy '{strategy}'"
-        )
+        raise ValueError(f"invalid manifest script strategy '{strategy}'")
 
 
 class _DelegatedYAMLError(Exception):
@@ -455,7 +435,9 @@ class _DelegatedYAML:
                     "        try:\n"
                     "            if isinstance(obj, dict):\n"
                     "                return {\n"
-                    "                    (k if isinstance(k, (str, int, float, bool)) or k is None else str(k)): _stringify_keys(v, stack)\n"
+                    "                    (k if isinstance(k, (str, int, float, bool))\n"
+                    "                     or k is None else str(k)):\\n"
+                    "                        _stringify_keys(v, stack)\n"
                     "                    for k, v in obj.items()\n"
                     "                }\n"
                     "            return [_stringify_keys(v, stack) for v in obj]\n"
@@ -495,7 +477,8 @@ class _DelegatedYAML:
                     "except yaml.YAMLError as exc:\n"
                     "    print(str(exc), file=sys.stderr)\n"
                     "    sys.exit(1)\n"
-                    "json.dump(_stringify_keys(_only_templates(data)), sys.stdout, default=_default)",
+                    "json.dump(_stringify_keys(_only_templates(data)), sys.stdout,\n"
+                    "        default=_default)",
                 ],
                 input=text,
                 capture_output=True,
@@ -509,8 +492,7 @@ class _DelegatedYAML:
             ) from exc
         if proc.returncode != 0:
             raise _DelegatedYAMLError(
-                proc.stderr.strip()
-                or "SPECKIT_PYTHON_EXECUTABLE could not parse the manifest"
+                proc.stderr.strip() or "SPECKIT_PYTHON_EXECUTABLE could not parse the manifest"
             )
         try:
             return json.loads(proc.stdout, object_hook=_delegated_yaml_object_hook)
@@ -552,9 +534,7 @@ def _import_yaml() -> object | None:
     return _DelegatedYAML(python_override)
 
 
-def _preset_template_layer(
-    preset_dir: Path, template_name: str
-) -> tuple[Path, str] | None:
+def _preset_template_layer(preset_dir: Path, template_name: str) -> tuple[Path, str] | None:
     """Return the preset template path and composition strategy."""
     manifest_path = preset_dir / "preset.yml"
     conventional = _conventional_template(preset_dir, template_name)
@@ -564,9 +544,7 @@ def _preset_template_layer(
 
     yaml = _import_yaml()
     if yaml is None:
-        raise TemplateResolutionError(
-            "PyYAML is required to resolve preset template composition"
-        )
+        raise TemplateResolutionError("PyYAML is required to resolve preset template composition")
 
     try:
         manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
@@ -587,10 +565,7 @@ def _preset_template_layer(
         for entry in templates:
             _validate_manifest_template_entry(entry)
         for entry in templates:
-            if (
-                entry.get("name") != template_name
-                or entry.get("type", "template") != "template"
-            ):
+            if entry.get("name") != template_name or entry.get("type", "template") != "template":
                 continue
             file_value = entry.get("file", "")
             strategy = entry.get("strategy", "replace")
@@ -628,9 +603,7 @@ def resolve_template_content(template_name: str, repo_root: Path) -> str | None:
                 elif strategy == "wrap":
                     placeholder = "{CORE_TEMPLATE}"
                     if placeholder not in layer_content:
-                        raise TemplateResolutionError(
-                            f"Wrap layer {path} is missing {placeholder}"
-                        )
+                        raise TemplateResolutionError(f"Wrap layer {path} is missing {placeholder}")
                     content = layer_content.replace(placeholder, content)
                 else:
                     raise TemplateResolutionError(
@@ -642,13 +615,7 @@ def resolve_template_content(template_name: str, repo_root: Path) -> str | None:
             ) from exc
         return content
 
-    override = (
-        repo_root
-        / ".specify"
-        / "templates"
-        / "overrides"
-        / f"{template_name}.md"
-    )
+    override = repo_root / ".specify" / "templates" / "overrides" / f"{template_name}.md"
     if override.is_file():
         layers.append((override, "replace"))
         return compose_from_base()

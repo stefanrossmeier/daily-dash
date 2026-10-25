@@ -110,7 +110,8 @@ def main(argv: list[str] | None = None) -> int:
     if not paths.impl_plan.is_file():
         print(f"ERROR: plan.md not found in {paths.feature_dir}", file=sys.stderr)
         print(
-            f"Run {format_speckit_command('plan', paths.repo_root)} first to create the implementation plan.",
+            f"Run {format_speckit_command('plan', paths.repo_root)} first "
+            f"to create the implementation plan.",
             file=sys.stderr,
         )
         return 1
@@ -118,7 +119,8 @@ def main(argv: list[str] | None = None) -> int:
     if not paths.feature_spec.is_file():
         print(f"ERROR: spec.md not found in {paths.feature_dir}", file=sys.stderr)
         print(
-            f"Run {format_speckit_command('specify', paths.repo_root)} first to create the feature structure.",
+            f"Run {format_speckit_command('specify', paths.repo_root)} first "
+            f"to create the feature structure.",
             file=sys.stderr,
         )
         return 1
@@ -126,9 +128,7 @@ def main(argv: list[str] | None = None) -> int:
     docs = _available_docs(paths)
 
     try:
-        tasks_template_content = resolve_template_content(
-            "tasks-template", paths.repo_root
-        )
+        tasks_template_content = resolve_template_content("tasks-template", paths.repo_root)
     except TemplateResolutionError as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1
