@@ -1,0 +1,15 @@
+{
+  "version": "1.2.4.dev0",
+  "integration_state_schema": 1,
+  "installed_integrations": [
+    "hermes"
+  ],
+  "integration_settings": {
+    "hermes": {
+      "script": "py",
+      "invoke_separator": "-"
+    }
+  },
+  "integration": "hermes",
+  "default_integration": "hermes"
+}
