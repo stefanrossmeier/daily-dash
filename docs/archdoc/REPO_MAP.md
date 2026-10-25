@@ -1,7 +1,8 @@
 # DailyDash Repository Map
 
 > Generated with `ai-craftkit` skill: `archdoc`  
-> Source: `https://github.com/stefanrossmeier/daily-dash.git` at commit `e080781f788934b050123bffa686df5ae4faf125`  
+Source Repository: https://github.com/stefanrossmeier/daily-dash
+Source Revision: e23be92579d8c069c051d669bda1a279e0f77401
 > Prompt: `Inspect the repo, create the full documentation in the directory /docs/archdoc`
 
 Last Reviewed Scope: full review
@@ -34,7 +35,7 @@ DailyDash is a self-hosted personal market-intelligence system. It retrieves mar
 | [services/model-gateway](../../services/model-gateway) | Isolated HTTP gateway for provider/model access. |
 | [scripts](../../scripts) | Validation, bootstrap, sync, live-check, and operator helpers. |
 | [tests](../../tests) | Unit, contract, replay, ranking-evaluation, and fixture tests. |
-| [docs](..) | Existing design/implementation records plus this generated `archdoc` set. |
+| [docs](..) | Existing design/implementation records, `docs/adr/` ADRs (layered pipeline boundaries, Windmill workspace-as-code, immutable artifacts, gateway/versioned assets), the `VPS_DEPLOYMENT.md` runbook, plus this generated `archdoc` set. |
 
 ## Important Files
 

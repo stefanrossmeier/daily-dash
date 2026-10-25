@@ -1,7 +1,8 @@
 # DailyDash Operations
 
 > Generated with `ai-craftkit` skill: `archdoc`  
-> Source: `https://github.com/stefanrossmeier/daily-dash.git` at commit `e080781f788934b050123bffa686df5ae4faf125`  
+Source Repository: https://github.com/stefanrossmeier/daily-dash
+Source Revision: e23be92579d8c069c051d669bda1a279e0f77401
 > Prompt: `Inspect the repo, create the full documentation in the directory /docs/archdoc`
 
 Last Reviewed Scope: full review
