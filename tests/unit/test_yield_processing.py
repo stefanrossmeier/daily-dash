@@ -88,8 +88,7 @@ def _fr_de_snapshot(**overrides: list[tuple[str, float]]) -> RawYieldSnapshot:
         source_set="yields",
         retrieved_at=datetime(2026, 8, 31, 18, 3, tzinfo=UTC),
         series=[
-            _series(series_id, name, values)
-            for series_id, (name, values) in series_defs.items()
+            _series(series_id, name, values) for series_id, (name, values) in series_defs.items()
         ],
     )
 
@@ -145,9 +144,7 @@ def test_france_germany_spread_uses_shared_dates_only() -> None:
 
 
 def test_france_germany_spread_missing_when_no_shared_dates() -> None:
-    raw = _fr_de_snapshot(
-        **{"de-2y": [("2026-08-20", 2.00)], "de-10y": [("2026-08-20", 2.60)]}
-    )
+    raw = _fr_de_snapshot(**{"de-2y": [("2026-08-20", 2.00)], "de-10y": [("2026-08-20", 2.60)]})
     report = process_yield_snapshot(raw, _profile())
 
     for spread_id in ("fr-de-2y", "fr-de-10y"):
@@ -187,13 +184,27 @@ def test_existing_levels_and_spreads_preserved_with_france_added() -> None:
 
     level_ids = [level.series_id for level in report.levels]
     for existing in (
-        "us-3m", "us-2y", "us-10y", "de-2y", "de-10y",
-        "eur-aaa-3m", "eur-aaa-2y", "eur-aaa-10y", "eur-all-10y",
+        "us-3m",
+        "us-2y",
+        "us-10y",
+        "de-2y",
+        "de-10y",
+        "eur-aaa-3m",
+        "eur-aaa-2y",
+        "eur-aaa-10y",
+        "eur-all-10y",
     ):
         assert existing in level_ids
     spread_ids = [spread.spread_id for spread in report.spreads]
     for existing in (
-        "us-eur-3m", "us-de-2y", "us-de-10y", "us-10y-3m", "us-10y-2y",
-        "de-10y-2y", "eur-aaa-10y-3m", "eur-aaa-10y-2y", "eur-all-aaa-10y",
+        "us-eur-3m",
+        "us-de-2y",
+        "us-de-10y",
+        "us-10y-3m",
+        "us-10y-2y",
+        "de-10y-2y",
+        "eur-aaa-10y-3m",
+        "eur-aaa-10y-2y",
+        "eur-all-aaa-10y",
     ):
         assert existing in spread_ids

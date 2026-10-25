@@ -1,8 +1,6 @@
 import pytest
 
-from daily_dash.retrieval.yields import _csv_observations, _fred_observations
-
-from daily_dash.retrieval.yields import _cnbc_observations
+from daily_dash.retrieval.yields import _cnbc_observations, _csv_observations, _fred_observations
 
 
 def test_fred_csv_parser_skips_missing_values_and_returns_latest_first() -> None:

@@ -48,9 +48,7 @@ def _parse_float(value: str) -> float | None:
         return None
 
 
-CNBC_BASE = (
-    "https://quote.cnbc.com/quote-html-webservice/restQuote/symbolType/symbol"
-)
+CNBC_BASE = "https://quote.cnbc.com/quote-html-webservice/restQuote/symbolType/symbol"
 # Akamai on quote.cnbc.com rejects the default httpx user agent (403); a
 # browser-like agent plus the cnbc.com referer are required (verified live).
 CNBC_HEADERS = {
