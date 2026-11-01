@@ -62,6 +62,14 @@ schedules:
     days: [MON, TUE, WED, THU, FRI]
     slots_local: ["10:03", "18:03"]
 
+  yahoo-movers:
+    schedule_id: yahoo-movers
+    enabled: true
+    flow_path: f/daily_dash/yahoo_movers
+    timezone: Europe/Berlin
+    days: [MON, TUE, WED, THU, FRI]
+    slots_local: ["18:45"]
+
   news-smart:
     schedule_id: news-smart
     enabled: true

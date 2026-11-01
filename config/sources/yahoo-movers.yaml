@@ -1,0 +1,17 @@
+schema_version: 1
+pipeline: yahoo-movers
+source_set_id: yahoo-movers
+top_n: 5
+
+categories:
+  - id: most-active
+    name: Most Active
+    screener: most_actives
+
+  - id: top-gainers
+    name: Top Gainers
+    screener: day_gainers
+
+  - id: top-losers
+    name: Top Losers
+    screener: day_losers

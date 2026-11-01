@@ -10,6 +10,10 @@ from daily_dash.storage.weekend_markets import (
     JsonFileWeekendMarketSnapshotStore,
     WeekendMarketSnapshotStore,
 )
+from daily_dash.storage.yahoo_movers import (
+    JsonFileYahooMoversSnapshotStore,
+    YahooMoversSnapshotStore,
+)
 from daily_dash.storage.yields import JsonFileYieldSnapshotStore, YieldSnapshotStore
 
 __all__ = [
@@ -19,6 +23,8 @@ __all__ = [
     "MarketSnapshotStore",
     "JsonFileWeekendMarketSnapshotStore",
     "WeekendMarketSnapshotStore",
+    "JsonFileYahooMoversSnapshotStore",
+    "YahooMoversSnapshotStore",
     "JsonFileYieldSnapshotStore",
     "YieldSnapshotStore",
 ]
