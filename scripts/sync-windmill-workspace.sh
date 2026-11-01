@@ -18,6 +18,7 @@ uv run pytest -q \
   tests/contract/test_weekend_markets_windmill_flow.py \
   tests/contract/test_wsb_windmill_flow.py \
   tests/contract/test_x_watchlist_windmill_flow.py \
+  tests/contract/test_yahoo_movers_windmill_flow.py \
   tests/contract/test_yields_windmill_flow.py \
   tests/contract/test_windmill_schedules.py
 

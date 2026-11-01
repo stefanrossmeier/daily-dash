@@ -23,6 +23,7 @@ def test_repository_configuration_is_valid() -> None:
         "polymarket",
         "wsb",
         "x-watchlist",
+        "yahoo-movers",
         "yields",
     )
 
@@ -37,6 +38,7 @@ def test_repository_configuration_is_valid() -> None:
         "polymarket",
         "wsb",
         "x-watchlist",
+        "yahoo-movers",
         "yields",
     )
 
@@ -51,6 +53,7 @@ def test_repository_configuration_is_valid() -> None:
         "polymarket",
         "wsb",
         "x-watchlist",
+        "yahoo-movers",
         "yields",
     )
 

@@ -25,6 +25,8 @@ from daily_dash.config.models import (
     WsbSourceSet,
     XWatchlistProfile,
     XWatchlistSourceSet,
+    YahooMoversProfile,
+    YahooMoversSourceSet,
     YieldProfile,
     YieldSourceSet,
 )
@@ -60,6 +62,7 @@ def load_profile(path: Path) -> Profile:
         | type[MarketsProfile]
         | type[WeekendMarketsProfile]
         | type[YieldProfile]
+        | type[YahooMoversProfile]
         | type[FuturesProfile]
     )
     if pipeline == "news":
@@ -76,6 +79,8 @@ def load_profile(path: Path) -> Profile:
         model = WeekendMarketsProfile
     elif pipeline == "yields":
         model = YieldProfile
+    elif pipeline == "yahoo-movers":
+        model = YahooMoversProfile
     elif pipeline == "futures":
         model = FuturesProfile
     else:
@@ -99,6 +104,7 @@ def load_source_set(path: Path) -> SourceSet:
         | type[MarketSourceSet]
         | type[WeekendMarketSourceSet]
         | type[YieldSourceSet]
+        | type[YahooMoversSourceSet]
         | type[FuturesSourceSet]
     )
     if pipeline == "news":
@@ -115,6 +121,8 @@ def load_source_set(path: Path) -> SourceSet:
         model = WeekendMarketSourceSet
     elif pipeline == "yields":
         model = YieldSourceSet
+    elif pipeline == "yahoo-movers":
+        model = YahooMoversSourceSet
     elif pipeline == "futures":
         model = FuturesSourceSet
     else:
@@ -187,6 +195,20 @@ def load_yield_source_set(path: Path) -> YieldSourceSet:
     source_set = load_source_set(path)
     if not isinstance(source_set, YieldSourceSet):
         raise ConfigurationError(f"expected yield source set: {path}")
+    return source_set
+
+
+def load_yahoo_movers_profile(path: Path) -> YahooMoversProfile:
+    profile = load_profile(path)
+    if not isinstance(profile, YahooMoversProfile):
+        raise ConfigurationError(f"expected Yahoo Movers profile: {path}")
+    return profile
+
+
+def load_yahoo_movers_source_set(path: Path) -> YahooMoversSourceSet:
+    source_set = load_source_set(path)
+    if not isinstance(source_set, YahooMoversSourceSet):
+        raise ConfigurationError(f"expected Yahoo Movers source set: {path}")
     return source_set
 
 

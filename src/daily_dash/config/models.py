@@ -528,6 +528,37 @@ class YieldProfile(BaseModel):
     presentation: YieldPresentationConfig
 
 
+class YahooMoversPresentationConfig(BaseModel):
+    """Presentation policy for the deterministic Yahoo Movers report."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    title: str = Field(default="Yahoo Movers", min_length=1)
+    timezone: str = Field(default="Europe/Berlin", min_length=1)
+    data_issue_limit: int = Field(default=8, ge=0, le=100)
+
+    @field_validator("timezone")
+    @classmethod
+    def validate_timezone(cls, value: str) -> str:
+        try:
+            ZoneInfo(value)
+        except ZoneInfoNotFoundError as exc:
+            raise ValueError(f"unknown timezone: {value}") from exc
+        return value
+
+
+class YahooMoversProfile(BaseModel):
+    """Configuration for the Yahoo Finance movers pipeline."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    schema_version: Literal[1] = 1
+    profile_id: Literal["yahoo-movers"] = "yahoo-movers"
+    pipeline: Literal["yahoo-movers"] = "yahoo-movers"
+    source_set: str = Field(min_length=1, pattern=IDENTIFIER_PATTERN)
+    presentation: YahooMoversPresentationConfig
+
+
 class FuturesPresentationConfig(BaseModel):
     """Presentation policy for the deterministic Futures Snapshot."""
 
@@ -802,6 +833,36 @@ class YieldSourceSet(BaseModel):
         return self
 
 
+class MoverCategoryConfig(BaseModel):
+    """One Yahoo Finance predefined screener consumed by the movers report."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    id: str = Field(min_length=1, pattern=IDENTIFIER_PATTERN)
+    name: str = Field(min_length=1)
+    screener: str = Field(min_length=1)
+    enabled: bool = True
+
+
+class YahooMoversSourceSet(BaseModel):
+    """Predefined Yahoo Finance screeners consumed by the movers report."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    schema_version: Literal[1] = 1
+    pipeline: Literal["yahoo-movers"] = "yahoo-movers"
+    source_set_id: str = Field(min_length=1, pattern=IDENTIFIER_PATTERN)
+    top_n: int = Field(default=5, ge=1, le=25)
+    categories: list[MoverCategoryConfig]
+
+    @model_validator(mode="after")
+    def validate_unique_category_ids(self) -> Self:
+        ids = [category.id for category in self.categories]
+        if len(ids) != len(set(ids)):
+            raise ValueError("category ids must be unique within a movers source set")
+        return self
+
+
 type Profile = (
     NewsProfile
     | WsbProfile
@@ -810,6 +871,7 @@ type Profile = (
     | MarketsProfile
     | WeekendMarketsProfile
     | YieldProfile
+    | YahooMoversProfile
     | FuturesProfile
 )
 type SourceSet = (
@@ -820,5 +882,6 @@ type SourceSet = (
     | MarketSourceSet
     | WeekendMarketSourceSet
     | YieldSourceSet
+    | YahooMoversSourceSet
     | FuturesSourceSet
 )

@@ -31,6 +31,15 @@ from daily_dash.contracts.weekend_market import (
     WeekendMarketReportData,
     WeekendMarketSnapshotDocument,
 )
+from daily_dash.contracts.yahoo_movers import (
+    MoverEntry,
+    MoverSection,
+    MoversReportData,
+    MoversSnapshotDocument,
+    RawMoverCategory,
+    RawMoverEntry,
+    RawMoverSnapshot,
+)
 from daily_dash.contracts.yields import (
     RawYieldSeries,
     RawYieldSnapshot,
@@ -57,6 +66,10 @@ __all__ = [
     "MarketReportData",
     "MarketSnapshotDocument",
     "ModelCall",
+    "MoverEntry",
+    "MoversReportData",
+    "MoversSnapshotDocument",
+    "MoverSection",
     "ProcessedMarketAsset",
     "RankedBatch",
     "RankedItem",
@@ -65,6 +78,9 @@ __all__ = [
     "RawFuturesSnapshot",
     "RawMarketAsset",
     "RawMarketSnapshot",
+    "RawMoverCategory",
+    "RawMoverEntry",
+    "RawMoverSnapshot",
     "ReportArtifact",
     "RunManifest",
     "SourceItem",
