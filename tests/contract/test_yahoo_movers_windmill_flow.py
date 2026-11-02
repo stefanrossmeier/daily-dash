@@ -68,3 +68,16 @@ def test_yahoo_movers_schedule_matches_registry() -> None:
     assert schedule["enabled"] is True
     assert schedule["script_path"] == "f/daily_dash/yahoo_movers"
     assert schedule["is_flow"] is True
+
+
+def test_yahoo_movers_runs_morning_midday_and_evening() -> None:
+    expected = {
+        "yahoo_movers_0945.schedule.yaml": "0 45 9 * * MON,TUE,WED,THU,FRI",
+        "yahoo_movers_1315.schedule.yaml": "0 15 13 * * MON,TUE,WED,THU,FRI",
+        "yahoo_movers_1845.schedule.yaml": "0 45 18 * * MON,TUE,WED,THU,FRI",
+    }
+    for filename, cron in expected.items():
+        path = SCHEDULE.parent / filename
+        schedule = yaml.safe_load(path.read_text(encoding="utf-8"))
+        assert schedule["schedule"] == cron
+        assert schedule["enabled"] is True
