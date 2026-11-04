@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import date
 from zoneinfo import ZoneInfo
 
 from daily_dash.config import YieldProfile
@@ -11,33 +12,70 @@ from daily_dash.contracts import (
     YieldSpread,
 )
 
+# Compact two-letter country labels keep every series on a single line in
+# Telegram's narrow code blocks. EU = Euro AAA, EU* = Euro all-ratings.
+LEVEL_LABELS = {
+    "us-3m": "US 3M",
+    "us-2y": "US 2Y",
+    "us-10y": "US 10Y",
+    "de-2y": "DE 2Y",
+    "de-10y": "DE 10Y",
+    "fr-2y": "FR 2Y",
+    "fr-10y": "FR 10Y",
+    "eur-aaa-3m": "EU 3M",
+    "eur-aaa-2y": "EU 2Y",
+    "eur-aaa-10y": "EU 10Y",
+    "eur-all-10y": "EU* 10Y",
+}
+
+SPREAD_LABELS = {
+    "us-eur-3m": "US-EU 3M",
+    "us-de-2y": "US-DE 2Y",
+    "us-de-10y": "US-DE 10Y",
+    "fr-de-2y": "FR-DE 2Y",
+    "fr-de-10y": "FR-DE 10Y",
+    "us-10y-3m": "US 10Y-3M",
+    "us-10y-2y": "US 10Y-2Y",
+    "de-10y-2y": "DE 10Y-2Y",
+    "eur-aaa-10y-3m": "EU 10Y-3M",
+    "eur-aaa-10y-2y": "EU 10Y-2Y",
+    "eur-all-aaa-10y": "EU*-EU 10Y",
+}
+
 
 def _pct(value: float | None) -> str:
     return "—" if value is None else f"{value:.2f}%"
 
 
 def _pp(value: float | None) -> str:
-    return "—" if value is None else f"{value:.2f} pp"
+    return "—" if value is None else f"{value:.2f}pp"
 
 
 def _bp(value: float | None) -> str:
-    return "—" if value is None else f"{value:+.0f} bp"
+    return "—" if value is None else f"{value:+.0f}bp"
 
 
 def _signal(signal: str) -> str:
     return {"green": "🟢", "orange": "🟠", "red": "🔴"}.get(signal, "⚪")
 
 
+def _short_date(observed_on: date | None) -> str:
+    return "—" if observed_on is None else f"{observed_on:%y-%m-%d}"
+
+
 def _level_line(level: YieldLevel) -> str:
-    date_text = "—" if level.observed_on is None else level.observed_on.isoformat()
-    return f"{level.name:<20} {_pct(level.value_pct):>7}  {_bp(level.change_bp):>8}  {date_text}"
+    label = LEVEL_LABELS.get(level.series_id, level.name)
+    return (
+        f"{label:<8} {_pct(level.value_pct):>7}  "
+        f"{_bp(level.change_bp):>7}  {_short_date(level.observed_on)}"
+    )
 
 
 def _spread_line(spread: YieldSpread) -> str:
-    date_text = "—" if spread.observed_on is None else spread.observed_on.isoformat()
+    label = SPREAD_LABELS.get(spread.spread_id, spread.name)
     return (
-        f"{_signal(spread.signal)} {spread.name:<30} "
-        f"{_pp(spread.value_pp):>8}  {_bp(spread.change_bp):>8}  {date_text}"
+        f"{_signal(spread.signal)} {label:<11} "
+        f"{_pp(spread.value_pp):>7}  {_bp(spread.change_bp):>7}  {_short_date(spread.observed_on)}"
     )
 
 
@@ -50,19 +88,32 @@ def render_yield_report(report: YieldReportData, profile: YieldProfile) -> Repor
         f"*{profile.presentation.title}*",
         f"_{local_time:%Y-%m-%d %H:%M} {profile.presentation.timezone}_",
         "",
-        "*Levels — yield / Δ previous observation / date*",
+        "*Levels — yield / Δ / date*",
         "```",
     ]
-    for group, ids in (
-        ("US", ("us-3m", "us-2y", "us-10y")),
-        ("Germany", ("de-2y", "de-10y")),
-        ("France", ("fr-2y", "fr-10y")),
-        ("Euro AAA", ("eur-aaa-3m", "eur-aaa-2y", "eur-aaa-10y")),
-        ("Euro all-ratings", ("eur-all-10y",)),
+    for series_id in (
+        "us-3m",
+        "us-2y",
+        "us-10y",
+        "de-2y",
+        "de-10y",
+        "fr-2y",
+        "fr-10y",
+        "eur-aaa-3m",
+        "eur-aaa-2y",
+        "eur-aaa-10y",
+        "eur-all-10y",
     ):
-        lines.append(group)
-        lines.extend(_level_line(levels[series_id]) for series_id in ids)
-    lines.extend(["```", "", "*Cross-market spreads*", "```"])
+        lines.append(_level_line(levels[series_id]))
+    lines.extend(
+        [
+            "```",
+            "_EU = Euro AAA, EU\\* = Euro all-ratings_",
+            "",
+            "*Cross-market spreads*",
+            "```",
+        ]
+    )
     lines.extend(
         _spread_line(spreads[spread_id])
         for spread_id in ("us-eur-3m", "us-de-2y", "us-de-10y", "fr-de-2y", "fr-de-10y")
