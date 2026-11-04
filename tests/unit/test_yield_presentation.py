@@ -153,15 +153,30 @@ def test_france_rows_rendered_compact() -> None:
 def test_every_data_row_fits_one_line() -> None:
     artifact = render_yield_report(*_fr_report())
 
+    # Levels, cross-market, term and stress blocks (the four tabular blocks;
+    # a trailing data-issues block may contain long raw URLs).
     data_lines = [
         line
-        for block in artifact.content.split("```")[1::2]
+        for block in artifact.content.split("```")[1:9:2]
         for line in block.splitlines()
         if line.strip()
     ]
     assert data_lines
     for line in data_lines:
         assert len(line) <= 40, f"line too long for one Telegram row: {line!r}"
+
+
+def test_data_issues_render_raw_inside_code_fence() -> None:
+    report, profile = _fr_report()
+    report.issues = [
+        "Euro AAA 3M: HTTPStatusError '504' https://x.example/YC/B.U2.G_N_A.SR_3M?format=csv"
+    ]
+
+    artifact = render_yield_report(report, profile)
+
+    block = artifact.content.split("```")[-2]
+    assert "https://x.example/YC/B.U2.G_N_A.SR_3M?format=csv" in block
+    assert "⚠️ Data issues" in artifact.content
 
 
 def test_country_codes_used_in_level_rows() -> None:
