@@ -210,8 +210,8 @@ def test_new_spreads_render_in_cross_market_block() -> None:
     assert "FR-DE 2Y" in cross_block
     assert "FR-DE 10Y" in cross_block
     assert "US-EU 3M" in cross_block
-    assert "⚪ FR-DE 2Y" in cross_block
-    assert "⚪ FR-DE 10Y" in cross_block
+    assert "⚪FR-DE 2Y" in cross_block
+    assert "⚪FR-DE 10Y" in cross_block
 
 
 def test_sections_and_metadata_unchanged() -> None:

@@ -73,9 +73,11 @@ def _level_line(level: YieldLevel) -> str:
 
 def _spread_line(spread: YieldSpread) -> str:
     label = SPREAD_LABELS.get(spread.spread_id, spread.name)
+    # Telegram renders the signal emoji ~2 columns wide; keeping the whole
+    # row at <= 34 display columns prevents mid-row wraps on narrow phones.
     return (
-        f"{_signal(spread.signal)} {label:<11} "
-        f"{_pp(spread.value_pp):>7}  {_bp(spread.change_bp):>7}  {_short_date(spread.observed_on)}"
+        f"{_signal(spread.signal)}{label:<10}{_pp(spread.value_pp):>7} "
+        f"{_bp(spread.change_bp):>5} {_short_date(spread.observed_on)}"
     )
 
 
