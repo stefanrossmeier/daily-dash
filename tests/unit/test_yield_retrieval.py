@@ -115,3 +115,68 @@ def test_cnbc_parser_skips_missing_or_invalid_fields() -> None:
 @requires_cnbc_parser
 def test_cnbc_parser_empty_quote_list() -> None:
     assert _cnbc_observations({"FormattedQuoteResult": {"FormattedQuote": []}}, limit=12) == []
+
+
+def test_retry_transient_retries_5xx_and_timeouts() -> None:
+    import httpx
+
+    from daily_dash.retrieval.yields import _retry_transient
+
+    calls = []
+    sleeps = []
+
+    def attempt() -> str:
+        calls.append(1)
+        if len(calls) < 3:
+            request = httpx.Request("GET", "https://example/x")
+            response = httpx.Response(504, request=request)
+            raise httpx.HTTPStatusError("504", request=request, response=response)
+        return "ok"
+
+    result = _retry_transient(attempt, sleeper=sleeps.append)
+
+    assert result == "ok"
+    assert len(calls) == 3
+    assert sleeps == [2.0, 4.0]
+
+
+def test_retry_transient_does_not_retry_4xx() -> None:
+    import httpx
+    import pytest
+
+    from daily_dash.retrieval.yields import _retry_transient
+
+    calls = []
+
+    def attempt() -> str:
+        calls.append(1)
+        request = httpx.Request("GET", "https://example/x")
+        response = httpx.Response(403, request=request)
+        raise httpx.HTTPStatusError("403", request=request, response=response)
+
+    sleeps: list[float] = []
+    with pytest.raises(httpx.HTTPStatusError):
+        _retry_transient(attempt, sleeper=sleeps.append)
+
+    assert len(calls) == 1
+    assert sleeps == []
+
+
+def test_retry_transient_gives_up_after_max_attempts() -> None:
+    import httpx
+    import pytest
+
+    from daily_dash.retrieval.yields import _retry_transient
+
+    calls = []
+
+    def attempt() -> str:
+        calls.append(1)
+        raise httpx.ConnectTimeout("timed out")
+
+    sleeps: list[float] = []
+    with pytest.raises(httpx.ConnectTimeout):
+        _retry_transient(attempt, sleeper=sleeps.append)
+
+    assert len(calls) == 3
+    assert sleeps == [2.0, 4.0]
