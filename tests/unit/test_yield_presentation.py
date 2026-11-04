@@ -63,9 +63,9 @@ def test_yield_report_highlights_current_euro_financial_stress_proxy() -> None:
     artifact = render_yield_report(report, profile)
 
     assert "*Financial stress*" in artifact.content
-    assert "Euro all-ratings 10Y − AAA 10Y" in artifact.content
-    assert "0.43 pp" in artifact.content
-    assert "+2 bp" in artifact.content
+    assert "EU*-EU 10Y" in artifact.content
+    assert "0.43pp" in artifact.content
+    assert "+2bp" in artifact.content
     assert "Italy 10Y" not in artifact.content
 
 
@@ -131,67 +131,85 @@ def _fr_report() -> tuple[YieldReportData, YieldProfile]:
     return report, profile
 
 
-def test_france_group_and_cross_market_rows_rendered() -> None:
+def test_france_rows_rendered_compact() -> None:
     artifact = render_yield_report(*_fr_report())
     content = artifact.content
 
-    # France levels group lines, matching existing level formatting.
-    assert "France 2Y" in content
-    assert "France 10Y" in content
+    assert "FR 2Y" in content
+    assert "FR 10Y" in content
     assert "3.20%" in content
-    assert "+10 bp" in content
-    assert "2026-08-31" in content
-    # New cross-market spread rows.
-    assert "France 2Y − Germany 2Y" in content
-    assert "France 10Y − Germany 10Y" in content
-    assert "1.10 pp" in content
-    assert "0.85 pp" in content
-    assert "+1 bp" in content
+    assert "+10bp" in content
+    assert "26-08-31" in content
+    assert "FR-DE 2Y" in content
+    assert "FR-DE 10Y" in content
+    assert "1.10pp" in content
+    assert "0.85pp" in content
+    # Short dates in data rows; only the report header keeps the full date.
+    level_block = content.split("```")[1]
+    assert "26-08-31" in level_block
+    assert "2026-08-31" not in level_block
+
+
+def test_every_data_row_fits_one_line() -> None:
+    artifact = render_yield_report(*_fr_report())
+
+    data_lines = [
+        line
+        for block in artifact.content.split("```")[1::2]
+        for line in block.splitlines()
+        if line.strip()
+    ]
+    assert data_lines
+    for line in data_lines:
+        assert len(line) <= 40, f"line too long for one Telegram row: {line!r}"
+
+
+def test_country_codes_used_in_level_rows() -> None:
+    artifact = render_yield_report(*_fr_report())
+    level_block = artifact.content.split("```")[1]
+
+    for label in (
+        "US 3M",
+        "US 2Y",
+        "US 10Y",
+        "DE 2Y",
+        "DE 10Y",
+        "FR 2Y",
+        "FR 10Y",
+        "EU 3M",
+        "EU 2Y",
+        "EU 10Y",
+        "EU* 10Y",
+    ):
+        assert f"{label:<8}" in level_block, f"missing compact level label {label}"
+    for long_name in ("Germany", "France", "Euro AAA", "Euro all-ratings"):
+        assert long_name not in level_block
 
 
 def test_new_spreads_render_in_cross_market_block() -> None:
     artifact = render_yield_report(*_fr_report())
     cross_block = artifact.content.split("*Cross-market spreads*")[1].split("*Term spreads*")[0]
 
-    assert "US 2Y − Germany 2Y" in cross_block
-    assert "US 10Y − Germany 10Y" in cross_block
-    assert "France 2Y − Germany 2Y" in cross_block
-    assert "France 10Y − Germany 10Y" in cross_block
-    # Neutral signal marker on the new France spread rows (no France
-    # threshold policy); US rows in this fixture are also neutral, so the
-    # count alone is not a discriminating assertion.
-    assert "⚪ France 2Y − Germany 2Y" in cross_block
-    assert "⚪ France 10Y − Germany 10Y" in cross_block
+    assert "US-DE 2Y" in cross_block
+    assert "US-DE 10Y" in cross_block
+    assert "FR-DE 2Y" in cross_block
+    assert "FR-DE 10Y" in cross_block
+    assert "US-EU 3M" in cross_block
+    assert "⚪ FR-DE 2Y" in cross_block
+    assert "⚪ FR-DE 10Y" in cross_block
 
 
-def test_pre_existing_report_lines_unchanged() -> None:
+def test_sections_and_metadata_unchanged() -> None:
     artifact = render_yield_report(*_fr_report())
     content = artifact.content
 
-    for line in (
-        "US 3M",
-        "US 2Y",
-        "US 10Y",
-        "Germany 2Y",
-        "Germany 10Y",
-        "Euro AAA 3M",
-        "Euro AAA 2Y",
-        "Euro AAA 10Y",
-        "Euro all-ratings 10Y",
-        "US 3M − Euro AAA 3M",
-        "US 2Y − Germany 2Y",
-        "US 10Y − Germany 10Y",
-        "US 10Y − 3M",
-        "US 10Y − 2Y",
-        "Germany 10Y − 2Y",
-        "Euro AAA 10Y − 3M",
-        "Euro AAA 10Y − 2Y",
-        "Euro all-ratings 10Y − AAA 10Y",
-        "*Levels — yield / Δ previous observation / date*",
+    for heading in (
+        "*Levels — yield / Δ / date*",
         "*Cross-market spreads*",
         "*Term spreads*",
         "*Financial stress*",
     ):
-        assert line in content
+        assert heading in content
+    assert "EU = Euro AAA" in content
     assert artifact.metadata["level_count"] == 11
     assert artifact.metadata["spread_count"] == 11
