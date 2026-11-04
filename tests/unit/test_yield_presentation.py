@@ -63,7 +63,7 @@ def test_yield_report_highlights_current_euro_financial_stress_proxy() -> None:
     artifact = render_yield_report(report, profile)
 
     assert "*Financial stress*" in artifact.content
-    assert "EU*-EU 10Y" in artifact.content
+    assert "EUa-EU 10Y" in artifact.content
     assert "0.43pp" in artifact.content
     assert "+2bp" in artifact.content
     assert "Italy 10Y" not in artifact.content
@@ -179,7 +179,7 @@ def test_country_codes_used_in_level_rows() -> None:
         "EU 3M",
         "EU 2Y",
         "EU 10Y",
-        "EU* 10Y",
+        "EUa 10Y",
     ):
         assert f"{label:<8}" in level_block, f"missing compact level label {label}"
     for long_name in ("Germany", "France", "Euro AAA", "Euro all-ratings"):

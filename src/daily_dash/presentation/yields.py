@@ -13,7 +13,7 @@ from daily_dash.contracts import (
 )
 
 # Compact two-letter country labels keep every series on a single line in
-# Telegram's narrow code blocks. EU = Euro AAA, EU* = Euro all-ratings.
+# Telegram's narrow code blocks. EU = Euro AAA, EUa = Euro all-ratings.
 LEVEL_LABELS = {
     "us-3m": "US 3M",
     "us-2y": "US 2Y",
@@ -25,7 +25,7 @@ LEVEL_LABELS = {
     "eur-aaa-3m": "EU 3M",
     "eur-aaa-2y": "EU 2Y",
     "eur-aaa-10y": "EU 10Y",
-    "eur-all-10y": "EU* 10Y",
+    "eur-all-10y": "EUa 10Y",
 }
 
 SPREAD_LABELS = {
@@ -39,7 +39,7 @@ SPREAD_LABELS = {
     "de-10y-2y": "DE 10Y-2Y",
     "eur-aaa-10y-3m": "EU 10Y-3M",
     "eur-aaa-10y-2y": "EU 10Y-2Y",
-    "eur-all-aaa-10y": "EU*-EU 10Y",
+    "eur-all-aaa-10y": "EUa-EU 10Y",
 }
 
 
@@ -108,7 +108,7 @@ def render_yield_report(report: YieldReportData, profile: YieldProfile) -> Repor
     lines.extend(
         [
             "```",
-            "_EU = Euro AAA, EU\\* = Euro all-ratings_",
+            "_EU = Euro AAA, EUa = Euro all-ratings_",
             "",
             "*Cross-market spreads*",
             "```",
