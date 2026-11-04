@@ -150,11 +150,15 @@ def render_yield_report(report: YieldReportData, profile: YieldProfile) -> Repor
 
     if report.issues and profile.presentation.data_issue_limit > 0:
         displayed = report.issues[: profile.presentation.data_issue_limit]
-        lines.extend(["", "⚠️ Data issues"])
+        # Issue text can contain raw URLs with underscores that Telegram
+        # legacy Markdown would parse as entity starts; a code fence keeps
+        # the text raw and delivery reliable.
+        lines.extend(["", "⚠️ Data issues", "```"])
         lines.extend(f"- {issue}" for issue in displayed)
         remaining = len(report.issues) - len(displayed)
         if remaining > 0:
             lines.append(f"- ... +{remaining} more")
+        lines.append("```")
 
     return ReportArtifact(
         run_id=report.run_id,
