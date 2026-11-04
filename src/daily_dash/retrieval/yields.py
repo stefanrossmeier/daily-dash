@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import csv
 import io
+import time
+from collections.abc import Callable
 from datetime import date, datetime, timedelta
 from typing import Any, Protocol
 
@@ -172,6 +174,40 @@ def _fred_observations(text: str, *, limit: int) -> list[YieldObservation]:
     return observations[:limit]
 
 
+def _is_transient(exc: BaseException) -> bool:
+    """Whether a retrieval failure is plausibly a temporary upstream blip.
+
+    Server-side gateway errors (5xx, e.g. ECB '504 Gateway Time-out') and
+    network-level timeouts/transport failures are retried; auth/config
+    problems (4xx, parsing, unsupported providers) are not.
+    """
+    if isinstance(exc, (httpx.TimeoutException, httpx.TransportError)):
+        return True
+    return isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code >= 500
+
+
+def _retry_transient(
+    attempt: Callable[[], Any],
+    *,
+    max_attempts: int = 3,
+    backoff_seconds: float = 2.0,
+    sleeper: Callable[[float], None] = time.sleep,
+) -> Any:
+    """Run attempt() with bounded retries on transient upstream failures."""
+    last_exc: BaseException | None = None
+    for index in range(max_attempts):
+        try:
+            return attempt()
+        except Exception as exc:
+            if not _is_transient(exc):
+                raise
+            last_exc = exc
+            if index < max_attempts - 1:
+                sleeper(backoff_seconds * (index + 1))
+    assert last_exc is not None
+    raise last_exc
+
+
 class OfficialYieldRetriever:
     """Retrieve yields from official central-bank/statistical-provider endpoints."""
 
@@ -182,7 +218,8 @@ class OfficialYieldRetriever:
         source_ref = (
             f"{config.provider}:{config.dataset or ''}:{config.key or config.dataset or ''}"
         )
-        try:
+
+        def _fetch() -> list[YieldObservation]:
             with httpx.Client(timeout=self._timeout_seconds, follow_redirects=True) as client:
                 if config.provider == "fred":
                     response = client.get(FRED_BASE, params={"id": config.key})
@@ -230,6 +267,10 @@ class OfficialYieldRetriever:
                 else:  # pragma: no cover - enforced by Pydantic
                     raise ValueError(f"unsupported yield provider: {config.provider}")
 
+            return observations
+
+        try:
+            observations = _retry_transient(_fetch)
             if not observations:
                 raise ValueError("no matching observations returned")
             return RawYieldSeries(
