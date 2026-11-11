@@ -85,7 +85,9 @@ fi
 # ------------------------------------------------------------- 4. schedules
 schedules_json="$("$ROOT/scripts/wmill.sh" schedule list --json 2>/dev/null || echo '[]')"
 schedule_count="$(printf '%s' "$schedules_json" | python3 -c 'import json,sys; print(len(json.load(sys.stdin)))')"
-disabled="$(printf '%s' "$schedules_json" | python3 -c 'import json,sys; print("\n".join(s["path"] for s in json.load(sys.stdin) if not s.get("enabled")))')"
+# Only daily-dash's own schedules are gated: other projects sharing the
+# Windmill workspace (e.g. f/ai_dash) may legitimately keep disabled drafts.
+disabled="$(printf '%s' "$schedules_json" | python3 -c 'import json,sys; print("\n".join(s["path"] for s in json.load(sys.stdin) if not s.get("enabled") and s["path"].startswith("f/daily_dash/")))')"
 if (( schedule_count >= MIN_SCHEDULES )); then
   ok "schedules present: $schedule_count (minimum $MIN_SCHEDULES)"
 else
