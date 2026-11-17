@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from zoneinfo import ZoneInfo
+
 from daily_dash.config import MarketsProfile
 from daily_dash.contracts import ArtifactFormat, ReportArtifact
 from daily_dash.contracts.market import MarketReportData, ProcessedMarketAsset
@@ -59,7 +61,10 @@ def _ath_rows(assets: list[ProcessedMarketAsset]) -> list[list[str]]:
 
 def render_markets_report(report: MarketReportData, profile: MarketsProfile) -> ReportArtifact:
     presentation = profile.presentation
-    timestamp = report.generated_at.strftime("%Y-%m-%d %H:%M")
+    # generated_at is stored in UTC; display the profile's local time so the
+    # header matches when the report actually arrives (e.g. 22:00 CET, not 21:00).
+    local_time = report.generated_at.astimezone(ZoneInfo(presentation.timezone))
+    timestamp = local_time.strftime("%Y-%m-%d %H:%M")
 
     lines = [f"*{presentation.title}*  _({timestamp})_", ""]
 
