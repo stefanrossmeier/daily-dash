@@ -3,13 +3,14 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+from collections.abc import Mapping
 from typing import Protocol
 
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
 
-def _idempotency_key(body: dict[str, object]) -> str:
+def _idempotency_key(body: Mapping[str, object]) -> str:
     """Stable logical-request ID: identical request bodies reuse one key.
 
     A caller-level retry must replay the gateway's recorded result instead of
@@ -98,7 +99,7 @@ class ModelGatewayClient:
         self._rank_token = _rank_gateway_token()
         self._timeout_seconds = timeout_seconds
 
-    def _headers(self, body: dict[str, object]) -> dict[str, str]:
+    def _headers(self, body: Mapping[str, object]) -> dict[str, str]:
         """Bearer auth plus a stable Idempotency-Key for the instance wires."""
         if self._rank_url == self._base_url or not self._rank_token:
             return {}
