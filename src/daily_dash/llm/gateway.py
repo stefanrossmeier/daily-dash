@@ -1,11 +1,23 @@
 from __future__ import annotations
 
+import hashlib
+import json
 import os
-import uuid
 from typing import Protocol
 
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
+
+
+def _idempotency_key(body: dict[str, object]) -> str:
+    """Stable logical-request ID: identical request bodies reuse one key.
+
+    A caller-level retry must replay the gateway's recorded result instead of
+    being charged again, so the key is derived from the request content — a
+    fresh random key per call would make every retry a new paid request.
+    """
+    canonical = json.dumps(body, sort_keys=True, separators=(",", ":"), default=str)
+    return f"daily-dash:{hashlib.sha256(canonical.encode('utf-8')).hexdigest()}"
 
 
 def _rank_gateway_token() -> str | None:
@@ -77,13 +89,23 @@ class ModelGatewayClient:
         )
 
         self._base_url = configured_url.rstrip("/")
-        # Ranking chats route to daily-dash's dedicated llm-gateway instance
-        # when configured; X search keeps the shared model gateway (native X
-        # stays disabled on the llm-gateway release). Both speak the same
-        # /v1/chat wire, so the split is URL-level only.
+        # Ranking chats AND native X search route to daily-dash's dedicated
+        # llm-gateway instance when configured (its /v1/chat and /v1/x-search
+        # dashboard-compatibility wires). The shared model gateway stays the
+        # fallback when no instance URL is configured; both speak the same
+        # wire, so the split is URL-level only.
         self._rank_url = (os.getenv("DAILY_DASH_RANK_GATEWAY_URL") or self._base_url).rstrip("/")
         self._rank_token = _rank_gateway_token()
         self._timeout_seconds = timeout_seconds
+
+    def _headers(self, body: dict[str, object]) -> dict[str, str]:
+        """Bearer auth plus a stable Idempotency-Key for the instance wires."""
+        if self._rank_url == self._base_url or not self._rank_token:
+            return {}
+        return {
+            "Authorization": f"Bearer {self._rank_token}",
+            "Idempotency-Key": _idempotency_key(body),
+        }
 
     def chat_structured(
         self,
@@ -96,28 +118,21 @@ class ModelGatewayClient:
         response_schema_name: str,
         response_schema: dict[str, object],
     ) -> GatewayResponse:
-        headers = {}
-        if self._rank_url != self._base_url and self._rank_token:
-            # The llm-gateway wire authenticates the project principal and
-            # recovers requests by stable logical ID, so retries stay free.
-            headers = {
-                "Authorization": f"Bearer {self._rank_token}",
-                "Idempotency-Key": f"daily-dash:{uuid.uuid4()}",
-            }
+        body = {
+            "alias": alias,
+            "purpose": purpose,
+            "profile": profile,
+            "messages": [
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ],
+            "response_schema_name": response_schema_name,
+            "response_schema": response_schema,
+        }
         response = httpx.post(
             f"{self._rank_url}/v1/chat",
-            json={
-                "alias": alias,
-                "purpose": purpose,
-                "profile": profile,
-                "messages": [
-                    {"role": "system", "content": system},
-                    {"role": "user", "content": user},
-                ],
-                "response_schema_name": response_schema_name,
-                "response_schema": response_schema,
-            },
-            headers=headers,
+            json=body,
+            headers=self._headers(body),
             timeout=self._timeout_seconds,
         )
 
@@ -142,27 +157,22 @@ class ModelGatewayClient:
         response_schema: dict[str, object],
     ) -> GatewayResponse:
         # Native X search runs on the same dedicated llm-gateway instance as
-        # ranking (its /v1/x-search wire); the model gateway stays the default.
-        headers = {}
-        if self._rank_url != self._base_url and self._rank_token:
-            headers = {
-                "Authorization": f"Bearer {self._rank_token}",
-                "Idempotency-Key": f"daily-dash:{uuid.uuid4()}",
-            }
+        # ranking (its /v1/x-search wire).
+        body = {
+            "alias": alias,
+            "purpose": purpose,
+            "profile": profile,
+            "input": input_text,
+            "allowed_x_handles": allowed_x_handles,
+            "from_date": from_date,
+            "to_date": to_date,
+            "response_schema_name": response_schema_name,
+            "response_schema": response_schema,
+        }
         response = httpx.post(
             f"{self._rank_url}/v1/x-search",
-            json={
-                "alias": alias,
-                "purpose": purpose,
-                "profile": profile,
-                "input": input_text,
-                "allowed_x_handles": allowed_x_handles,
-                "from_date": from_date,
-                "to_date": to_date,
-                "response_schema_name": response_schema_name,
-                "response_schema": response_schema,
-            },
-            headers=headers,
+            json=body,
+            headers=self._headers(body),
             timeout=self._timeout_seconds,
         )
 
