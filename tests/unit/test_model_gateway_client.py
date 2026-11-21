@@ -135,7 +135,7 @@ def test_rank_gateway_env_splits_chat_from_x_search(monkeypatch: Any, tmp_path: 
     client.x_search_structured(
         alias="x-retrieve",
         purpose="retrieval",
-        profile="wsb",
+        profile="x-watchlist",
         input_text="query",
         allowed_x_handles=["test"],
         from_date="2026-11-21",
@@ -144,5 +144,7 @@ def test_rank_gateway_env_splits_chat_from_x_search(monkeypatch: Any, tmp_path: 
         response_schema={"type": "object"},
     )
 
-    assert observed["url"] == "http://model-gateway:8080/v1/x-search"
-    assert "Authorization" not in observed["headers"]
+    # Native X search rides the same dedicated instance as ranking.
+    assert observed["url"] == "http://daily-dash-llm-gateway:8080/v1/x-search"
+    assert observed["headers"]["Authorization"] == "Bearer synthetic-token"
+    assert observed["headers"]["Idempotency-Key"].startswith("daily-dash:")

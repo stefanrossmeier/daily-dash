@@ -139,8 +139,16 @@ class ModelGatewayClient:
         response_schema_name: str,
         response_schema: dict[str, object],
     ) -> GatewayResponse:
+        # Native X search runs on the same dedicated llm-gateway instance as
+        # ranking (its /v1/x-search wire); the model gateway stays the default.
+        headers = {}
+        if self._rank_url != self._base_url and self._rank_token:
+            headers = {
+                "Authorization": f"Bearer {self._rank_token}",
+                "Idempotency-Key": f"daily-dash:{uuid.uuid4()}",
+            }
         response = httpx.post(
-            f"{self._base_url}/v1/x-search",
+            f"{self._rank_url}/v1/x-search",
             json={
                 "alias": alias,
                 "purpose": purpose,
@@ -152,6 +160,7 @@ class ModelGatewayClient:
                 "response_schema_name": response_schema_name,
                 "response_schema": response_schema,
             },
+            headers=headers,
             timeout=self._timeout_seconds,
         )
 
