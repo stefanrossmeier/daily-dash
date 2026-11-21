@@ -10,7 +10,6 @@ from typing import Protocol
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
-
 # One nonce per process (one Windmill job run): retries inside the run share
 # it, a later run does not.
 _RUN_NONCE = uuid.uuid4().hex[:16]
