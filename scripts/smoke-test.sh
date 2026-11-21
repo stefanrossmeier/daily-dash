@@ -3,8 +3,10 @@
 #
 # Verifies, without sending Telegram messages or making paid model calls:
 #   1. the source checkout is clean and on a recorded commit
-#   2. all three production containers are running
-#   3. Windmill and the model gateway answer on their loopback ports
+#   2. all production containers are running, including daily-dash's dedicated
+#      llm-gateway instance
+#   3. Windmill and the model gateway answer on their loopback ports, and the
+#      llm-gateway instance authenticates this project's principal
 #   4. all known Windmill schedules exist and are enabled
 #   5. git works against the mounted data repo from inside a job-like
 #      sanitized environment (catches the 'dubious ownership' regression
@@ -60,6 +62,40 @@ for service in windmill_server windmill_worker_dailydash daily_dash_model_gatewa
     fail "service not running: $service"
   fi
 done
+
+# Dedicated llm-gateway instance: its own container, joined to this stack's
+# network, holding this project's config/secret/ledger. It serves every
+# ranking chat and the native X retrieval, so a missing instance silently
+# breaks both even while the rest of the stack looks healthy.
+GATEWAY_TOKEN_SOURCE="${DAILY_DASH_GATEWAY_TOKEN_SOURCE:-/var/code/llm-gateway-deployments/daily-dash/tokens/gateway.token}"
+if [[ "$(docker inspect -f '{{.State.Running}}' daily-dash-llm-gateway 2>/dev/null)" == "true" ]]; then
+  ok "service running: daily-dash-llm-gateway (dedicated instance)"
+else
+  fail "service not running: daily-dash-llm-gateway"
+fi
+
+# The worker reaches the instance over TCP with the token mounted into it;
+# /ready must report THIS project's identity.
+instance_ready=""
+if [[ ! -r "$GATEWAY_TOKEN_SOURCE" ]]; then
+  fail "gateway token unreadable: $GATEWAY_TOKEN_SOURCE"
+else
+  deadline=$((SECONDS + GATEWAY_TIMEOUT))
+  while (( SECONDS < deadline )); do
+    instance_ready="$(dc exec -T windmill_worker_dailydash /opt/daily-dash/.venv/bin/python -c "
+import urllib.request
+token = open('/run/daily-dash-secrets/gateway_token').read().strip()
+request = urllib.request.Request('http://daily-dash-llm-gateway:8080/ready', headers={'Authorization': 'Bearer ' + token})
+print(urllib.request.urlopen(request, timeout=10).read().decode())" 2>/dev/null || true)"
+    [[ "$instance_ready" == *'"project_id":"daily-dash"'* ]] && break
+    sleep 2
+  done
+  if [[ "$instance_ready" == *'"project_id":"daily-dash"'* ]]; then
+    ok "llm-gateway instance ready and principal authenticated (project daily-dash)"
+  else
+    fail "llm-gateway instance not ready from the worker after ${GATEWAY_TIMEOUT}s (last: '$instance_ready')"
+  fi
+fi
 
 # ------------------------------------------------------------------ 3. HTTP
 windmill_version="$(curl -fsS --max-time 10 http://127.0.0.1:80/api/version || true)"
