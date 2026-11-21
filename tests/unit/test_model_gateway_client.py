@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from daily_dash.llm import gateway as gateway_module
 from daily_dash.llm.gateway import ModelGatewayClient
 
 
@@ -133,12 +134,18 @@ def test_rank_gateway_env_splits_chat_from_x_search(monkeypatch: Any, tmp_path: 
     assert headers["Authorization"] == "Bearer synthetic-token"
     assert headers["Idempotency-Key"].startswith("daily-dash:")
 
-    # A retry of the same logical request reuses the key so the gateway
-    # replays its recorded result instead of charging twice.
+    # A retry of the same logical request inside one run reuses the key so the
+    # gateway replays its recorded result instead of charging twice.
     client.chat_structured(**chat)
     assert calls[-1]["headers"]["Idempotency-Key"] == headers["Idempotency-Key"]
     # A different logical request must not collide.
     client.chat_structured(**{**chat, "user": "other user"})
+    assert calls[-1]["headers"]["Idempotency-Key"] != headers["Idempotency-Key"]
+    # A NEW run (fresh process nonce) must be a new request: otherwise a
+    # failed retrieval could never be rerun and tomorrow's report would
+    # replay today's terminal result.
+    monkeypatch.setattr(gateway_module, "_RUN_NONCE", "second-run-nonce")
+    client.chat_structured(**chat)
     assert calls[-1]["headers"]["Idempotency-Key"] != headers["Idempotency-Key"]
 
     client.x_search_structured(
