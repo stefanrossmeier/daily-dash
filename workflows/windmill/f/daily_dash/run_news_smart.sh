@@ -8,9 +8,10 @@ python_bin="$app_home/.venv/bin/python"
 config_dir="${DAILY_DASH_CONFIG_DIR:-$app_home/config}"
 assets_dir="${DAILY_DASH_ASSETS_DIR:-$app_home/assets}"
 gateway_url="${DAILY_DASH_MODEL_GATEWAY_URL:-http://daily_dash_model_gateway:8080}"
-# Ranking chats route to the dedicated llm-gateway instance; X search keeps the
-# model gateway. Windmill jobs run with a sanitized environment, so every
-# variable the client needs is exported here with its default.
+# Ranking chats AND native X search route to the dedicated llm-gateway
+# instance; the model gateway is only the fallback. Windmill jobs run with a
+# sanitized environment, so every variable the client needs is exported here
+# with its default.
 rank_gateway_url="${DAILY_DASH_RANK_GATEWAY_URL:-http://daily-dash-llm-gateway:8080}"
 rank_gateway_token_file="${DAILY_DASH_RANK_GATEWAY_TOKEN_FILE:-/run/daily-dash-secrets/gateway_token}"
 
