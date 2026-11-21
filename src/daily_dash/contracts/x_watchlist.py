@@ -66,7 +66,8 @@ class XWatchlistModelTrace(BaseModel):
     task_sha256: str | None = None
     combined_sha256: str
     model_alias: str
-    provider: str
+    # Null when the upstream provider does not report a provider name.
+    provider: str | None = None
     resolved_model: str
     generation_id: str | None = None
     usage: NewsModelUsage

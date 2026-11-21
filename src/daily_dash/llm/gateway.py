@@ -37,7 +37,9 @@ class GatewayResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     alias: str
-    provider: str
+    # The dedicated llm-gateway instance leaves provider null when the
+    # upstream does not report one (OpenRouter x-search wires).
+    provider: str | None = None
     model: str
     generation_id: str | None = None
     content: dict[str, object]
