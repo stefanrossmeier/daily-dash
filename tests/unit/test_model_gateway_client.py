@@ -93,13 +93,78 @@ def test_x_search_client_sends_only_gateway_contract(monkeypatch: Any) -> None:
 
 
 def test_rank_gateway_env_splits_chat_from_x_search(monkeypatch: Any, tmp_path: Any) -> None:
-    """Ranking chats route to the dedicated llm-gateway instance with Bearer
-    auth and an Idempotency-Key; X search keeps the model gateway URL."""
+    """Ranking chats and X search both ride the dedicated llm-gateway instance
+    with Bearer auth and a content-derived Idempotency-Key."""
     monkeypatch.setenv("DAILY_DASH_MODEL_GATEWAY_URL", "http://model-gateway:8080")
     monkeypatch.setenv("DAILY_DASH_RANK_GATEWAY_URL", "http://daily-dash-llm-gateway:8080")
     token_file = tmp_path / "gateway.token"
     token_file.write_text("synthetic-token\n")
     monkeypatch.setenv("DAILY_DASH_RANK_GATEWAY_TOKEN_FILE", str(token_file))
+
+    calls: list[dict[str, Any]] = []
+
+    def fake_post(
+        url: str,
+        *,
+        json: dict[str, object],
+        headers: dict[str, str] | None = None,
+        **kw: object,
+    ) -> _Response:
+        calls.append({"url": url, "headers": headers or {}, "body": json})
+        return _Response()
+
+    monkeypatch.setattr("daily_dash.llm.gateway.httpx.post", fake_post)
+
+    client = ModelGatewayClient()
+    chat = {
+        "alias": "rank-cheap",
+        "purpose": "ranking",
+        "profile": "news-top",
+        "system": "system",
+        "user": "user",
+        "response_schema_name": "test_schema",
+        "response_schema": {"type": "object"},
+    }
+    client.chat_structured(**chat)
+
+    observed = calls[-1]
+    assert observed["url"] == "http://daily-dash-llm-gateway:8080/v1/chat"
+    headers = observed["headers"]
+    assert headers["Authorization"] == "Bearer synthetic-token"
+    assert headers["Idempotency-Key"].startswith("daily-dash:")
+
+    # A retry of the same logical request reuses the key so the gateway
+    # replays its recorded result instead of charging twice.
+    client.chat_structured(**chat)
+    assert calls[-1]["headers"]["Idempotency-Key"] == headers["Idempotency-Key"]
+    # A different logical request must not collide.
+    client.chat_structured(**{**chat, "user": "other user"})
+    assert calls[-1]["headers"]["Idempotency-Key"] != headers["Idempotency-Key"]
+
+    client.x_search_structured(
+        alias="x-retrieve",
+        purpose="retrieval",
+        profile="x-watchlist",
+        input_text="query",
+        allowed_x_handles=["test"],
+        from_date="2026-11-21",
+        to_date="2026-11-22",
+        response_schema_name="test_schema",
+        response_schema={"type": "object"},
+    )
+
+    # Native X search rides the same dedicated instance as ranking.
+    assert calls[-1]["url"] == "http://daily-dash-llm-gateway:8080/v1/x-search"
+    assert calls[-1]["headers"]["Authorization"] == "Bearer synthetic-token"
+    assert calls[-1]["headers"]["Idempotency-Key"].startswith("daily-dash:")
+
+
+def test_chat_without_an_instance_url_keeps_the_model_gateway(monkeypatch: Any) -> None:
+    """No instance configured: chat falls back to the model gateway, unauthenticated."""
+    monkeypatch.setenv("DAILY_DASH_MODEL_GATEWAY_URL", "http://model-gateway:8080")
+    monkeypatch.delenv("DAILY_DASH_RANK_GATEWAY_URL", raising=False)
+    monkeypatch.delenv("DAILY_DASH_RANK_GATEWAY_TOKEN_FILE", raising=False)
+    monkeypatch.delenv("DAILY_DASH_RANK_GATEWAY_TOKEN", raising=False)
 
     observed: dict[str, object] = {}
 
@@ -115,9 +180,7 @@ def test_rank_gateway_env_splits_chat_from_x_search(monkeypatch: Any, tmp_path: 
         return _Response()
 
     monkeypatch.setattr("daily_dash.llm.gateway.httpx.post", fake_post)
-
-    client = ModelGatewayClient()
-    client.chat_structured(
+    ModelGatewayClient().chat_structured(
         alias="rank-cheap",
         purpose="ranking",
         profile="news-top",
@@ -126,25 +189,5 @@ def test_rank_gateway_env_splits_chat_from_x_search(monkeypatch: Any, tmp_path: 
         response_schema_name="test_schema",
         response_schema={"type": "object"},
     )
-
-    assert observed["url"] == "http://daily-dash-llm-gateway:8080/v1/chat"
-    headers = observed["headers"]
-    assert headers["Authorization"] == "Bearer synthetic-token"
-    assert headers["Idempotency-Key"].startswith("daily-dash:")
-
-    client.x_search_structured(
-        alias="x-retrieve",
-        purpose="retrieval",
-        profile="x-watchlist",
-        input_text="query",
-        allowed_x_handles=["test"],
-        from_date="2026-11-21",
-        to_date="2026-11-22",
-        response_schema_name="test_schema",
-        response_schema={"type": "object"},
-    )
-
-    # Native X search rides the same dedicated instance as ranking.
-    assert observed["url"] == "http://daily-dash-llm-gateway:8080/v1/x-search"
-    assert observed["headers"]["Authorization"] == "Bearer synthetic-token"
-    assert observed["headers"]["Idempotency-Key"].startswith("daily-dash:")
+    assert observed["url"] == "http://model-gateway:8080/v1/chat"
+    assert observed["headers"] == {}
