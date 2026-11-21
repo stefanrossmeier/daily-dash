@@ -1,10 +1,23 @@
 from __future__ import annotations
 
 import os
+import uuid
 from typing import Protocol
 
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
+
+
+def _rank_gateway_token() -> str | None:
+    """Bearer token for the dedicated llm-gateway ranking instance. Read from
+    a private file (DAILY_DASH_RANK_GATEWAY_TOKEN_FILE) or the environment;
+    never logged."""
+    path = os.getenv("DAILY_DASH_RANK_GATEWAY_TOKEN_FILE")
+    if path:
+        with open(path, encoding="utf-8") as handle:
+            return handle.read().strip()
+    value = os.getenv("DAILY_DASH_RANK_GATEWAY_TOKEN", "").strip()
+    return value or None
 
 
 class GatewayUsage(BaseModel):
@@ -58,6 +71,12 @@ class ModelGatewayClient:
         )
 
         self._base_url = configured_url.rstrip("/")
+        # Ranking chats route to daily-dash's dedicated llm-gateway instance
+        # when configured; X search keeps the shared model gateway (native X
+        # stays disabled on the llm-gateway release). Both speak the same
+        # /v1/chat wire, so the split is URL-level only.
+        self._rank_url = (os.getenv("DAILY_DASH_RANK_GATEWAY_URL") or self._base_url).rstrip("/")
+        self._rank_token = _rank_gateway_token()
         self._timeout_seconds = timeout_seconds
 
     def chat_structured(
@@ -71,8 +90,16 @@ class ModelGatewayClient:
         response_schema_name: str,
         response_schema: dict[str, object],
     ) -> GatewayResponse:
+        headers = {}
+        if self._rank_url != self._base_url and self._rank_token:
+            # The llm-gateway wire authenticates the project principal and
+            # recovers requests by stable logical ID, so retries stay free.
+            headers = {
+                "Authorization": f"Bearer {self._rank_token}",
+                "Idempotency-Key": f"daily-dash:{uuid.uuid4()}",
+            }
         response = httpx.post(
-            f"{self._base_url}/v1/chat",
+            f"{self._rank_url}/v1/chat",
             json={
                 "alias": alias,
                 "purpose": purpose,
@@ -84,6 +111,7 @@ class ModelGatewayClient:
                 "response_schema_name": response_schema_name,
                 "response_schema": response_schema,
             },
+            headers=headers,
             timeout=self._timeout_seconds,
         )
 

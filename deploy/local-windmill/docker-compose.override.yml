@@ -19,10 +19,16 @@ services:
       - DAILY_DASH_DATA_REPO=/data/daily-dash-data
       - DAILY_DASH_CONFIG_DIR=/opt/daily-dash/config
       - DAILY_DASH_MODEL_GATEWAY_URL=http://daily_dash_model_gateway:8080
+      # Ranking chats route to daily-dash's dedicated llm-gateway instance
+      # (container daily-dash-llm-gateway, joined to this network); X search
+      # keeps the model gateway above. See services/model-gateway/README.
+      - DAILY_DASH_RANK_GATEWAY_URL=http://daily-dash-llm-gateway:8080
+      - DAILY_DASH_RANK_GATEWAY_TOKEN_FILE=/run/daily-dash-secrets/gateway_token
       - DAILY_DASH_ASSETS_DIR=/opt/daily-dash/assets
 
     volumes:
       - ${DAILY_DASH_DATA_SOURCE:?DAILY_DASH_DATA_SOURCE is required}:/data/daily-dash-data
+      - ${DAILY_DASH_GATEWAY_TOKEN_SOURCE:-/var/code/llm-gateway-deployments/daily-dash/tokens/gateway.token}:/run/daily-dash-secrets/gateway_token:ro
 
     depends_on:
       db:
