@@ -27,6 +27,10 @@ class GatewayUsage(BaseModel):
     output_tokens: int = Field(default=0, ge=0)
     total_tokens: int = Field(default=0, ge=0)
     cost_usd: float = Field(default=0.0, ge=0.0)
+    # Returned by the dedicated llm-gateway instance; the old model gateway
+    # omits them and the defaults keep both responses valid.
+    reasoning_tokens: int = Field(default=0, ge=0)
+    cache_tokens: int = Field(default=0, ge=0)
 
 
 class GatewayResponse(BaseModel):
