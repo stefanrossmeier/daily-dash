@@ -90,3 +90,59 @@ def test_x_search_client_sends_only_gateway_contract(monkeypatch: Any) -> None:
     assert "model" not in observed_json
     assert "plugins" not in observed_json
     assert "x_search_filter" not in observed_json
+
+
+def test_rank_gateway_env_splits_chat_from_x_search(monkeypatch: Any, tmp_path: Any) -> None:
+    """Ranking chats route to the dedicated llm-gateway instance with Bearer
+    auth and an Idempotency-Key; X search keeps the model gateway URL."""
+    monkeypatch.setenv("DAILY_DASH_MODEL_GATEWAY_URL", "http://model-gateway:8080")
+    monkeypatch.setenv("DAILY_DASH_RANK_GATEWAY_URL", "http://daily-dash-llm-gateway:8080")
+    token_file = tmp_path / "gateway.token"
+    token_file.write_text("synthetic-token\n")
+    monkeypatch.setenv("DAILY_DASH_RANK_GATEWAY_TOKEN_FILE", str(token_file))
+
+    observed: dict[str, object] = {}
+
+    def fake_post(
+        url: str,
+        *,
+        json: dict[str, object],
+        headers: dict[str, str] | None = None,
+        **kw: object,
+    ) -> _Response:
+        observed["url"] = url
+        observed["headers"] = headers or {}
+        return _Response()
+
+    monkeypatch.setattr("daily_dash.llm.gateway.httpx.post", fake_post)
+
+    client = ModelGatewayClient()
+    client.chat_structured(
+        alias="rank-cheap",
+        purpose="ranking",
+        profile="news-top",
+        system="system",
+        user="user",
+        response_schema_name="test_schema",
+        response_schema={"type": "object"},
+    )
+
+    assert observed["url"] == "http://daily-dash-llm-gateway:8080/v1/chat"
+    headers = observed["headers"]
+    assert headers["Authorization"] == "Bearer synthetic-token"
+    assert headers["Idempotency-Key"].startswith("daily-dash:")
+
+    client.x_search_structured(
+        alias="x-retrieve",
+        purpose="retrieval",
+        profile="wsb",
+        input_text="query",
+        allowed_x_handles=["test"],
+        from_date="2026-11-21",
+        to_date="2026-11-22",
+        response_schema_name="test_schema",
+        response_schema={"type": "object"},
+    )
+
+    assert observed["url"] == "http://model-gateway:8080/v1/x-search"
+    assert "Authorization" not in observed["headers"]
