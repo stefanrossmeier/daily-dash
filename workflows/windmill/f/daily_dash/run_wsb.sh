@@ -10,12 +10,19 @@ python_bin="$app_home/.venv/bin/python"
 config_dir="${DAILY_DASH_CONFIG_DIR:-$app_home/config}"
 assets_dir="${DAILY_DASH_ASSETS_DIR:-$app_home/assets}"
 gateway_url="${DAILY_DASH_MODEL_GATEWAY_URL:-http://daily_dash_model_gateway:8080}"
+# Ranking chats route to the dedicated llm-gateway instance; X search keeps the
+# model gateway. Windmill jobs run with a sanitized environment, so every
+# variable the client needs is exported here with its default.
+rank_gateway_url="${DAILY_DASH_RANK_GATEWAY_URL:-http://daily-dash-llm-gateway:8080}"
+rank_gateway_token_file="${DAILY_DASH_RANK_GATEWAY_TOKEN_FILE:-/run/daily-dash-secrets/gateway_token}"
 
 export DAILY_DASH_HOME="$app_home"
 export DAILY_DASH_CONFIG_DIR="$config_dir"
 export DAILY_DASH_ASSETS_DIR="$assets_dir"
 export DAILY_DASH_DATA_REPO="$data_repo"
 export DAILY_DASH_MODEL_GATEWAY_URL="$gateway_url"
+export DAILY_DASH_RANK_GATEWAY_URL="$rank_gateway_url"
+export DAILY_DASH_RANK_GATEWAY_TOKEN_FILE="$rank_gateway_token_file"
 export DAILY_DASH_REDDIT_CLIENT_ID="$reddit_client_id"
 export DAILY_DASH_REDDIT_CLIENT_SECRET="$reddit_client_secret"
 export DAILY_DASH_REDDIT_USER_AGENT="$reddit_user_agent"
