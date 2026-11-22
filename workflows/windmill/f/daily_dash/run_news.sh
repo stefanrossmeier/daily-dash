@@ -16,7 +16,7 @@ assets_dir="${DAILY_DASH_ASSETS_DIR:-$app_home/assets}"
 data_repo="${DAILY_DASH_DATA_REPO:-/data/daily-dash-data}"
 gateway_url="${DAILY_DASH_GATEWAY_URL:-http://daily-dash-llm-gateway:8080}"
 # Ranking chats AND native X search route to the dedicated llm-gateway
-# instance; the model gateway is only the fallback. Windmill jobs run with a
+# instance. Windmill jobs run with a
 # sanitized environment, so every variable the client needs is exported here
 # with its default.
 gateway_token_file="${DAILY_DASH_GATEWAY_TOKEN_FILE:-/run/daily-dash-secrets/gateway_token}"
