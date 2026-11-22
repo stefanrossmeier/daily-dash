@@ -93,3 +93,21 @@ sources:
     enabled: true
     weight: 1.0
     tags: [official, global, central-bank]
+
+  # Verified live 2026-11-22 from inside the worker; both are the only German
+  # market sources that keep publishing at weekends.
+  - id: wallstreet-online
+    name: wallstreet:online
+    kind: rss
+    url: https://www.wallstreet-online.de/rss/nachrichten
+    enabled: true
+    weight: 1.0
+    tags: [germany, markets, high-volume]
+
+  - id: investing-de
+    name: Investing.com Deutsch
+    kind: rss
+    url: https://de.investing.com/rss/news.rss
+    enabled: true
+    weight: 1.0
+    tags: [germany, markets]
