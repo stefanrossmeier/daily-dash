@@ -96,3 +96,38 @@ sources:
     enabled: true
     weight: 1.0
     tags: [alternative, analysis]
+
+  # Verified live from inside the worker on 2026-11-22. These are the macro and
+  # contrarian feeds that keep publishing at weekends; the previous set rested
+  # on ZeroHedge alone once the weekday-only wire went quiet.
+  - id: macrobusiness
+    name: MacroBusiness
+    kind: rss
+    url: https://www.macrobusiness.com.au/feed/
+    enabled: true
+    weight: 1.0
+    tags: [alternative, macro, australia]
+
+  - id: quoth-the-raven
+    name: Quoth the Raven
+    kind: rss
+    url: https://quoththeraven.substack.com/feed
+    enabled: true
+    weight: 1.0
+    tags: [alternative, finance]
+
+  - id: michael-hudson
+    name: Michael Hudson
+    kind: rss
+    url: https://michael-hudson.com/feed/
+    enabled: true
+    weight: 1.0
+    tags: [alternative, macro, heterodox]
+
+  - id: real-investment-advice
+    name: Real Investment Advice
+    kind: rss
+    url: https://realinvestmentadvice.com/feed/
+    enabled: true
+    weight: 1.0
+    tags: [alternative, markets]
