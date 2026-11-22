@@ -46,6 +46,9 @@ sources:
   - id: boerse-frankfurt
     name: Börse Frankfurt
     kind: rss
+    # Verified live 2026-11-22: the official exchange feed works and carries
+    # Anleihen/Gold/ETF/Wochenausblick notes, but only ~2-3 items per week on
+    # weekdays. Kept because it is the exchange's own announcement channel.
     url: https://api.boerse-frankfurt.de/v1/feeds/news.rss
     enabled: true
     weight: 1.0
