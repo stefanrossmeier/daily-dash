@@ -105,10 +105,10 @@ class NewsRankingContent(BaseModel):
 class NewsModelUsage(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    input_tokens: int = Field(default=0, ge=0)
-    output_tokens: int = Field(default=0, ge=0)
-    total_tokens: int = Field(default=0, ge=0)
-    cost_usd: float = Field(default=0.0, ge=0.0)
+    input_tokens: int | None = Field(default=None, ge=0)
+    output_tokens: int | None = Field(default=None, ge=0)
+    total_tokens: int | None = Field(default=None, ge=0)
+    cost_usd: float | None = Field(default=None, ge=0)
 
 
 class NewsRankingTrace(BaseModel):

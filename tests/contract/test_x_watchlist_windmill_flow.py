@@ -29,7 +29,7 @@ def test_x_watchlist_run_script_has_no_openrouter_or_x_secret_access() -> None:
     assert "openrouter_api_key" not in script
     assert "cookie" not in script.lower()
     assert "playwright" not in script.lower()
-    assert "DAILY_DASH_MODEL_GATEWAY_URL" in script
+    assert "DAILY_DASH_GATEWAY_URL" in script
 
 
 def test_x_watchlist_schedule_runs_daily_at_1920_berlin_time() -> None:

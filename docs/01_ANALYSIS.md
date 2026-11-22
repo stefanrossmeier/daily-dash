@@ -1,3 +1,7 @@
+> Gateway migration: use [the current integration guide](LLM_GATEWAY.md).
+> Copied-provider setup described in historical sections is retired; all inference
+> uses the authenticated reusable gateway.
+
 # DailyDash Modernization — Analysis and Target Architecture
 
 **Status:** Architecture proposal  
@@ -75,7 +79,7 @@ Examples from the archive:
 
 `crontab.txt` currently contains DailyDash schedules alongside commented schedules from other VPS projects. Each DailyDash job also has a shell wrapper that knows:
 
-- the repository location (`/var/code/DailyDash`),
+- the repository location (`/srv/example/DailyDash`),
 - the Docker Compose service name,
 - lock-file handling,
 - timeout behavior,

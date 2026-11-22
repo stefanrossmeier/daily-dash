@@ -10,8 +10,7 @@ from pathlib import Path
 from typing import cast
 from uuid import uuid4
 
-import httpx
-
+from daily_dash.llm.gateway import ModelGatewayClient
 from daily_dash.prompts import load_prompt_asset
 
 
@@ -66,8 +65,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--gateway-url",
         default=os.getenv(
-            "DAILY_DASH_MODEL_GATEWAY_URL",
-            "http://127.0.0.1:18080",
+            "DAILY_DASH_GATEWAY_URL",
+            "http://127.0.0.1:18181",
         ),
     )
 
@@ -274,21 +273,8 @@ def main() -> None:
         "response_schema": ranking_schema(ids),
     }
 
-    response = httpx.post(
-        f"{args.gateway_url.rstrip('/')}/v1/chat",
-        json=payload,
-        timeout=90,
-    )
-
-    if response.is_error:
-        raise RuntimeError(f"gateway returned HTTP {response.status_code}: {response.text}")
-
-    body_value: object = response.json()
-
-    if not isinstance(body_value, dict):
-        raise ValueError("gateway response must be a JSON object")
-
-    body = cast(dict[str, object], body_value)
+    result = ModelGatewayClient(args.gateway_url)._request("chat", payload)
+    body = result.model_dump(mode="json")
 
     content_value = body.get("content")
     if not isinstance(content_value, dict):

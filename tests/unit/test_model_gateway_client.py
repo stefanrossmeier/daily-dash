@@ -2,199 +2,110 @@ from __future__ import annotations
 
 from typing import Any
 
-from daily_dash.llm import gateway as gateway_module
-from daily_dash.llm.gateway import ModelGatewayClient
+import httpx
+import pytest
+
+from daily_dash.llm.gateway import GatewayResponse, ModelGatewayClient
 
 
-class _Response:
+class Response:
     is_error = False
     status_code = 200
-    text = ""
 
-    def json(self) -> dict[str, object]:
+    def json(self) -> dict:
         return {
-            "alias": "rank-budget",
+            "alias": "rank-cheap",
             "provider": "openrouter",
             "model": "test/model",
-            "generation_id": "gen-test",
-            "content": {"evaluations": {}},
-            "usage": {
-                "input_tokens": 1,
-                "output_tokens": 1,
-                "total_tokens": 2,
-                "cost_usd": 0.0,
-            },
+            "content": {},
+            "usage": {"cost_usd": None, "reasoning_tokens": None, "cache_tokens": None},
             "latency_ms": 1,
+            "usage_complete": False,
         }
 
 
-def test_model_gateway_client_default_timeout_covers_two_retries(
-    monkeypatch: Any,
-) -> None:
-    observed_timeout: float | None = None
+@pytest.fixture(autouse=True)
+def credentials(monkeypatch: Any) -> None:
+    monkeypatch.setenv("DAILY_DASH_GATEWAY_TOKEN", "synthetic-token")
+    monkeypatch.setenv("DAILY_DASH_RUN_ID", "durable-job-one")
 
-    def fake_post(*args: object, **kwargs: object) -> _Response:
-        nonlocal observed_timeout
-        del args
-        value = kwargs.get("timeout")
-        assert isinstance(value, float)
-        observed_timeout = value
-        return _Response()
 
-    monkeypatch.setattr("daily_dash.llm.gateway.httpx.post", fake_post)
-
-    ModelGatewayClient("http://gateway.test").chat_structured(
-        alias="rank-budget",
-        purpose="ranking",
+def chat(client: ModelGatewayClient) -> GatewayResponse:
+    return client.chat_structured(
+        alias="rank-cheap",
+        purpose="rank",
         profile="news-top",
         system="system",
         user="user",
-        response_schema_name="test_schema",
+        response_schema_name="schema",
         response_schema={"type": "object"},
     )
 
-    assert observed_timeout == 600.0
+
+def test_restart_keeps_identity_and_a_new_run_gets_a_new_identity(monkeypatch: Any) -> None:
+    calls: list[dict] = []
+
+    def post(url: str, **kw: Any) -> Response:
+        calls.append({"url": url, **kw})
+        return Response()
+
+    monkeypatch.setattr("daily_dash.llm.gateway.httpx.post", post)
+    chat(ModelGatewayClient("http://gateway.test"))
+    chat(ModelGatewayClient("http://gateway.test"))
+    assert calls[0]["headers"] == calls[1]["headers"]
+    assert calls[0]["json"]["run_id"] == "durable-job-one"
+    assert calls[0]["headers"]["Authorization"] == "Bearer synthetic-token"
+    assert calls[0]["timeout"] == 600.0
+    monkeypatch.setenv("DAILY_DASH_RUN_ID", "new-job")
+    chat(ModelGatewayClient("http://gateway.test"))
+    assert calls[-1]["headers"]["Idempotency-Key"] != calls[0]["headers"]["Idempotency-Key"]
 
 
-def test_x_search_client_sends_only_gateway_contract(monkeypatch: Any) -> None:
-    observed_url: str | None = None
-    observed_json: dict[str, object] | None = None
+def test_lost_response_recovers_same_request_without_second_post(monkeypatch: Any) -> None:
+    calls: list[str] = []
 
-    def fake_post(*args: object, **kwargs: object) -> _Response:
-        nonlocal observed_url, observed_json
-        assert args
-        assert isinstance(args[0], str)
-        observed_url = args[0]
-        payload = kwargs.get("json")
-        assert isinstance(payload, dict)
-        observed_json = payload
-        return _Response()
+    def post(*a: Any, **kw: Any) -> Response:
+        calls.append(kw["headers"]["Idempotency-Key"])
+        raise httpx.ReadTimeout("lost response")
 
-    monkeypatch.setattr("daily_dash.llm.gateway.httpx.post", fake_post)
+    def get(url: str, **kw: Any) -> Response:
+        assert url.endswith(f"/v1/requests/{calls[0]}?format=dashboard")
+        return Response()
 
+    monkeypatch.setattr("daily_dash.llm.gateway.httpx.post", post)
+    monkeypatch.setattr("daily_dash.llm.gateway.httpx.get", get)
+    result = chat(ModelGatewayClient("http://gateway.test"))
+    assert len(calls) == 1 and result.usage.cost_usd is None
+    assert result.usage.reasoning_tokens is None and result.usage.cache_tokens is None
+
+
+def test_x_uses_same_authenticated_gateway(monkeypatch: Any) -> None:
+    def post(url: str, **kw: Any) -> Response:
+        assert url == "http://gateway.test/v1/x-search"
+        assert kw["headers"]["Authorization"] == "Bearer synthetic-token"
+        assert "model" not in kw["json"] and "plugins" not in kw["json"]
+        return Response()
+
+    monkeypatch.setattr("daily_dash.llm.gateway.httpx.post", post)
     ModelGatewayClient("http://gateway.test").x_search_structured(
         alias="x-retrieve",
-        purpose="x-retrieval-compatibility",
-        profile="x-watchlist-spike",
-        input_text="search X",
-        allowed_x_handles=["NickTimiraos"],
-        from_date="2026-08-28",
-        to_date="2026-08-29",
-        response_schema_name="x_schema",
-        response_schema={"type": "object"},
-    )
-
-    assert observed_url == "http://gateway.test/v1/x-search"
-    assert observed_json is not None
-    assert observed_json["alias"] == "x-retrieve"
-    assert observed_json["allowed_x_handles"] == ["NickTimiraos"]
-    assert "model" not in observed_json
-    assert "plugins" not in observed_json
-    assert "x_search_filter" not in observed_json
-
-
-def test_rank_gateway_env_splits_chat_from_x_search(monkeypatch: Any, tmp_path: Any) -> None:
-    """Ranking chats and X search both ride the dedicated llm-gateway instance
-    with Bearer auth and a content-derived Idempotency-Key."""
-    monkeypatch.setenv("DAILY_DASH_MODEL_GATEWAY_URL", "http://model-gateway:8080")
-    monkeypatch.setenv("DAILY_DASH_RANK_GATEWAY_URL", "http://daily-dash-llm-gateway:8080")
-    token_file = tmp_path / "gateway.token"
-    token_file.write_text("synthetic-token\n")
-    monkeypatch.setenv("DAILY_DASH_RANK_GATEWAY_TOKEN_FILE", str(token_file))
-
-    calls: list[dict[str, Any]] = []
-
-    def fake_post(
-        url: str,
-        *,
-        json: dict[str, object],
-        headers: dict[str, str] | None = None,
-        **kw: object,
-    ) -> _Response:
-        calls.append({"url": url, "headers": headers or {}, "body": json})
-        return _Response()
-
-    monkeypatch.setattr("daily_dash.llm.gateway.httpx.post", fake_post)
-
-    client = ModelGatewayClient()
-    chat = {
-        "alias": "rank-cheap",
-        "purpose": "ranking",
-        "profile": "news-top",
-        "system": "system",
-        "user": "user",
-        "response_schema_name": "test_schema",
-        "response_schema": {"type": "object"},
-    }
-    client.chat_structured(**chat)
-
-    observed = calls[-1]
-    assert observed["url"] == "http://daily-dash-llm-gateway:8080/v1/chat"
-    headers = observed["headers"]
-    assert headers["Authorization"] == "Bearer synthetic-token"
-    assert headers["Idempotency-Key"].startswith("daily-dash:")
-
-    # A retry of the same logical request inside one run reuses the key so the
-    # gateway replays its recorded result instead of charging twice.
-    client.chat_structured(**chat)
-    assert calls[-1]["headers"]["Idempotency-Key"] == headers["Idempotency-Key"]
-    # A different logical request must not collide.
-    client.chat_structured(**{**chat, "user": "other user"})
-    assert calls[-1]["headers"]["Idempotency-Key"] != headers["Idempotency-Key"]
-    # A NEW run (fresh process nonce) must be a new request: otherwise a
-    # failed retrieval could never be rerun and tomorrow's report would
-    # replay today's terminal result.
-    monkeypatch.setattr(gateway_module, "_RUN_NONCE", "second-run-nonce")
-    client.chat_structured(**chat)
-    assert calls[-1]["headers"]["Idempotency-Key"] != headers["Idempotency-Key"]
-
-    client.x_search_structured(
-        alias="x-retrieve",
-        purpose="retrieval",
+        purpose="retrieve",
         profile="x-watchlist",
-        input_text="query",
+        input_text="search",
         allowed_x_handles=["test"],
         from_date="2026-11-21",
         to_date="2026-11-22",
-        response_schema_name="test_schema",
+        response_schema_name="schema",
         response_schema={"type": "object"},
     )
 
-    # Native X search rides the same dedicated instance as ranking.
-    assert calls[-1]["url"] == "http://daily-dash-llm-gateway:8080/v1/x-search"
-    assert calls[-1]["headers"]["Authorization"] == "Bearer synthetic-token"
-    assert calls[-1]["headers"]["Idempotency-Key"].startswith("daily-dash:")
 
-
-def test_chat_without_an_instance_url_keeps_the_model_gateway(monkeypatch: Any) -> None:
-    """No instance configured: chat falls back to the model gateway, unauthenticated."""
-    monkeypatch.setenv("DAILY_DASH_MODEL_GATEWAY_URL", "http://model-gateway:8080")
-    monkeypatch.delenv("DAILY_DASH_RANK_GATEWAY_URL", raising=False)
-    monkeypatch.delenv("DAILY_DASH_RANK_GATEWAY_TOKEN_FILE", raising=False)
-    monkeypatch.delenv("DAILY_DASH_RANK_GATEWAY_TOKEN", raising=False)
-
-    observed: dict[str, object] = {}
-
-    def fake_post(
-        url: str,
-        *,
-        json: dict[str, object],
-        headers: dict[str, str] | None = None,
-        **kw: object,
-    ) -> _Response:
-        observed["url"] = url
-        observed["headers"] = headers or {}
-        return _Response()
-
-    monkeypatch.setattr("daily_dash.llm.gateway.httpx.post", fake_post)
-    ModelGatewayClient().chat_structured(
-        alias="rank-cheap",
-        purpose="ranking",
-        profile="news-top",
-        system="system",
-        user="user",
-        response_schema_name="test_schema",
-        response_schema={"type": "object"},
-    )
-    assert observed["url"] == "http://model-gateway:8080/v1/chat"
-    assert observed["headers"] == {}
+def test_missing_credentials_or_run_identity_fails_before_transport(monkeypatch: Any) -> None:
+    monkeypatch.delenv("DAILY_DASH_GATEWAY_TOKEN")
+    with pytest.raises(RuntimeError, match="TOKEN"):
+        chat(ModelGatewayClient())
+    monkeypatch.setenv("DAILY_DASH_GATEWAY_TOKEN", "synthetic-token")
+    for name in ("DAILY_DASH_RUN_ID", "WM_ROOT_FLOW_JOB_ID", "WM_JOB_ID"):
+        monkeypatch.delenv(name, raising=False)
+    with pytest.raises(RuntimeError, match="RUN_ID"):
+        chat(ModelGatewayClient())

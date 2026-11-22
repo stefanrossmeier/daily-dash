@@ -6,7 +6,7 @@ DEFAULT_WINDMILL_DIR="$(cd "$ROOT/.." && pwd)/daily-dash-windmill-local"
 WINDMILL_DIR="${DAILY_DASH_WINDMILL_DIR:-$DEFAULT_WINDMILL_DIR}"
 SECRET_DIR="$WINDMILL_DIR/secrets"
 DATA_REPO="${DAILY_DASH_WSB_TEST_DATA_REPO:-/tmp/daily-dash-wsb-test}"
-GATEWAY_URL="${DAILY_DASH_MODEL_GATEWAY_URL:-http://127.0.0.1:18080}"
+GATEWAY_URL="${DAILY_DASH_GATEWAY_URL:-http://127.0.0.1:18181}"
 
 read_required() {
   local name="$1"

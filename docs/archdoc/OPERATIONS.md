@@ -49,7 +49,7 @@ DAILY_DASH_WINDMILL_DIR=../daily-dash-windmill-local ./scripts/local-windmill.sh
 ./scripts/sync-windmill-workspace.sh
 ```
 
-Windmill is opened at `http://localhost` after startup. The model gateway is intentionally local-only at `http://127.0.0.1:18080` from the host and `http://daily_dash_model_gateway:8080` from the DailyDash worker.
+Windmill is opened at `http://localhost` after startup. The model gateway is intentionally local-only at `http://127.0.0.1:18181` from the host and `the configured authenticated gateway URL` from the DailyDash worker.
 
 ## Runtime Units
 
@@ -59,7 +59,6 @@ Windmill is opened at `http://localhost` after startup. The model gateway is int
 | `windmill_server` | Windmill server. | Exposes internal ports 8000/2525; waits for database health. |
 | `windmill_worker` | General worker pool. | Three replicas in Compose template; privileged configuration present. |
 | `windmill_worker_dailydash` | DailyDash application jobs. | Built from repository; tagged `dailydash`; mounts private data repo. |
-| `daily_dash_model_gateway` | Model provider boundary. | Reads `OPENROUTER_API_KEY_FILE`; publishes host localhost port 18080 only. |
 | Caddy | Reverse proxy. | Publishes 80 and 25 in local template. |
 
 ## Configuration And Secrets
@@ -67,7 +66,7 @@ Windmill is opened at `http://localhost` after startup. The model gateway is int
 | Category | Location | Notes |
 |---|---|---|
 | Profiles/source universes/schedules | `config/`. | Committed, typed YAML; no secret values. |
-| Model aliases | `config/model-gateway.yaml`. | Maps alias to provider/model, attempts, timeout, structured/X capability. |
+| Model aliases | project-owned private gateway configuration. | Maps alias to provider/model, attempts, timeout, structured/X capability. |
 | Runtime paths | Generated local `.env`. | Includes Compose database URL, images, source/data mount paths. |
 | Local secret files | Generated `secrets/` directory. | One raw value per 0600 file; directory mode 0700. |
 | Windmill secret variables | `f/daily_dash/*`. | Telegram, deploy-key, and Reddit secrets are injected into relevant steps. |

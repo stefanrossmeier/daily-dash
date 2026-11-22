@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DATA_REPO="${DAILY_DASH_POLYMARKET_TEST_DATA_REPO:-/tmp/daily-dash-polymarket-test}"
-GATEWAY_URL="${DAILY_DASH_MODEL_GATEWAY_URL:-http://127.0.0.1:18080}"
+GATEWAY_URL="${DAILY_DASH_GATEWAY_URL:-http://127.0.0.1:18181}"
 
 "$ROOT/scripts/check.sh"
 uv run python -m daily_dash.commands.polymarket check-api --config-dir "$ROOT/config"

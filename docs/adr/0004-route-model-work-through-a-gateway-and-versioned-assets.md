@@ -19,13 +19,13 @@ Several reports use LLMs for narrow retrieval, ranking, or thematic work. These 
 
 ## Decision
 
-Route model-provider access through the local model gateway using aliases in `config/model-gateway.yaml`. Keep stable prompts and substantive deterministic editorial policy as versioned assets. Record prompt/policy identity and hashes in traces, and retain deterministic processing as authority for selection and presentation policy.
+Route model-provider access through the local model gateway using aliases in project-owned private gateway configuration. Keep stable prompts and substantive deterministic editorial policy as versioned assets. Record prompt/policy identity and hashes in traces, and retain deterministic processing as authority for selection and presentation policy.
 
 ## Evidence
 
 | Claim | Evidence | Status |
 |---|---|---|
-| Gateway aliases define provider/model choice, retries, timeout, and capability flags. | `config/model-gateway.yaml` | verified |
+| Gateway aliases define provider/model choice, retries, timeout, and capability flags. | project-owned private gateway configuration | verified |
 | Prompt and policy assets are versioned and hashed into traces/artifacts. | `docs/16_ARCHITECTURE_BOUNDARIES.md`, `docs/archdoc/ARCHITECTURE.md` | verified |
 | Gateway receives the provider key file and the worker receives its URL. | `deploy/local-windmill/docker-compose.override.yml` | verified |
 | Model-backed reports do not call providers directly. | `README.md` | verified |

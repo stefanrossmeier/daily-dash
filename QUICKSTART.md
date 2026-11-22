@@ -1,3 +1,7 @@
+> Gateway migration: use [the current integration guide](docs/LLM_GATEWAY.md).
+> Copied-provider setup described in historical sections is retired; all inference
+> uses the authenticated reusable gateway.
+
 # DailyDash Quickstart
 
 This guide takes a clean checkout to a working local Windmill deployment. It uses explicit paths

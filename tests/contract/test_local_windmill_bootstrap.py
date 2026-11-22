@@ -18,14 +18,10 @@ def test_local_windmill_template_contains_dailydash_services() -> None:
     services = override["services"]
 
     worker = services["windmill_worker_dailydash"]
-    gateway = services["daily_dash_model_gateway"]
-
+    assert "daily_dash_model_gateway" not in services
     assert worker["build"]["dockerfile"] == "deploy/example/windmill-worker.Dockerfile"
-    assert gateway["build"]["dockerfile"] == "deploy/example/model-gateway.Dockerfile"
-    assert (
-        "DAILY_DASH_MODEL_GATEWAY_URL=http://daily_dash_model_gateway:8080" in worker["environment"]
-    )
-    assert gateway["ports"] == ["127.0.0.1:18080:8080"]
+    assert "DAILY_DASH_GATEWAY_URL=http://daily-dash-llm-gateway:8080" in worker["environment"]
+    assert not any("OPENROUTER" in value for value in worker["environment"])
 
 
 def test_bootstrap_materializes_environment_without_secrets_in_git(
@@ -64,7 +60,7 @@ def test_bootstrap_materializes_environment_without_secrets_in_git(
     assert "WM_IMAGE=ghcr.io/windmill-labs/windmill:1.775.1" in env_text
 
     secret_names = (
-        "openrouter_api_key",
+        "gateway_token",
         "data_repo_deploy_key",
         "telegram_token",
         "telegram_chat_id",

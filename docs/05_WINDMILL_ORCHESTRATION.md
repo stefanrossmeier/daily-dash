@@ -281,14 +281,14 @@ Local development currently uses sibling checkouts.
 The intended VPS layout is:
 
 ~~~text
-/var/code/daily-dash
-/var/code/daily-dash-data
+/srv/example/daily-dash
+/srv/example/daily-dash-data
 ~~~
 
 The host data repository is mounted into the worker as:
 
 ~~~text
-/var/code/daily-dash-data -> /data/daily-dash-data
+/srv/example/daily-dash-data -> /data/daily-dash-data
 ~~~
 
 ### Workspace configuration

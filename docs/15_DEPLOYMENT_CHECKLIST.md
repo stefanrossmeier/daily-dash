@@ -1,3 +1,7 @@
+> Gateway migration: use [the current integration guide](LLM_GATEWAY.md).
+> Copied-provider setup described in historical sections is retired; all inference
+> uses the authenticated reusable gateway.
+
 # Deployment checklist
 
 This checklist is the final repository-side gate before deploying DailyDash to a

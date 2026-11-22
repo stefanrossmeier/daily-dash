@@ -1,3 +1,7 @@
+> Gateway migration: use [the current integration guide](docs/LLM_GATEWAY.md).
+> Copied-provider setup described in historical sections is retired; all inference
+> uses the authenticated reusable gateway.
+
 # Contributing to DailyDash
 
 DailyDash welcomes focused bug fixes, source improvements, tests, documentation, and pipeline

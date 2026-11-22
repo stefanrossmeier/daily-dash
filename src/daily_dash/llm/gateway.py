@@ -3,56 +3,57 @@ from __future__ import annotations
 import hashlib
 import json
 import os
-import uuid
 from collections.abc import Mapping
 from typing import Protocol
 
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
-# One nonce per process (one Windmill job run): retries inside the run share
-# it, a later run does not.
-_RUN_NONCE = uuid.uuid4().hex[:16]
+
+def _run_id() -> str:
+    value = next(
+        (
+            os.environ[k]
+            for k in ("DAILY_DASH_RUN_ID", "WM_ROOT_FLOW_JOB_ID", "WM_JOB_ID")
+            if os.getenv(k)
+        ),
+        None,
+    )
+    if not value:
+        raise RuntimeError(
+            "Set DAILY_DASH_RUN_ID for a new logical run; reuse it after interruption"
+        )
+    return value
 
 
 def _idempotency_key(body: Mapping[str, object]) -> str:
-    """Logical-request ID: stable within one run, distinct for the next run.
-
-    The key is the canonical request content plus a per-process run nonce. A
-    retry inside the same run (same process) replays the gateway's recorded
-    result instead of being charged twice, while a fresh run — an operator
-    rerun after a failure, or tomorrow's scheduled run of the same report —
-    executes as a new request instead of replaying a terminal failure
-    forever.
-    """
     canonical = json.dumps(body, sort_keys=True, separators=(",", ":"), default=str)
-    digest = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
-    return f"daily-dash:{_RUN_NONCE}:{digest}"
+    return "daily-dash:" + hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
 def _rank_gateway_token() -> str | None:
     """Bearer token for the dedicated llm-gateway ranking instance. Read from
-    a private file (DAILY_DASH_RANK_GATEWAY_TOKEN_FILE) or the environment;
+    a private file (DAILY_DASH_GATEWAY_TOKEN_FILE) or the environment;
     never logged."""
-    path = os.getenv("DAILY_DASH_RANK_GATEWAY_TOKEN_FILE")
+    path = os.getenv("DAILY_DASH_GATEWAY_TOKEN_FILE")
     if path:
         with open(path, encoding="utf-8") as handle:
             return handle.read().strip()
-    value = os.getenv("DAILY_DASH_RANK_GATEWAY_TOKEN", "").strip()
+    value = os.getenv("DAILY_DASH_GATEWAY_TOKEN", "").strip()
     return value or None
 
 
 class GatewayUsage(BaseModel):
+    x_posts_fetched: int | None = Field(default=None, ge=0)
+    x_profiles_fetched: int | None = Field(default=None, ge=0)
     model_config = ConfigDict(extra="forbid")
 
-    input_tokens: int = Field(default=0, ge=0)
-    output_tokens: int = Field(default=0, ge=0)
-    total_tokens: int = Field(default=0, ge=0)
-    cost_usd: float = Field(default=0.0, ge=0.0)
-    # Returned by the dedicated llm-gateway instance; the old model gateway
-    # omits them and the defaults keep both responses valid.
-    reasoning_tokens: int = Field(default=0, ge=0)
-    cache_tokens: int = Field(default=0, ge=0)
+    input_tokens: int | None = Field(default=None, ge=0)
+    output_tokens: int | None = Field(default=None, ge=0)
+    total_tokens: int | None = Field(default=None, ge=0)
+    cost_usd: float | None = Field(default=None, ge=0)
+    reasoning_tokens: int | None = Field(default=None, ge=0)
+    cache_tokens: int | None = Field(default=None, ge=0)
 
 
 class GatewayResponse(BaseModel):
@@ -94,28 +95,46 @@ class ModelGatewayClient:
         *,
         timeout_seconds: float = 600.0,
     ) -> None:
-        configured_url = (
-            base_url or os.getenv("DAILY_DASH_MODEL_GATEWAY_URL") or "http://127.0.0.1:18080"
-        )
-
+        configured_url = base_url or os.getenv("DAILY_DASH_GATEWAY_URL") or "http://127.0.0.1:18181"
         self._base_url = configured_url.rstrip("/")
-        # Ranking chats AND native X search route to daily-dash's dedicated
-        # llm-gateway instance when configured (its /v1/chat and /v1/x-search
-        # dashboard-compatibility wires). The shared model gateway stays the
-        # fallback when no instance URL is configured; both speak the same
-        # wire, so the split is URL-level only.
-        self._rank_url = (os.getenv("DAILY_DASH_RANK_GATEWAY_URL") or self._base_url).rstrip("/")
-        self._rank_token = _rank_gateway_token()
+        self._token = _rank_gateway_token()
         self._timeout_seconds = timeout_seconds
 
     def _headers(self, body: Mapping[str, object]) -> dict[str, str]:
-        """Bearer auth plus a stable Idempotency-Key for the instance wires."""
-        if self._rank_url == self._base_url or not self._rank_token:
-            return {}
-        return {
-            "Authorization": f"Bearer {self._rank_token}",
-            "Idempotency-Key": _idempotency_key(body),
-        }
+        if not self._token:
+            raise RuntimeError(
+                "DAILY_DASH_GATEWAY_TOKEN_FILE or DAILY_DASH_GATEWAY_TOKEN is required"
+            )
+        return {"Authorization": f"Bearer {self._token}", "Idempotency-Key": _idempotency_key(body)}
+
+    def _request(self, route: str, body: Mapping[str, object]) -> GatewayResponse:
+        body = {**body, "run_id": _run_id()}
+        headers = self._headers(body)
+        try:
+            response = httpx.post(
+                f"{self._base_url}/v1/{route}",
+                json=body,
+                headers=headers,
+                timeout=self._timeout_seconds,
+            )
+        except httpx.HTTPError:
+            # Recover the same invocation; never start another paid attempt.
+            identifier = headers["Idempotency-Key"]
+            try:
+                response = httpx.get(
+                    f"{self._base_url}/v1/requests/{identifier}?format=dashboard",
+                    headers=headers,
+                    timeout=10,
+                )
+            except httpx.HTTPError:
+                raise RuntimeError(
+                    f"gateway transport lost; recover request {identifier}"
+                ) from None
+        if response.is_error or response.status_code == 202:
+            raise RuntimeError(
+                f"gateway HTTP {response.status_code}; request {headers['Idempotency-Key']}"
+            )
+        return GatewayResponse.model_validate(response.json())
 
     def chat_structured(
         self,
@@ -139,19 +158,7 @@ class ModelGatewayClient:
             "response_schema_name": response_schema_name,
             "response_schema": response_schema,
         }
-        response = httpx.post(
-            f"{self._rank_url}/v1/chat",
-            json=body,
-            headers=self._headers(body),
-            timeout=self._timeout_seconds,
-        )
-
-        if response.is_error:
-            raise RuntimeError(
-                f"model gateway returned HTTP {response.status_code}: {response.text}"
-            )
-
-        return GatewayResponse.model_validate(response.json())
+        return self._request("chat", body)
 
     def x_search_structured(
         self,
@@ -166,8 +173,6 @@ class ModelGatewayClient:
         response_schema_name: str,
         response_schema: dict[str, object],
     ) -> GatewayResponse:
-        # Native X search runs on the same dedicated llm-gateway instance as
-        # ranking (its /v1/x-search wire).
         body = {
             "alias": alias,
             "purpose": purpose,
@@ -179,16 +184,4 @@ class ModelGatewayClient:
             "response_schema_name": response_schema_name,
             "response_schema": response_schema,
         }
-        response = httpx.post(
-            f"{self._rank_url}/v1/x-search",
-            json=body,
-            headers=self._headers(body),
-            timeout=self._timeout_seconds,
-        )
-
-        if response.is_error:
-            raise RuntimeError(
-                f"model gateway returned HTTP {response.status_code}: {response.text}"
-            )
-
-        return GatewayResponse.model_validate(response.json())
+        return self._request("x-search", body)

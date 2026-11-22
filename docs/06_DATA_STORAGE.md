@@ -102,15 +102,15 @@ The path is runtime configuration and must not be hard-coded into DailyDash.
 A recommended VPS layout is:
 
 ~~~text
-/var/code/daily-dash
-/var/code/daily-dash-data
+/srv/example/daily-dash
+/srv/example/daily-dash-data
 /srv/windmill
 ~~~
 
 The Windmill DailyDash worker can mount:
 
 ~~~text
-/var/code/daily-dash-data -> /data/daily-dash-data
+/srv/example/daily-dash-data -> /data/daily-dash-data
 ~~~
 
 The workflow then uses:

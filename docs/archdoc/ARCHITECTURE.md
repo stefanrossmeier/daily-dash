@@ -81,7 +81,7 @@ The pipeline is intentionally separated from reader presentation. A command load
 - `config/schedules.yaml` is the schedule source of truth. It is loaded by pipelines to derive exact retrieval windows and rendered into Windmill schedule files.
 - `assets/prompts/` contains versioned model instruction manifests and text. The loader validates paths and records SHA-256 hashes in model traces.
 - `assets/policies/` stores substantive deterministic policy. Smart News records policy identity and SHA-256 in its artifact.
-- `config/model-gateway.yaml` keeps model choice/retry policy outside application code through aliases such as `rank-cheap` and `x-retrieve`.
+- project-owned private gateway configuration keeps model choice/retry policy outside application code through aliases such as `rank-cheap` and `x-retrieve`.
 
 ## Data Ownership
 

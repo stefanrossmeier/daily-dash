@@ -1,3 +1,7 @@
+> Gateway migration: use [the current integration guide](LLM_GATEWAY.md).
+> Copied-provider setup described in historical sections is retired; all inference
+> uses the authenticated reusable gateway.
+
 # Smart News pipeline
 
 Smart News is the theme-oriented DailyDash briefing. It is intentionally separate

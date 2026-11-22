@@ -32,7 +32,6 @@ DailyDash is a self-hosted personal market-intelligence system. It retrieves mar
 | [assets](../../assets) | Versioned prompt and deterministic policy assets. |
 | [workflows/windmill](../../workflows/windmill) | Windmill workspace-as-code, scripts, flows, and generated schedules. |
 | [deploy](../../deploy) | Reproducible local Windmill Compose templates and image Dockerfiles. |
-| [services/model-gateway](../../services/model-gateway) | Isolated HTTP gateway for provider/model access. |
 | [scripts](../../scripts) | Validation, bootstrap, sync, live-check, and operator helpers. |
 | [tests](../../tests) | Unit, contract, replay, ranking-evaluation, and fixture tests. |
 | [docs](..) | Existing design/implementation records, `docs/adr/` ADRs (layered pipeline boundaries, Windmill workspace-as-code, immutable artifacts, gateway/versioned assets), the `VPS_DEPLOYMENT.md` runbook, plus this generated `archdoc` set. |
@@ -44,7 +43,6 @@ DailyDash is a self-hosted personal market-intelligence system. It retrieves mar
 | [pyproject.toml](../../pyproject.toml) | Python 3.12 package, dependencies, `daily-dash` CLI, Ruff, mypy, pytest configuration. |
 | [package.json](../../package.json) | Pinned Windmill CLI is the only root Node dependency. |
 | [config/schedules.yaml](../../config/schedules.yaml) | Canonical cadence and retrieval-window configuration for 11 report profiles. |
-| [config/model-gateway.yaml](../../config/model-gateway.yaml) | Model alias to provider/model mapping and retry/timeout policy. |
 | [src/daily_dash/cli.py](../../src/daily_dash/cli.py) | Public package CLI: configuration validation. |
 | [src/daily_dash/config/validation.py](../../src/daily_dash/config/validation.py) | Cross-validates profile, source-set, and schedule relationships. |
 | [src/daily_dash/llm/gateway.py](../../src/daily_dash/llm/gateway.py) | DailyDash client for model gateway `/v1/chat` and `/v1/x-search`. |

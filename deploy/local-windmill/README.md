@@ -1,14 +1,10 @@
-# Local Windmill deployment source
+# Application stack template
 
-These files are the checked-in source for the local DailyDash Windmill stack.
-Do not maintain a separate hand-edited copy as the source of truth.
+Materialize this template using `scripts/bootstrap-local-windmill.sh`. Keep the
+resulting runtime environment and credentials outside Git. Set the private
+`DAILY_DASH_GATEWAY_TOKEN_SOURCE` and owned `DAILY_DASH_GATEWAY_NETWORK`.
+The application worker joins the gateway's internal client network; it never
+mounts a provider key. The copied provider container is retired.
 
-Materialize a machine-specific deployment directory with:
-
-```bash
-./scripts/bootstrap-local-windmill.sh
-```
-
-The bootstrap script copies these files and writes a local `.env` containing only
-Compose/runtime paths. Application credentials are stored as one-value files under
-the generated `secrets/` directory. Neither `.env` nor `secrets/` is intended for Git.
+Use the main repository's current LLM integration and deployment guides. These
+files are generic templates and do not record any particular installation.

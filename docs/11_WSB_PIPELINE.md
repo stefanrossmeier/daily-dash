@@ -1,3 +1,7 @@
+> Gateway migration: use [the current integration guide](LLM_GATEWAY.md).
+> Copied-provider setup described in historical sections is retired; all inference
+> uses the authenticated reusable gateway.
+
 # WallStreetBets market-relevance pipeline
 
 DailyDash treats r/wallstreetbets primarily as an alternative market-signal source, with a deliberately narrow exception for exceptionally hot WSB topics.
@@ -176,7 +180,7 @@ model-gateway /health check
 
 The test artifact is written to `/tmp/daily-dash-wsb-test` by default. Override it with `DAILY_DASH_WSB_TEST_DATA_REPO` if needed.
 
-The local gateway defaults to `http://127.0.0.1:18080`; override it through `DAILY_DASH_MODEL_GATEWAY_URL`.
+The local gateway defaults to `http://127.0.0.1:18181`; override it through `DAILY_DASH_GATEWAY_URL`.
 
 ## Failure interpretation
 
@@ -194,7 +198,7 @@ Credentials are invalid, access is not approved for the app/use case, or Reddit 
 
 ### Model gateway unavailable
 
-Reddit retrieval can be healthy while the classifier gateway is down. Rebuild/start the local DailyDash Windmill stack and verify `http://127.0.0.1:18080/health`.
+Reddit retrieval can be healthy while the classifier gateway is down. Rebuild/start the local DailyDash Windmill stack and verify `http://127.0.0.1:18181/health`.
 
 ## Scheduling
 

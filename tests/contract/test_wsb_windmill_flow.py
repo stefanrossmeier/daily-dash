@@ -60,6 +60,7 @@ def test_wsb_runner_executes_without_positional_args(tmp_path: Path) -> None:
     env.update(
         {
             "DAILY_DASH_HOME": str(app_home),
+            "DAILY_DASH_RUN_ID": "synthetic-durable-job",
             "DAILY_DASH_CONFIG_DIR": str(config_dir),
             "DAILY_DASH_ASSETS_DIR": str(tmp_path / "assets"),
             "DAILY_DASH_DATA_REPO": str(data_repo),

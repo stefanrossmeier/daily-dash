@@ -55,7 +55,7 @@ dc() {
   ( cd "$DEPLOY_DIR" && docker compose "$@" )
 }
 
-for service in windmill_server windmill_worker_dailydash daily_dash_model_gateway; do
+for service in windmill_server windmill_worker_dailydash; do
   if dc ps --status running --services 2>/dev/null | grep -qx "$service"; then
     ok "service running: $service"
   else
@@ -68,10 +68,10 @@ done
 # ranking chat and the native X retrieval, so a missing instance silently
 # breaks both even while the rest of the stack looks healthy.
 GATEWAY_TOKEN_SOURCE="${DAILY_DASH_GATEWAY_TOKEN_SOURCE:-/var/code/llm-gateway-deployments/daily-dash/tokens/gateway.token}"
-if [[ "$(docker inspect -f '{{.State.Running}}' daily-dash-llm-gateway 2>/dev/null)" == "true" ]]; then
-  ok "service running: daily-dash-llm-gateway (dedicated instance)"
+if [[ "$(docker inspect -f '{{.State.Running}}' daily-dash-llm-gateway-1 2>/dev/null)" == "true" ]]; then
+  ok "service running: daily-dash-llm-gateway-1 (dedicated instance)"
 else
-  fail "service not running: daily-dash-llm-gateway"
+  fail "service not running: daily-dash-llm-gateway-1"
 fi
 
 # The worker reaches the instance over TCP with the token mounted into it;
@@ -106,17 +106,6 @@ else
 fi
 
 deadline=$((SECONDS + GATEWAY_TIMEOUT))
-gateway_health=""
-while (( SECONDS < deadline )); do
-  gateway_health="$(curl -fsS --max-time 5 http://127.0.0.1:18080/health 2>/dev/null || true)"
-  [[ "$gateway_health" == '{"status":"ok"}' ]] && break
-  sleep 2
-done
-if [[ "$gateway_health" == '{"status":"ok"}' ]]; then
-  ok "model gateway healthy on 127.0.0.1:18080"
-else
-  fail "model gateway not healthy after ${GATEWAY_TIMEOUT}s (last: '$gateway_health')"
-fi
 
 # ------------------------------------------------------------- 4. schedules
 schedules_json="$("$ROOT/scripts/wmill.sh" schedule list --json 2>/dev/null || echo '[]')"

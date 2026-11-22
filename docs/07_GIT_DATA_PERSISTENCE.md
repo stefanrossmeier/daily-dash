@@ -30,8 +30,8 @@ Collected runtime data lives in the private repository:
 
 The intended VPS checkout layout is:
 
-    /var/code/daily-dash
-    /var/code/daily-dash-data
+    /srv/example/daily-dash
+    /srv/example/daily-dash-data
 
 Inside the dedicated Windmill worker the stable data path is:
 

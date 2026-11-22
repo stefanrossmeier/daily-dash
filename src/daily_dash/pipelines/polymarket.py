@@ -34,10 +34,38 @@ def _model_summary(traces: list[NewsRankingTrace]) -> NewsModelSummary | None:
         return None
     return NewsModelSummary(
         usage=NewsModelUsage(
-            input_tokens=sum(trace.usage.input_tokens for trace in traces),
-            output_tokens=sum(trace.usage.output_tokens for trace in traces),
-            total_tokens=sum(trace.usage.total_tokens for trace in traces),
-            cost_usd=sum(trace.usage.cost_usd for trace in traces),
+            input_tokens=(
+                sum(
+                    trace.usage.input_tokens
+                    for trace in traces
+                    if trace.usage.input_tokens is not None
+                )
+                if all(trace.usage.input_tokens is not None for trace in traces)
+                else None
+            ),
+            output_tokens=(
+                sum(
+                    trace.usage.output_tokens
+                    for trace in traces
+                    if trace.usage.output_tokens is not None
+                )
+                if all(trace.usage.output_tokens is not None for trace in traces)
+                else None
+            ),
+            total_tokens=(
+                sum(
+                    trace.usage.total_tokens
+                    for trace in traces
+                    if trace.usage.total_tokens is not None
+                )
+                if all(trace.usage.total_tokens is not None for trace in traces)
+                else None
+            ),
+            cost_usd=(
+                sum(trace.usage.cost_usd for trace in traces if trace.usage.cost_usd is not None)
+                if all(trace.usage.cost_usd is not None for trace in traces)
+                else None
+            ),
         ),
         latency_ms=sum(trace.latency_ms for trace in traces),
         calls=len(traces),

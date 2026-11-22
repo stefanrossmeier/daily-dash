@@ -14,21 +14,20 @@ python_bin="$app_home/.venv/bin/python"
 config_dir="${DAILY_DASH_CONFIG_DIR:-$app_home/config}"
 assets_dir="${DAILY_DASH_ASSETS_DIR:-$app_home/assets}"
 data_repo="${DAILY_DASH_DATA_REPO:-/data/daily-dash-data}"
-gateway_url="${DAILY_DASH_MODEL_GATEWAY_URL:-http://daily_dash_model_gateway:8080}"
+gateway_url="${DAILY_DASH_GATEWAY_URL:-http://daily-dash-llm-gateway:8080}"
 # Ranking chats AND native X search route to the dedicated llm-gateway
 # instance; the model gateway is only the fallback. Windmill jobs run with a
 # sanitized environment, so every variable the client needs is exported here
 # with its default.
-rank_gateway_url="${DAILY_DASH_RANK_GATEWAY_URL:-http://daily-dash-llm-gateway:8080}"
-rank_gateway_token_file="${DAILY_DASH_RANK_GATEWAY_TOKEN_FILE:-/run/daily-dash-secrets/gateway_token}"
+gateway_token_file="${DAILY_DASH_GATEWAY_TOKEN_FILE:-/run/daily-dash-secrets/gateway_token}"
 
 export DAILY_DASH_HOME="$app_home"
 export DAILY_DASH_CONFIG_DIR="$config_dir"
 export DAILY_DASH_ASSETS_DIR="$assets_dir"
 export DAILY_DASH_DATA_REPO="$data_repo"
-export DAILY_DASH_MODEL_GATEWAY_URL="$gateway_url"
-export DAILY_DASH_RANK_GATEWAY_URL="$rank_gateway_url"
-export DAILY_DASH_RANK_GATEWAY_TOKEN_FILE="$rank_gateway_token_file"
+export DAILY_DASH_GATEWAY_URL="$gateway_url"
+export DAILY_DASH_RUN_ID="${DAILY_DASH_RUN_ID:-${WM_ROOT_FLOW_JOB_ID:-${WM_JOB_ID:?Set DAILY_DASH_RUN_ID}}}"
+export DAILY_DASH_GATEWAY_TOKEN_FILE="$gateway_token_file"
 
 if [[ ! -d "$assets_dir/prompts" ]]; then
   echo "DailyDash prompt assets not found: $assets_dir" >&2

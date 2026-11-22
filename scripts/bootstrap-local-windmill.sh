@@ -18,8 +18,8 @@ Options:
                              (default: $DEFAULT_TARGET)
   --data-repo PATH           Separate DailyDash data Git checkout
                              (default: $DEFAULT_DATA_REPO)
-  --openrouter-key-file PATH Existing file containing the OpenRouter API key.
-                             If omitted, TARGET/secrets/openrouter_api_key is
+  --gateway-token-file PATH Existing file containing the gateway bearer token.
+                             If omitted, TARGET/secrets/gateway_token is
                              created as an empty 0600 file.
   --force                    Refresh tracked infrastructure files in an existing
                              target. Existing .env and secrets are preserved.
@@ -46,7 +46,7 @@ require() {
 
 TARGET="$DEFAULT_TARGET"
 DATA_REPO="$DEFAULT_DATA_REPO"
-OPENROUTER_KEY_FILE=""
+GATEWAY_TOKEN_FILE=""
 FORCE=false
 REWRITE_ENV=false
 
@@ -60,8 +60,8 @@ while [[ $# -gt 0 ]]; do
       DATA_REPO="$2"
       shift 2
       ;;
-    --openrouter-key-file)
-      OPENROUTER_KEY_FILE="$2"
+    --gateway-token-file)
+      GATEWAY_TOKEN_FILE="$2"
       shift 2
       ;;
     --force)
@@ -131,20 +131,20 @@ if [[ ! -d "$DATA_REPO/.git" ]]; then
     commit -qm 'chore: initialize local data sink'
 fi
 
-if [[ -n "$OPENROUTER_KEY_FILE" ]]; then
-  OPENROUTER_KEY_FILE="$(canonical_path "$OPENROUTER_KEY_FILE")"
-  if [[ ! -f "$OPENROUTER_KEY_FILE" ]]; then
-    echo "ERROR: OpenRouter key file not found: $OPENROUTER_KEY_FILE" >&2
+if [[ -n "$GATEWAY_TOKEN_FILE" ]]; then
+  GATEWAY_TOKEN_FILE="$(canonical_path "$GATEWAY_TOKEN_FILE")"
+  if [[ ! -f "$GATEWAY_TOKEN_FILE" ]]; then
+    echo "ERROR: Gateway token file not found: $GATEWAY_TOKEN_FILE" >&2
     exit 7
   fi
 else
   mkdir -p "$TARGET/secrets"
   chmod 700 "$TARGET/secrets"
-  OPENROUTER_KEY_FILE="$TARGET/secrets/openrouter_api_key"
-  if [[ ! -e "$OPENROUTER_KEY_FILE" ]]; then
-    : > "$OPENROUTER_KEY_FILE"
+  GATEWAY_TOKEN_FILE="$TARGET/secrets/gateway_token"
+  if [[ ! -e "$GATEWAY_TOKEN_FILE" ]]; then
+    : > "$GATEWAY_TOKEN_FILE"
   fi
-  chmod 600 "$OPENROUTER_KEY_FILE"
+  chmod 600 "$GATEWAY_TOKEN_FILE"
 fi
 
 mkdir -p "$TARGET/secrets"
@@ -170,7 +170,8 @@ DATABASE_URL=postgres://postgres:changeme@db/windmill?sslmode=disable
 WM_IMAGE=ghcr.io/windmill-labs/windmill:1.775.1
 DAILY_DASH_SOURCE=$ROOT
 DAILY_DASH_DATA_SOURCE=$DATA_REPO
-DAILY_DASH_OPENROUTER_KEY_FILE=$OPENROUTER_KEY_FILE
+DAILY_DASH_GATEWAY_TOKEN_SOURCE=$GATEWAY_TOKEN_FILE
+DAILY_DASH_GATEWAY_NETWORK=${DAILY_DASH_GATEWAY_NETWORK:-daily-dash-llm_client}
 ENV
   chmod 600 "$ENV_FILE"
 else
@@ -188,10 +189,10 @@ Local Windmill deployment materialized.
   deployment:      $TARGET
   daily-dash:      $ROOT
   data sink:       $DATA_REPO
-  OpenRouter file: $OPENROUTER_KEY_FILE
+  Gateway token: $GATEWAY_TOKEN_FILE
 
 Next:
-  1. Put your OpenRouter key in secrets/openrouter_api_key (one line, no quotes).
+  1. Put your Gateway token in secrets/gateway_token (one line, no quotes).
   2. Populate the other one-value files under secrets/ as needed.
   3. Run: DAILY_DASH_WINDMILL_DIR="$TARGET" ./scripts/local-windmill.sh up
   4. Open http://localhost and complete the Windmill bootstrap login/workspace setup.

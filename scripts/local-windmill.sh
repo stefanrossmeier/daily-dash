@@ -45,25 +45,25 @@ case "$1" in
     dc down
     ;;
   rebuild)
-    dc build --no-cache windmill_worker_dailydash daily_dash_model_gateway
-    dc up -d --no-deps --force-recreate windmill_worker_dailydash daily_dash_model_gateway
+    dc build --no-cache windmill_worker_dailydash
+    dc up -d --no-deps --force-recreate windmill_worker_dailydash
     ;;
   status)
     dc ps
     ;;
   logs)
-    dc logs --tail=200 windmill_server windmill_worker_dailydash daily_dash_model_gateway
+    dc logs --tail=200 windmill_server windmill_worker_dailydash
     ;;
   config)
     dc config
     ;;
   health)
-    dc ps windmill_server windmill_worker_dailydash daily_dash_model_gateway
+    dc ps windmill_server windmill_worker_dailydash
     printf '\nWindmill HTTP:\n'
     curl --fail --silent --show-error http://localhost/ >/dev/null
     echo 'ok'
-    printf '\nDailyDash model gateway:\n'
-    curl --fail --silent --show-error http://127.0.0.1:18080/health
+    printf '\nLLM Gateway:\n'
+    curl --fail --silent --show-error ${DAILY_DASH_GATEWAY_URL:-http://127.0.0.1:18181}/health
     echo
     ;;
   *)

@@ -1,3 +1,7 @@
+> Gateway migration: use [the current integration guide](LLM_GATEWAY.md).
+> Copied-provider setup described in historical sections is retired; all inference
+> uses the authenticated reusable gateway.
+
 # DailyDash Modernization — Step-by-Step Implementation Plan
 
 This plan deliberately builds a new system **beside** the legacy DailyDash repository. The legacy project remains runnable until each selected workflow is proven equivalent or better.

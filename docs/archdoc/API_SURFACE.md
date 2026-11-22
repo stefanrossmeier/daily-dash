@@ -64,7 +64,7 @@ The exact fields vary by report, but callers should treat `artifact_path` and `p
 
 ## Model Gateway HTTP Contract
 
-DailyDash sends JSON to a configurable base URL. Default resolution is explicit `gateway_url`, then `DAILY_DASH_MODEL_GATEWAY_URL`, then `http://127.0.0.1:18080`.
+DailyDash sends JSON to a configurable base URL. Default resolution is explicit `gateway_url`, then `DAILY_DASH_GATEWAY_URL`, then `http://127.0.0.1:18181`.
 
 | Endpoint | Request fields | Response contract |
 |---|---|---|
