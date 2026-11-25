@@ -70,33 +70,37 @@ done
 # ranking chat and the native X retrieval, so a missing instance silently
 # breaks both even while the rest of the stack looks healthy.
 GATEWAY_TOKEN_SOURCE="${DAILY_DASH_GATEWAY_TOKEN_SOURCE:-/var/code/llm-gateway-deployments/daily-dash/tokens/gateway.token}"
-if [[ "$(docker inspect -f '{{.State.Running}}' daily-dash-llm-gateway-1 2>/dev/null)" == "true" ]]; then
-  ok "service running: daily-dash-llm-gateway-1 (dedicated instance)"
+# The instance is run as its own Compose project, so its container name carries
+# a "-<n>" suffix; match the prefix rather than one exact name.
+if docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^daily-dash-llm-gateway'; then
+  ok "service running: daily-dash-llm-gateway (dedicated instance)"
 else
-  fail "service not running: daily-dash-llm-gateway-1"
+  fail "service not running: daily-dash-llm-gateway"
 fi
 
 # The worker reaches the instance over TCP with the token mounted into it;
-# /ready must report THIS project's identity.
-instance_ready=""
+# /ready must report THIS project's identity. The token directory belongs to
+# the instance's own runtime user, so the operator account cannot necessarily
+# read it on the host — that is a hardening choice, not a defect. Only note it;
+# the in-worker probe below is the real gate.
 if [[ ! -r "$GATEWAY_TOKEN_SOURCE" ]]; then
-  fail "gateway token unreadable: $GATEWAY_TOKEN_SOURCE"
-else
-  deadline=$((SECONDS + GATEWAY_TIMEOUT))
-  while (( SECONDS < deadline )); do
-    instance_ready="$(dc exec -T windmill_worker_dailydash /opt/daily-dash/.venv/bin/python -c "
+  echo "INFO: token file not readable by the operator account ($GATEWAY_TOKEN_SOURCE); verifying through the worker instead"
+fi
+instance_ready=""
+deadline=$((SECONDS + GATEWAY_TIMEOUT))
+while (( SECONDS < deadline )); do
+  instance_ready="$(dc exec -T windmill_worker_dailydash /opt/daily-dash/.venv/bin/python -c "
 import urllib.request
 token = open('/run/daily-dash-secrets/gateway_token').read().strip()
 request = urllib.request.Request('http://daily-dash-llm-gateway:8080/ready', headers={'Authorization': 'Bearer ' + token})
 print(urllib.request.urlopen(request, timeout=10).read().decode())" 2>/dev/null || true)"
-    [[ "$instance_ready" == *'"project_id":"daily-dash"'* && "$instance_ready" == *"$GATEWAY_VERSION_FRAGMENT"* ]] && break
-    sleep 2
-  done
-  if [[ "$instance_ready" == *'"project_id":"daily-dash"'* && "$instance_ready" == *"$GATEWAY_VERSION_FRAGMENT"* ]]; then
-    ok "llm-gateway $GATEWAY_VERSION ready and principal authenticated (project daily-dash)"
-  else
-    fail "llm-gateway instance not ready from the worker after ${GATEWAY_TIMEOUT}s (last: '$instance_ready')"
-  fi
+  [[ "$instance_ready" == *'"project_id":"daily-dash"'* && "$instance_ready" == *"$GATEWAY_VERSION_FRAGMENT"* ]] && break
+  sleep 2
+done
+if [[ "$instance_ready" == *'"project_id":"daily-dash"'* && "$instance_ready" == *"$GATEWAY_VERSION_FRAGMENT"* ]]; then
+  ok "llm-gateway $GATEWAY_VERSION ready and principal authenticated (project daily-dash)"
+else
+  fail "llm-gateway instance not ready from the worker after ${GATEWAY_TIMEOUT}s (last: '$instance_ready')"
 fi
 
 # ------------------------------------------------------------------ 3. HTTP
