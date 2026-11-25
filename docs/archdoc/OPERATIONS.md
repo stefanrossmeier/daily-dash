@@ -13,7 +13,19 @@ Source Basis: README scan, scripts, Compose files, workflow definitions, code sc
 
 ## Runtime Overview
 
-The supported local runtime is a Docker Compose deployment of Windmill, PostgreSQL, a dedicated DailyDash worker image, and a model-gateway image. Caddy exposes Windmill on port 80; the model gateway binds to `127.0.0.1:18080`. Windmill executes scheduled flows, routes DailyDash jobs by the `dailydash` worker tag, and supplies workspace variables/secrets.
+Gateway release update (2026-11-25): `deploy/llm-gateway-release.json` pins
+`0.1.0a4`. The dedicated gateway and credential-free egress proxy use its verified
+immutable image, retaining project-owned state, model aliases and credentials.
+The worker uses the owned internal gateway network; no published host port is
+required. `scripts/smoke-test.sh` verifies the release version on authenticated
+readiness without inference or Telegram delivery.
+
+The runtime comprises Windmill, PostgreSQL, a dedicated DailyDash worker image,
+and an independently deployed LLM Gateway with its credential-free egress proxy.
+The worker reaches its authenticated gateway over the owned internal client
+network. Provider credentials and durable accounting stay at the gateway boundary;
+no gateway host port is required. Windmill executes scheduled flows, routes jobs
+by the `dailydash` worker tag, and supplies workspace variables/secrets.
 
 The reports use the production sequence:
 

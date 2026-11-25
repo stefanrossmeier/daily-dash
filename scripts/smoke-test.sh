@@ -23,6 +23,8 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DEPLOY_DIR="${DAILY_DASH_WINDMILL_DIR:-$ROOT/../daily-dash-windmill-local}"
 MIN_SCHEDULES=30
 GATEWAY_TIMEOUT=30
+GATEWAY_VERSION="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "$ROOT/deploy/llm-gateway-release.json")"
+GATEWAY_VERSION_FRAGMENT="\"version\":\"$GATEWAY_VERSION\""
 
 passages=0
 failures=0
@@ -92,11 +94,11 @@ import urllib.request
 token = open('/run/daily-dash-secrets/gateway_token').read().strip()
 request = urllib.request.Request('http://daily-dash-llm-gateway:8080/ready', headers={'Authorization': 'Bearer ' + token})
 print(urllib.request.urlopen(request, timeout=10).read().decode())" 2>/dev/null || true)"
-  [[ "$instance_ready" == *'"project_id":"daily-dash"'* ]] && break
+  [[ "$instance_ready" == *'"project_id":"daily-dash"'* && "$instance_ready" == *"$GATEWAY_VERSION_FRAGMENT"* ]] && break
   sleep 2
 done
-if [[ "$instance_ready" == *'"project_id":"daily-dash"'* ]]; then
-  ok "llm-gateway instance ready and principal authenticated (project daily-dash)"
+if [[ "$instance_ready" == *'"project_id":"daily-dash"'* && "$instance_ready" == *"$GATEWAY_VERSION_FRAGMENT"* ]]; then
+  ok "llm-gateway $GATEWAY_VERSION ready and principal authenticated (project daily-dash)"
 else
   fail "llm-gateway instance not ready from the worker after ${GATEWAY_TIMEOUT}s (last: '$instance_ready')"
 fi

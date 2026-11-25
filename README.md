@@ -183,6 +183,14 @@ git diff --check
 
 ## Model and cost discipline
 
+The independently deployed LLM Gateway is pinned to `0.1.0a4` in
+[`deploy/llm-gateway-release.json`](deploy/llm-gateway-release.json). Verify the
+release manifest and platform archive, then deploy the immutable image for both
+gateway and egress proxy while preserving this project's ledger and secrets.
+Provider definitions and model alias files are gateway-owned configuration; the
+application's chat and native X aliases and HTTP contracts remain compatible.
+The deployment smoke check requires the pinned version on authenticated `/ready`.
+
 Model-backed reports do not call providers directly. They use model aliases through the local
 model gateway, which records the resolved provider/model, token usage, exact reported cost,
 latency, retries, and prompt identity in persisted traces. Deterministic reports such as Markets,
