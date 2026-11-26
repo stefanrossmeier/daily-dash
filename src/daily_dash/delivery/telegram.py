@@ -1,5 +1,15 @@
+"""Telegram delivery is bounded to 105s per part (3 * 25s attempts + 2 * 15s
+Retry-After waits), excluding local processing overhead; an artifact with N
+parts is bounded to N * 105s. Other transient failures use jittered exponential
+backoff with less than 10s total wait per part.
+"""
+
 from __future__ import annotations
 
+import random
+import time
+from datetime import UTC, datetime
+from email.utils import parsedate_to_datetime
 from typing import Any
 
 import httpx
@@ -7,6 +17,12 @@ import httpx
 from daily_dash.contracts import DeliveryResult, DeliveryStatus, ReportArtifact
 
 TELEGRAM_SAFE_MESSAGE_LIMIT = 3800
+_MAX_ATTEMPTS = 3
+_TRANSIENT_STATUS_CODES = {429, 500, 502, 503, 504}
+_MAX_RETRY_AFTER_SECONDS = 15.0
+_BACKOFF_BASE_SECONDS = 1.0
+_BACKOFF_MAX_SECONDS = 10.0
+_JITTER = random.Random()
 
 
 def split_markdown_message(text: str, limit: int = TELEGRAM_SAFE_MESSAGE_LIMIT) -> list[str]:
@@ -46,7 +62,7 @@ def split_markdown_message(text: str, limit: int = TELEGRAM_SAFE_MESSAGE_LIMIT) 
 
 
 class TelegramDelivery:
-    """Deliver rendered artifacts through the Telegram Bot API."""
+    """Deliver artifacts through Telegram with bounded per-part retries."""
 
     def __init__(
         self,
@@ -75,6 +91,54 @@ class TelegramDelivery:
             return str(message_id)
         return None
 
+    @staticmethod
+    def _description(response: httpx.Response) -> str | None:
+        try:
+            payload = response.json()
+        except ValueError:
+            return None
+        if isinstance(payload, dict):
+            description = payload.get("description")
+            if isinstance(description, str):
+                return description
+        return None
+
+    @staticmethod
+    def _retry_after_seconds(response: httpx.Response) -> float | None:
+        value = response.headers.get("Retry-After")
+        if value is None:
+            return None
+        try:
+            seconds = float(value)
+        except ValueError:
+            try:
+                retry_at = parsedate_to_datetime(value)
+                if not isinstance(retry_at, datetime):
+                    return None
+                if retry_at.tzinfo is None:
+                    retry_at = retry_at.replace(tzinfo=UTC)
+                seconds = (retry_at - datetime.now(UTC)).total_seconds()
+            except (TypeError, ValueError, OverflowError):
+                return None
+        return min(max(seconds, 0.0), _MAX_RETRY_AFTER_SECONDS)
+
+    @staticmethod
+    def _backoff_seconds(attempt: int) -> float:
+        delay: float = _BACKOFF_BASE_SECONDS * float(2 ** (attempt - 1))
+        if delay > _BACKOFF_MAX_SECONDS:
+            delay = _BACKOFF_MAX_SECONDS
+        jitter: float = float(_JITTER.uniform(0.75, 1.25))
+        return float(delay * jitter)
+
+    @staticmethod
+    def _failed(artifact: ReportArtifact, error: str) -> DeliveryResult:
+        return DeliveryResult(
+            run_id=artifact.run_id,
+            destination="telegram",
+            status=DeliveryStatus.FAILED,
+            error=error,
+        )
+
     def send(self, artifact: ReportArtifact) -> DeliveryResult:
         url = f"https://api.telegram.org/bot{self._token}/sendMessage"
         own_client = self._client is None
@@ -83,23 +147,65 @@ class TelegramDelivery:
 
         try:
             for part in split_markdown_message(artifact.content):
-                response = client.post(
-                    url,
-                    data={
-                        "chat_id": self._chat_id,
-                        "text": part,
-                        "parse_mode": self._parse_mode,
-                    },
-                )
-                response.raise_for_status()
-                last_message_id = self._message_id(response.json())
-        except (httpx.HTTPError, ValueError) as exc:
-            return DeliveryResult(
-                run_id=artifact.run_id,
-                destination="telegram",
-                status=DeliveryStatus.FAILED,
-                error=str(exc),
-            )
+                for attempt in range(1, _MAX_ATTEMPTS + 1):
+                    try:
+                        response = client.post(
+                            url,
+                            data={
+                                "chat_id": self._chat_id,
+                                "text": part,
+                                "parse_mode": self._parse_mode,
+                            },
+                        )
+                    except httpx.TransportError as exc:
+                        if attempt < _MAX_ATTEMPTS:
+                            time.sleep(self._backoff_seconds(attempt))
+                            continue
+                        return self._failed(
+                            artifact,
+                            f"Telegram transport failed after {attempt} attempts: {exc}",
+                        )
+
+                    description = self._description(response)
+                    if response.status_code in _TRANSIENT_STATUS_CODES:
+                        if attempt < _MAX_ATTEMPTS:
+                            delay = (
+                                self._retry_after_seconds(response)
+                                if response.status_code == 429
+                                else None
+                            )
+                            retry_delay = (
+                                delay if delay is not None else self._backoff_seconds(attempt)
+                            )
+                            time.sleep(retry_delay)
+                            continue
+                        error = (
+                            f"Telegram API returned HTTP {response.status_code} "
+                            f"after {attempt} attempts"
+                        )
+                        if description:
+                            error += f": {description}"
+                        return self._failed(artifact, error)
+
+                    if not response.is_success:
+                        attempt_word = "attempt" if attempt == 1 else "attempts"
+                        error = (
+                            f"Telegram API returned HTTP {response.status_code} "
+                            f"after {attempt} {attempt_word}"
+                        )
+                        if description:
+                            error += f": {description}"
+                        return self._failed(artifact, error)
+
+                    try:
+                        payload = response.json()
+                    except ValueError as exc:
+                        return self._failed(
+                            artifact,
+                            f"Telegram returned invalid JSON after {attempt} attempt(s): {exc}",
+                        )
+                    last_message_id = self._message_id(payload)
+                    break
         finally:
             if own_client:
                 client.close()
